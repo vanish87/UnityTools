@@ -1,0 +1,45 @@
+﻿// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+
+#include "UnityCG.cginc"
+
+Texture2D<float4> _Depth; 
+Buffer<float4> _Input;
+RWBuffer<float4> _Result;
+
+
+cbuffer CB
+{
+	float4x4 _ViewToWorldMat;
+	float4x4 _ProjToViewMat;
+	float4x4 _VPMat;
+	float4 _SizeAndNearFar; //texture size (x,y) and near far(z,w)
+}
+
+
+[numthreads(8,1,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+	float4 worldPos = _Input[id.x];
+
+	float4 clipPos = mul(_VPMat, worldPos);
+	clipPos /= clipPos.w;
+
+	float2 texCood = (clipPos.xy + 1)*0.5;
+	int2 cood = texCood * _SizeAndNearFar.xy;
+	float depth = _Depth[cood].x;
+
+	#if defined(UNITY_REVERSED_Z)
+	depth = 1 - depth;
+	#endif
+
+	//set depth to [-1,1] becasue _ProjToViewMat has z range [-1,1]
+	clipPos.z = (depth * 2) - 1;
+	
+	float4 viewPos = mul(_ProjToViewMat, clipPos);
+	viewPos /= viewPos.w;
+
+	float4 depthPos = mul(_ViewToWorldMat, viewPos);
+
+	_Result[id.x] = depthPos;
+}
