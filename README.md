@@ -1,7 +1,7 @@
 # UnityTools
 
 Tools list
-- Closet Hit
+- Closest Hit
 - Read/Write json with base64 image, convert json (from)to png
 - Apply post effect to textures in disk
 - Pack strcut to AssetBundle
