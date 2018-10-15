@@ -7,7 +7,7 @@ namespace UnityTools.Common
 {
     public class RenderTexUtil
     {
-        static public void Rebuild(ref RenderTexture target, int width, int height, int depth = 0, RenderTextureFormat format = 0)
+        static public void Rebuild(ref RenderTexture target, int width, int height, int depth = 0, RenderTextureFormat format = RenderTextureFormat.Default)
         {
             if (target != null)
             {
@@ -25,7 +25,10 @@ namespace UnityTools.Common
 
         static public void CheckAndRebuild(RenderTexture src, ref RenderTexture target)
         {
-            if (ShouldRebuildTarget(src, target)) Rebuild(ref target, src.width, src.height, src.depth, src.format);
+            if (ShouldRebuildTarget(src, target))
+            {
+                Rebuild(ref target, src.width, src.height, src.depth, src.format);
+            }
         }
 
         static public void Clear(RenderTexture target)
@@ -48,7 +51,7 @@ namespace UnityTools.Common
 
         public static void savePng(RenderTexture rt, string path)
         {
-            Texture2D tex = new Texture2D(rt.width, rt.height, TextureFormat.RGB24, false);
+            Texture2D tex = new Texture2D(rt.width, rt.height, TextureFormat.RGBA32, false);
             RenderTexture.active = rt;
             tex.ReadPixels(new Rect(0, 0, rt.width, rt.height), 0, 0);
             tex.Apply();
