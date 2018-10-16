@@ -16,7 +16,7 @@ namespace UnityTools.AssetBundle
     {
         protected T data;
 
-        protected virtual void UpdateField(S data)
+        public virtual void UpdateFields(S data)
         {
 
         }
