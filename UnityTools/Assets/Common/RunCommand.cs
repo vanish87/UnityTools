@@ -30,20 +30,20 @@ namespace UnityTools.Common
         {
             UnityEngine.Debug.Assert(command != null, "Command is null");
 
-            if(command.enableLogging)
+            if (string.IsNullOrEmpty(command.workingDirectory) == false)
             {
-                var path = command.workingDirectory + "/" + command.exe + ".log";
-                command.log = new StreamWriter(path);
-                command.log.WriteLine(string.Format("Command {0} {1} Start Running at {2:yyyyMMddHmmss}", command.exe, command.args, DateTime.Now));
-            }
-
-            if(string.IsNullOrEmpty(command.workingDirectory) == false)
-            {
-                if(Directory.Exists(command.workingDirectory) == false)
+                if (Directory.Exists(command.workingDirectory) == false)
                 {
                     UnityEngine.Debug.Assert(false, "workingDirectory is invalid" + command.workingDirectory);
                 }
             }
+
+            if (command.enableLogging)
+            {
+                var path = command.workingDirectory + "/" + command.exe + ".log";
+                command.log = new StreamWriter(path);
+                command.log.WriteLine(string.Format("[{2}][INFO]Command {0} {1} Start Running", command.exe, command.args, DateTime.Now.ToString()));
+            }            
 
             var proc = new Process();
             proc.StartInfo.FileName = command.exe;
@@ -55,13 +55,13 @@ namespace UnityTools.Common
             proc.StartInfo.StandardErrorEncoding = Encoding.GetEncoding(932);
             proc.StartInfo.WorkingDirectory = command.workingDirectory;
             
-            proc.EnableRaisingEvents = true;//for ExitDataHandler
+            //proc.EnableRaisingEvents = true;//for ExitDataHandler
 
 
             proc.OutputDataReceived += (s, ea) => { if (ea.Data != null) OutputDataHandler(command, ea.Data); };
             proc.ErrorDataReceived  += (s, ea) => { if (ea.Data != null) ErrorDataHandler (command, ea.Data); };
 
-            proc.Exited += (s, ea) => ExitDataHandler(command, proc.ExitCode);
+            //proc.Exited += (s, ea) => ExitDataHandler(command, proc.ExitCode);
 
             command.process = proc;
 
@@ -76,7 +76,7 @@ namespace UnityTools.Common
         }
         private static void OutputDataHandler(CommandInfo command, string output)
         {
-            var message = output;
+            var message = "["+DateTime.Now.ToString()+"][OUTPUT]" + output;
 
             command.output?.Invoke(message);
 
@@ -87,7 +87,7 @@ namespace UnityTools.Common
         }
         private static void ErrorDataHandler(CommandInfo command, string error)
         {
-            var message = "ERROR: " + error;
+            var message = "[" + DateTime.Now.ToString() + "][ERROR]" + error;
 
             command.output?.Invoke(message);
 
@@ -98,17 +98,20 @@ namespace UnityTools.Common
         }
         private static void ExitDataHandler(CommandInfo command, int code)
         {
-            var message = string.Format("Command {0} {1} End Running at {2:yyyyMMddHmmss} with Code {3}", command.exe, command.args, DateTime.Now, code);
+            var message = string.Format("[{2}][INFO]Command {0} {1} End Running with Code {3}", command.exe, command.args, DateTime.Now.ToString(), code);
 
             command.exit?.Invoke(command.exe, command.args, code);
 
-            if(command.enableLogging && command.log != null)
+            if(command.enableLogging)
             {
                 command.log.WriteLine(message);
                 command.log.Flush();
                 command.log.Close();
                 command.log = null;
             }
+            
+            command.process.Close();
+            command.process = null;
         }
         static private int StartProcess(CommandInfo command)
         {
@@ -126,23 +129,19 @@ namespace UnityTools.Common
                 command.process.BeginErrorReadLine();
 
                 command.process.WaitForExit();
-                command.process.Close();
             }
             catch (Exception e)
             {
-                var message = string.Format("Exception {0}: {1}", e.GetType(), e.Message);
+                var message = string.Format("[{2}][ERROR]Exception {0}: {1}", e.GetType(), e.Message, DateTime.Now.ToString());
                 command.output?.Invoke(message);
                 if(command.enableLogging)
                 {
                     command.log.WriteLine(message);
-                    command.log.Flush();
-                    command.log.Close();
-                    command.log = null;
                 }
             }
             finally
             {
-                command.process = null;
+                ExitDataHandler(command, command.process.ExitCode);
             }
             return 0;
         }
