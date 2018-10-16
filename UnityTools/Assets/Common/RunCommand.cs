@@ -40,7 +40,7 @@ namespace UnityTools.Common
 
             if (command.enableLogging)
             {
-                var path = command.workingDirectory + "/" + command.exe + ".log";
+                var path = command.workingDirectory + "/" + command.exe + string.Format("_{0:yyyyMMddHmmss}", DateTime.Now) +".log";
                 command.log = new StreamWriter(path);
                 command.log.WriteLine(string.Format("[{2}][INFO]Command {0} {1} Start Running", command.exe, command.args, DateTime.Now.ToString()));
             }            
