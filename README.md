@@ -9,3 +9,4 @@ Tools list
 - AssetBundle downloader
 - Kmeans in GPU?
 - State Machine
+- Run command in new process
