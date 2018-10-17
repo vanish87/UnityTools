@@ -25,6 +25,7 @@ namespace UnityTools.HttpServer
 
         private void OnDestroy()
         {
+            this.httpServer.UnregisterHandler("GET", SendResponseFile);
             this.httpServer.Stop();
         }
 

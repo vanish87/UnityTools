@@ -74,7 +74,7 @@ namespace UnityTools.Common
                 StartProcess(command);
             }
         }
-        private static void OutputDataHandler(CommandInfo command, string output)
+        static private void OutputDataHandler(CommandInfo command, string output)
         {
             var message = "["+DateTime.Now.ToString()+"][OUTPUT]" + output;
 
@@ -85,7 +85,7 @@ namespace UnityTools.Common
                 command.log.WriteLine(message);
             }
         }
-        private static void ErrorDataHandler(CommandInfo command, string error)
+        static private void ErrorDataHandler(CommandInfo command, string error)
         {
             var message = "[" + DateTime.Now.ToString() + "][ERROR]" + error;
 
@@ -96,7 +96,7 @@ namespace UnityTools.Common
                 command.log.WriteLine(message);
             }
         }
-        private static void ExitDataHandler(CommandInfo command, int code)
+        static private void ExitDataHandler(CommandInfo command, int code)
         {
             var message = string.Format("[{2}][INFO]Command {0} {1} End Running with Code {3}", command.exe, command.args, DateTime.Now.ToString(), code);
 
