@@ -33,7 +33,7 @@ namespace UnityTools.LightCamera
                 this.targetCamera = go.GetComponent<Camera>();
                 Assert.IsNotNull(this.targetCamera);
                 go.hideFlags = HideFlags.DontSave;
-                this.targetCamera.enabled = true;
+                this.targetCamera.enabled = false;
                 this.targetCamera.clearFlags = CameraClearFlags.SolidColor;
                 this.targetCamera.targetTexture = new RenderTexture(Mathf.CeilToInt(lightTextureSize.x), Mathf.CeilToInt(lightTextureSize.y), 0);
             }

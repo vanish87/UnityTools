@@ -16,9 +16,12 @@ namespace UnityTools.LightCamera
 
 
         private Camera targetCamera = null;
+        private Shader lightShader = null;
 
         private void Start()
         {
+            this.lightShader = Shader.Find("Custom/RenderToGbuffer");
+            Assert.IsNotNull(this.lightShader);
 
             this.targetCamera = this.GetComponent<Camera>();
             Assert.IsNotNull(this.targetCamera);
@@ -41,6 +44,10 @@ namespace UnityTools.LightCamera
                 RenderTexUtil.Clear(this.mrtTex[i]);
             }
 
+        }
+        private void Update()
+        {
+            this.targetCamera.RenderWithShader(this.lightShader, null);
         }
         private void OnRenderImage(RenderTexture source, RenderTexture destination)
         {

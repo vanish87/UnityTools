@@ -39,7 +39,6 @@
 	{
 		Pass
 		{
-			Cull Off ZWrite On ZTest LEqual
 			CGPROGRAM
 			#pragma vertex vert
 			#pragma fragment fragGBuffer
