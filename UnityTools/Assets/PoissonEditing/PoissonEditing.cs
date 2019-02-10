@@ -24,6 +24,7 @@ public class PoissonEditing : MonoBehaviour
     protected int solverKernal = -1;
 
     [SerializeField] protected int count = 0;
+    [SerializeField] protected int maxCount = 50000;
 
 
     // Start is called before the first frame update
@@ -34,13 +35,13 @@ public class PoissonEditing : MonoBehaviour
         Assert.IsNotNull(this.maskImage);
         Assert.IsNotNull(this.blendCS);
 
-        this.outputImage = RenderTexUtil.Create(this.sourceImage.width, this.sourceImage.height, 24, RenderTextureFormat.Default, true);
-        this.outputImage1 = RenderTexUtil.Create(this.sourceImage.width, this.sourceImage.height, 24, RenderTextureFormat.Default, true);
-        this.lapTex = RenderTexUtil.Create(this.sourceImage.width, this.sourceImage.height, 24, RenderTextureFormat.Default, true);
+        this.outputImage = RenderTexUtil.Create(this.sourceImage.width, this.sourceImage.height, 24, RenderTextureFormat.ARGBFloat, true);
+        this.outputImage1 = RenderTexUtil.Create(this.sourceImage.width, this.sourceImage.height, 24, RenderTextureFormat.ARGBFloat, true);
+        this.lapTex = RenderTexUtil.Create(this.sourceImage.width, this.sourceImage.height, 24, RenderTextureFormat.ARGBFloat, true);
 
 
-        this.gradientX = RenderTexUtil.Create(this.sourceImage.width, this.sourceImage.height, 24, RenderTextureFormat.Default, true);
-        this.gradientY = RenderTexUtil.Create(this.sourceImage.width, this.sourceImage.height, 24, RenderTextureFormat.Default, true);
+        this.gradientX = RenderTexUtil.Create(this.sourceImage.width, this.sourceImage.height, 24, RenderTextureFormat.ARGBFloat, true);
+        this.gradientY = RenderTexUtil.Create(this.sourceImage.width, this.sourceImage.height, 24, RenderTextureFormat.ARGBFloat, true);
 
         this.kernal = this.blendCS.FindKernel("Lap");
         this.solverKernal = this.blendCS.FindKernel("Solver");
@@ -88,9 +89,9 @@ public class PoissonEditing : MonoBehaviour
 
     IEnumerator Solver()
     {
-        while (count++ < 10000)
+        while (count++ < maxCount)
         {
-            yield return new WaitForSeconds(0.01f);        
+            yield return new WaitForEndOfFrame();
             //var size = new Vector2(1, 1);
             this.blendCS.SetTexture(this.solverKernal, "_SourceTex", this.outputImage);
             this.blendCS.SetTexture(this.solverKernal, "_LapTex", this.lapTex);
@@ -118,7 +119,8 @@ public class PoissonEditing : MonoBehaviour
         if(this.outputImage != null)
         {
             GUI.DrawTexture(new Rect(10, 10, this.outputImage.width, this.outputImage.height), this.outputImage);
-            GUI.DrawTexture(new Rect(10 + this.outputImage.width, 10, this.lapTex.width, this.lapTex.height), this.lapTex);
+            GUI.DrawTexture(new Rect(10 + this.outputImage.width, 10, 256, 256), this.targetImage);
+            GUI.DrawTexture(new Rect(10 + this.outputImage.width, 266, 256, 256), this.lapTex);
         }
     }
 }

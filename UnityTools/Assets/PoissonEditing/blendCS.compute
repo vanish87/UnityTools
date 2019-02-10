@@ -163,14 +163,7 @@ void Solver(uint3 id : SV_DispatchThreadID)
 				+ GetOutMaskValue(_SourceTex, _MaskTex, id.xy + _SizeOffset.zw)
 				+ GetOutMaskValue(_SourceTex, _MaskTex, id.xy - _SizeOffset.zw);
 
-			float3 sumLap = _LapTex[id.xy].rgb; 
-			
-			/*4 * _LapTex[id.xy].rgb
-				- _LapTex[id.xy + _SizeOffset.xy].rgb 
-				- _LapTex[id.xy - _SizeOffset.xy].rgb
-				- _LapTex[id.xy + _SizeOffset.zw].rgb;
-				- _LapTex[id.xy - _SizeOffset.zw].rgb;
-				*/
+			float sumLap = _LapTex[id.xy].rgb; 
 			float3 xk = (sumLap + outMask) - inMask;
 
 			result = xk * 0.25;
