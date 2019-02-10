@@ -1,0 +1,184 @@
+﻿// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel Lap
+#pragma kernel LapCombine
+#pragma kernel Solver
+#pragma kernel GradientX
+#pragma kernel GradientY
+
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+RWTexture2D<float4> _Result;
+RWTexture2D<float4> _LapTex;
+Texture2D<float4> _SourceTex;
+Texture2D<float4> _TargetTex;
+Texture2D<float4> _MaskTex;
+//float4 _SizeOffset;
+
+
+float3 GetInMaskValue(Texture2D<float4> valueTex, Texture2D<float4> maskTex, int2 uv)
+{
+	float3 value = valueTex[uv].rgb;
+	float3 mask = maskTex[uv].rgb;
+	if (mask.x > 0.5)
+	{
+		return value;
+	}
+	else
+	{
+		return 0;
+	}
+}
+
+float3 GetOutMaskValue(Texture2D<float4> valueTex, Texture2D<float4> maskTex, int2 uv)
+{
+	float3 value = valueTex[uv].rgb;
+	float3 mask = maskTex[uv].rgb;
+	if (mask.x > 0.5)
+	{
+		return 0;
+	}
+	else
+	{
+		return value;
+	}
+}
+
+[numthreads(1, 1, 1)]
+void GradientX(uint3 id : SV_DispatchThreadID)
+{
+	float4 mask = _MaskTex[id.xy];
+
+	uint4 _SizeOffset = uint4(1, 0, 0, 1);
+
+	float3 result = float3(0, 0, 0);
+	bool useMask = mask.x > 0.5 && id.y < 256;
+	if (useMask)
+	{
+		result = (_TargetTex[id.xy + _SizeOffset.xy] - _TargetTex[id.xy]).rgb;
+		//result += GetGradients(_TargetTex, id.xy, id.xy - _SizeOffset.xy);
+		//result += GetGradients(_TargetTex, id.xy, id.xy + _SizeOffset.zw);
+		//result += GetGradients(_TargetTex, id.xy, id.xy - _SizeOffset.zw);
+	}
+	else
+	{
+		result = (_SourceTex[id.xy + _SizeOffset.xy] - _SourceTex[id.xy]).rgb;
+		//result += GetGradients(_SourceTex, id.xy, id.xy - _SizeOffset.xy);
+		//result += GetGradients(_SourceTex, id.xy, id.xy + _SizeOffset.zw);
+		//result += GetGradients(_SourceTex, id.xy, id.xy - _SizeOffset.zw);
+	}
+	_Result[id.xy] = float4(result, 1.0);
+}
+
+[numthreads(1, 1, 1)]
+void GradientY(uint3 id : SV_DispatchThreadID)
+{
+	float4 mask = _MaskTex[id.xy];
+
+	uint4 _SizeOffset = uint4(1, 0, 0, 1);
+
+	float3 result = float3(0, 0, 0);
+	bool useMask = mask.x > 0.5 && id.y < 256;
+	if (useMask)
+	{
+		result = (_TargetTex[id.xy + _SizeOffset.zw] - _TargetTex[id.xy]).rgb;
+		//result += GetGradients(_TargetTex, id.xy, id.xy - _SizeOffset.xy);
+		//result += GetGradients(_TargetTex, id.xy, id.xy + _SizeOffset.zw);
+		//result += GetGradients(_TargetTex, id.xy, id.xy - _SizeOffset.zw);
+	}
+	else
+	{
+		result = (_SourceTex[id.xy + _SizeOffset.zw] - _SourceTex[id.xy]).rgb;
+		//result += GetGradients(_SourceTex, id.xy, id.xy - _SizeOffset.xy);
+		//result += GetGradients(_SourceTex, id.xy, id.xy + _SizeOffset.zw);
+		//result += GetGradients(_SourceTex, id.xy, id.xy - _SizeOffset.zw);
+	}
+	_Result[id.xy] = float4(result, 1.0);
+}
+
+[numthreads(1,1,1)]
+void LapCombine (uint3 id : SV_DispatchThreadID)
+{
+	float4 mask = _MaskTex[id.xy];
+
+	uint4 _SizeOffset = uint4(1, 0, 0, 1);
+
+	float3 result = float3(0, 0, 0);
+
+	float3 dx = _SourceTex[id.xy + _SizeOffset.xy] - _SourceTex[id.xy];
+	float3 dy = _TargetTex[id.xy + _SizeOffset.zw] - _TargetTex[id.xy];
+
+	_LapTex[id.xy] = float4(dx + dy, 1.0);
+}
+
+[numthreads(1, 1, 1)]
+void Lap(uint3 id : SV_DispatchThreadID)
+{
+	float3 result = float3(0, 0, 0);
+	float4 mask = _MaskTex[id.xy];
+	float4 source = _SourceTex[id.xy];
+
+	uint4 _SizeOffset = uint4(1, 0, 0, 1);
+	
+	bool useMask = mask.x > 0.5 && id.y < 256;
+	if (useMask)
+	{
+		result = _TargetTex[id.xy].rgb * 4
+			- _TargetTex[id.xy + _SizeOffset.xy].rgb
+			- _TargetTex[id.xy - _SizeOffset.xy].rgb
+			- _TargetTex[id.xy + _SizeOffset.zw].rgb
+			- _TargetTex[id.xy - _SizeOffset.zw].rgb;
+	}
+	else
+	{
+		result = _SourceTex[id.xy].rgb * 4
+			- _SourceTex[id.xy + _SizeOffset.xy].rgb
+			- _SourceTex[id.xy - _SizeOffset.xy].rgb
+			- _SourceTex[id.xy + _SizeOffset.zw].rgb
+			- _SourceTex[id.xy - _SizeOffset.zw].rgb;
+	}
+	_LapTex[id.xy] = float4(result, 1.0);
+	_Result[id.xy] = useMask ? float4(0, 0, 0, 1.0) : source;
+}
+
+[numthreads(1, 1, 1)]
+void Solver(uint3 id : SV_DispatchThreadID)
+{
+	uint4 _SizeOffset = uint4(1, 0, 0, 1);
+
+	float4 lap = _LapTex[id.xy];
+	float4 mask = _MaskTex[id.xy];
+	float4 source = _SourceTex[id.xy];
+	
+	float3 result = source.rgb;
+	{
+		if (mask.x > 0.5 && id.x > 0 && id.x < 512 - 1 && id.y > 0 && id.y < 512 - 1)
+		{
+			float3 inMask = -GetInMaskValue(_SourceTex, _MaskTex, id.xy + _SizeOffset.xy)
+				- GetInMaskValue(_SourceTex, _MaskTex, id.xy - _SizeOffset.xy)
+				- GetInMaskValue(_SourceTex, _MaskTex, id.xy + _SizeOffset.zw)
+				- GetInMaskValue(_SourceTex, _MaskTex, id.xy - _SizeOffset.zw);
+
+			float3 outMask = GetOutMaskValue(_SourceTex, _MaskTex, id.xy + _SizeOffset.xy)
+				+ GetOutMaskValue(_SourceTex, _MaskTex, id.xy - _SizeOffset.xy)
+				+ GetOutMaskValue(_SourceTex, _MaskTex, id.xy + _SizeOffset.zw)
+				+ GetOutMaskValue(_SourceTex, _MaskTex, id.xy - _SizeOffset.zw);
+
+			float3 sumLap = _LapTex[id.xy].rgb; 
+			
+			/*4 * _LapTex[id.xy].rgb
+				- _LapTex[id.xy + _SizeOffset.xy].rgb 
+				- _LapTex[id.xy - _SizeOffset.xy].rgb
+				- _LapTex[id.xy + _SizeOffset.zw].rgb;
+				- _LapTex[id.xy - _SizeOffset.zw].rgb;
+				*/
+			float3 xk = (sumLap + outMask) - inMask;
+
+			result = xk * 0.25;
+			
+		}
+
+
+	}
+
+	_Result[id.xy] = float4(result, 1.0);
+}
