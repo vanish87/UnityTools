@@ -54,14 +54,14 @@ void GradientX(uint3 id : SV_DispatchThreadID)
 	bool useMask = mask.x > 0.5 && id.y < 256;
 	if (useMask)
 	{
-		result = (_TargetTex[id.xy + _SizeOffset.xy] - _TargetTex[id.xy]).rgb;
+		result = (_TargetTex[id.xy] - _TargetTex[id.xy + _SizeOffset.xy]).rgb;
 		//result += GetGradients(_TargetTex, id.xy, id.xy - _SizeOffset.xy);
 		//result += GetGradients(_TargetTex, id.xy, id.xy + _SizeOffset.zw);
 		//result += GetGradients(_TargetTex, id.xy, id.xy - _SizeOffset.zw);
 	}
 	else
 	{
-		result = (_SourceTex[id.xy + _SizeOffset.xy] - _SourceTex[id.xy]).rgb;
+		result = (_SourceTex[id.xy] - _SourceTex[id.xy + _SizeOffset.xy]).rgb;
 		//result += GetGradients(_SourceTex, id.xy, id.xy - _SizeOffset.xy);
 		//result += GetGradients(_SourceTex, id.xy, id.xy + _SizeOffset.zw);
 		//result += GetGradients(_SourceTex, id.xy, id.xy - _SizeOffset.zw);
@@ -80,14 +80,14 @@ void GradientY(uint3 id : SV_DispatchThreadID)
 	bool useMask = mask.x > 0.5 && id.y < 256;
 	if (useMask)
 	{
-		result = (_TargetTex[id.xy + _SizeOffset.zw] - _TargetTex[id.xy]).rgb;
+		result = (_TargetTex[id.xy]- _TargetTex[id.xy + _SizeOffset.zw]).rgb;
 		//result += GetGradients(_TargetTex, id.xy, id.xy - _SizeOffset.xy);
 		//result += GetGradients(_TargetTex, id.xy, id.xy + _SizeOffset.zw);
 		//result += GetGradients(_TargetTex, id.xy, id.xy - _SizeOffset.zw);
 	}
 	else
 	{
-		result = (_SourceTex[id.xy + _SizeOffset.zw] - _SourceTex[id.xy]).rgb;
+		result = (_SourceTex[id.xy] - _SourceTex[id.xy + _SizeOffset.zw]).rgb;
 		//result += GetGradients(_SourceTex, id.xy, id.xy - _SizeOffset.xy);
 		//result += GetGradients(_SourceTex, id.xy, id.xy + _SizeOffset.zw);
 		//result += GetGradients(_SourceTex, id.xy, id.xy - _SizeOffset.zw);
@@ -104,8 +104,8 @@ void LapCombine (uint3 id : SV_DispatchThreadID)
 
 	float3 result = float3(0, 0, 0);
 
-	float3 dx = _SourceTex[id.xy + _SizeOffset.xy] - _SourceTex[id.xy];
-	float3 dy = _TargetTex[id.xy + _SizeOffset.zw] - _TargetTex[id.xy];
+	float3 dx = _SourceTex[id.xy] - _SourceTex[id.xy + _SizeOffset.xy];
+	float3 dy = _TargetTex[id.xy] - _TargetTex[id.xy + _SizeOffset.zw];
 
 	_LapTex[id.xy] = float4(dx + dy, 1.0);
 }
@@ -153,24 +153,22 @@ void Solver(uint3 id : SV_DispatchThreadID)
 	{
 		if (mask.x > 0.5 && id.x > 0 && id.x < 512 - 1 && id.y > 0 && id.y < 512 - 1)
 		{
+			//Rx(k)
 			float3 inMask = -GetInMaskValue(_SourceTex, _MaskTex, id.xy + _SizeOffset.xy)
 				- GetInMaskValue(_SourceTex, _MaskTex, id.xy - _SizeOffset.xy)
 				- GetInMaskValue(_SourceTex, _MaskTex, id.xy + _SizeOffset.zw)
 				- GetInMaskValue(_SourceTex, _MaskTex, id.xy - _SizeOffset.zw);
-
+			
 			float3 outMask = GetOutMaskValue(_SourceTex, _MaskTex, id.xy + _SizeOffset.xy)
 				+ GetOutMaskValue(_SourceTex, _MaskTex, id.xy - _SizeOffset.xy)
 				+ GetOutMaskValue(_SourceTex, _MaskTex, id.xy + _SizeOffset.zw)
 				+ GetOutMaskValue(_SourceTex, _MaskTex, id.xy - _SizeOffset.zw);
 
-			float sumLap = _LapTex[id.xy].rgb; 
-			float3 xk = (sumLap + outMask) - inMask;
 
-			result = xk * 0.25;
+			float3 xk = (_LapTex[id.xy].rgb + outMask)/*b*/ - inMask/*Rx(k)*/;
 			
+			result = xk * 0.25/*D-1*/;			
 		}
-
-
 	}
 
 	_Result[id.xy] = float4(result, 1.0);

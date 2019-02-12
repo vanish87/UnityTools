@@ -63,15 +63,15 @@ public class PoissonEditing : MonoBehaviour
         this.blendCS.Dispatch(gy, this.sourceImage.width, this.sourceImage.height, 1);
 
 
-        /* 
-        var lapc = this.blendCS.FindKernel("LapCombine");
-         this.blendCS.SetTexture(lapc, "_SourceTex", this.gradientX);
-         this.blendCS.SetTexture(lapc, "_TargetTex", this.gradientY);
-         this.blendCS.SetTexture(lapc, "_MaskTex", this.maskImage);
-         this.blendCS.SetTexture(lapc, "_LapTex", this.lapTex);
-         this.blendCS.Dispatch(lapc, this.sourceImage.width, this.sourceImage.height, 1);
-         Graphics.Blit(this.sourceImage, this.outputImage);
-         */
+        /*
+       var lapc = this.blendCS.FindKernel("LapCombine");
+        this.blendCS.SetTexture(lapc, "_SourceTex", this.gradientX);
+        this.blendCS.SetTexture(lapc, "_TargetTex", this.gradientY);
+        this.blendCS.SetTexture(lapc, "_MaskTex", this.maskImage);
+        this.blendCS.SetTexture(lapc, "_LapTex", this.lapTex);
+        this.blendCS.Dispatch(lapc, this.sourceImage.width, this.sourceImage.height, 1);
+        Graphics.Blit(this.sourceImage, this.outputImage);
+       */
 
         this.blendCS.SetTexture(this.kernal, "_SourceTex", this.sourceImage);
         this.blendCS.SetTexture(this.kernal, "_TargetTex", this.targetImage);
@@ -119,8 +119,14 @@ public class PoissonEditing : MonoBehaviour
         if(this.outputImage != null)
         {
             GUI.DrawTexture(new Rect(10, 10, this.outputImage.width, this.outputImage.height), this.outputImage);
-            GUI.DrawTexture(new Rect(10 + this.outputImage.width, 10, 256, 256), this.targetImage);
+            GUI.DrawTexture(new Rect(10 + this.outputImage.width, 10, 256, 128), this.targetImage);
+            GUI.DrawTexture(new Rect(10 + this.outputImage.width, 138, 256, 128), this.maskImage);
+            
             GUI.DrawTexture(new Rect(10 + this.outputImage.width, 266, 256, 256), this.lapTex);
+
+            GUILayout.BeginArea(new Rect(10, 10, 100, 100));
+            GUILayout.TextField(this.count.ToString());
+            GUILayout.EndArea();
         }
     }
 }
