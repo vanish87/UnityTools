@@ -38,9 +38,10 @@ namespace Network
                     {
                         //this.gameObject.transform.Rotate(Vector3.right * (data.deltaTime) * 20);
                         var timeInSecond = (float)deltaThisFrame * 0.001f;
+                        var timeTick = data.deltaTime;
                         this.gameObject.transform.localPosition = new Vector3(
                             transform.localPosition.x, 
-                            Mathf.Sin(sin += Mathf.Abs(timeInSecond)) * 5, 
+                            Mathf.Sin(sin += timeTick) * 5, 
                             transform.localPosition.z);
 
                         currentDalta += timeInSecond + data.deltaTime;
@@ -54,7 +55,7 @@ namespace Network
                 }
             }
 
-            if (currentDalta > 0)
+            if (currentDalta > 0 && false)
             {
                 var tickTime = Mathf.Min(Time.deltaTime, (float)currentDalta);
                 this.gameObject.transform.localPosition = new Vector3(
@@ -70,7 +71,11 @@ namespace Network
         {
             //this.socket.Server(12345);
             //this.StartCoroutine(this.Broadcast());
-            this.socket.StartRecieve(12346);
+            this.socket.StartRecieve(12347);
+        }
+        private void OnDestroy()
+        {
+            this.socket.Disconnect();
         }
 
         /*IEnumerator Broadcast()

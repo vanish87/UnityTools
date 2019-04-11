@@ -1,0 +1,32 @@
+﻿// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel Random
+
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+RWTexture2D<float4> Result;
+
+float wang_hash01(uint seed)
+{
+	seed = (seed ^ 61) ^ (seed >> 16);
+	seed *= 9;
+	seed = seed ^ (seed >> 4);
+	seed *= 0x27d4eb2d;
+	seed = seed ^ (seed >> 15);
+	return float(seed) / 4294967295.0; // 2^32-1
+}
+
+[numthreads(8,8,1)]
+void Random(uint3 id : SV_DispatchThreadID)
+{
+	// TODO: insert actual code here!
+	float w, h;
+	Result.GetDimensions(w, h);
+	float random = wang_hash01(id.x + id.y * w);
+
+	random = random > 0.99 ? 1 : 0;
+	Result[id.xy] = float4(random, 0, 0, 1);
+
+	//Result[id.xy] = float4(id.x / 512.0, id.y / 512.0, 0, 1);
+}
+
+

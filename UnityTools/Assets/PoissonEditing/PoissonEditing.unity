@@ -145,13 +145,14 @@ MonoBehaviour:
   targetImage: {fileID: 2800000, guid: 352a4a237acf2d543bc67621d19817e2, type: 3}
   maskImage: {fileID: 2800000, guid: f9908767c021baf428ad8f691a98d2c8, type: 3}
   lapTex: {fileID: 0}
+  sourceLapTex: {fileID: 0}
   outputImage: {fileID: 0}
   outputImage1: {fileID: 0}
   gradientX: {fileID: 0}
   gradientY: {fileID: 0}
   blendCS: {fileID: 7200000, guid: afefeaae507f29d45ab63746c178ec25, type: 3}
   count: 0
-  maxCount: 50000
+  maxCount: 5000
 --- !u!4 &99709660
 Transform:
   m_ObjectHideFlags: 0

@@ -10,6 +10,7 @@ public class PoissonEditing : MonoBehaviour
     [SerializeField] protected Texture2D targetImage = null;
     [SerializeField] protected Texture2D maskImage = null;
     [SerializeField] protected RenderTexture lapTex = null;
+    [SerializeField] protected RenderTexture sourceLapTex = null;
     [SerializeField] protected RenderTexture outputImage = null;
     [SerializeField] protected RenderTexture outputImage1 = null;
 
@@ -38,6 +39,7 @@ public class PoissonEditing : MonoBehaviour
         this.outputImage = RenderTexUtil.Create(this.sourceImage.width, this.sourceImage.height, 24, RenderTextureFormat.ARGBFloat, true);
         this.outputImage1 = RenderTexUtil.Create(this.sourceImage.width, this.sourceImage.height, 24, RenderTextureFormat.ARGBFloat, true);
         this.lapTex = RenderTexUtil.Create(this.sourceImage.width, this.sourceImage.height, 24, RenderTextureFormat.ARGBFloat, true);
+        this.sourceLapTex = RenderTexUtil.Create(this.sourceImage.width, this.sourceImage.height, 24, RenderTextureFormat.ARGBFloat, true);
 
 
         this.gradientX = RenderTexUtil.Create(this.sourceImage.width, this.sourceImage.height, 24, RenderTextureFormat.ARGBFloat, true);
@@ -78,10 +80,11 @@ public class PoissonEditing : MonoBehaviour
         this.blendCS.SetTexture(this.kernal, "_MaskTex", this.maskImage);
         this.blendCS.SetTexture(this.kernal, "_Result", this.outputImage);
         this.blendCS.SetTexture(this.kernal, "_LapTex", this.lapTex);
+        this.blendCS.SetTexture(this.kernal, "_SourceLapTex", this.sourceLapTex);
         this.blendCS.Dispatch(this.kernal, this.sourceImage.width, this.sourceImage.height, 1);
 
 
-        Graphics.Blit(this.sourceImage, this.outputImage);
+        //Graphics.Blit(this.sourceImage, this.outputImage);
 
 
         this.StartCoroutine(Solver());
@@ -91,9 +94,10 @@ public class PoissonEditing : MonoBehaviour
     {
         while (count++ < maxCount)
         {
-            yield return new WaitForEndOfFrame();
+            //yield return new WaitForEndOfFrame();
             //var size = new Vector2(1, 1);
             this.blendCS.SetTexture(this.solverKernal, "_SourceTex", this.outputImage);
+            this.blendCS.SetTexture(this.solverKernal, "_SourceLapTex", this.sourceLapTex);
             this.blendCS.SetTexture(this.solverKernal, "_LapTex", this.lapTex);
             this.blendCS.SetTexture(this.solverKernal, "_MaskTex", this.maskImage);
             this.blendCS.SetTexture(this.solverKernal, "_Result", this.outputImage1);

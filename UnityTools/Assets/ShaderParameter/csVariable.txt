@@ -1,0 +1,771 @@
+﻿// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel InitData
+#pragma kernel Force
+#pragma kernel Integrate
+
+#include "MBSFishData.cginc"
+#include "Assets/Common/Shaders/Libs/PhotoshopMath.cginc"
+#include "Assets/Mangrove/Shaders/Common/SignedDistanceField.hlsl"
+#include "Assets/Mangrove/Shaders/Common/Particle.hlsl"
+
+#define SIMULATION_BLOCK_SIZE 256
+
+// ----------------------------------------------------------------------------
+// StructuredBuffer
+// ----------------------------------------------------------------------------
+StructuredBuffer<BoidData>   _BoidDataBufferRead;
+RWStructuredBuffer<BoidData> _BoidDataBufferWrite;
+StructuredBuffer<float3>     _BoidForceBufferRead;
+RWStructuredBuffer<float3>   _BoidForceBufferWrite;
+StructuredBuffer<float4>	 _FlowGridBufferRead;
+
+int _MaxBoidObjectNum;
+
+float _TimeStep = 100;
+float _Time, date1 = 0f,fata2 = 0.1f;
+
+float _CohesionNeighborhoodRadius;
+float _AlignmentNeighborhoodRadius;
+float _SeparateNeighborhoodRadius;
+float _AvoidEnemyNeighborhoodRadius;
+float _FriendNeighborhoodRadius;
+
+float _MaxSteerForce;
+
+float _SeparateWeight;
+float _CohesionWeight;
+float _AlignmentWeight;
+float _AccelerationWeight;
+float _FlowWeight;
+float _AvoidEnemyWeight;
+float _AvoidVerticalEnemyWeight;
+float _FriendWeight;
+float _FriendRotateWeight;
+
+float4 _WallCenter;
+float4 _WallSize;
+float  _AvoidWallWeight;
+
+float  _WaterLevel;
+float  _WaterLevelValue;
+
+float4x4 _MVP;
+float4 _FloorScale;
+Texture2D<float4> _UVField;
+Texture2D<float4> _UpVectorField;
+
+float _VelocityMin;
+float _VelocityMax;
+
+float _AnimeTimeStep;
+float _EyeSightRange;
+
+float _FlowGridDivNum;
+float4 _FlowGridNum;
+float4 _InvFlowGridNum;
+float _FlowPatternRatio;
+
+float4 _BaseColor;
+
+Texture2D<float4> _EnemyTex;	// normal, height, distance
+Texture2D<float4> _EnemyTex2;	// velocity, tangent
+
+Texture2D<float4> _FriendTex;	// normal, height, distance
+Texture2D<float4> _FriendTex2;	// velocity, tangent
+
+Texture2D<float4> _FluidTex;
+
+float4x4 _ViewMatrix;
+float _CameraOrthographicSize;
+
+float4 _ColorMax;
+float _ColorReturnSpeed;
+
+float _ColorAddSpeed;	// 色を足す速度
+
+float4 _AccelerationScale;
+
+float _SpeedK = 0.1f;
+
+float _BurstSpeed;
+float _HumanDepth;
+float2 _SizeRange;
+
+float _VelocityMaxNoisePower;
+
+float2 _DepthPerAlphaRange;
+
+float4 _WorldParameter;
+//RWStructuredBuffer<Particle> _ParticlesBuffer;
+#define PI 3.141592653359
+
+// 座標から対流グリッドの各次元のインデックスを取得
+float3 GetFlowGridIndex(float3 position) {
+	float limit = _FlowGridDivNum - 1;
+	return clamp((position + _WallSize.xyz * 0.5f) * _InvFlowGridNum, float3(0, 0, 0), float3(limit, limit, limit));
+}
+
+uint GetFlowGridKey(uint3 xyz) {
+	return xyz.z * _FlowGridDivNum * _FlowGridDivNum + xyz.y * _FlowGridDivNum + xyz.x;
+}
+
+// 座標からグリッド番号を取得
+// -_WallSize～_WallSizeなので正の値になるように補正している
+uint GetFlowGridHash(float3 position) {
+	return GetFlowGridKey((uint3)GetFlowGridIndex(position));
+}
+
+// ワールド座標がビューポート範囲内か
+bool CheckWortlPosToViewport(float3 position, float4x4 vp) {
+	float4 pos = mul(vp, float4(position, 1));
+
+	return all(abs(pos.xyz / pos.w) < 1);
+}
+
+// 座標からUV座標取得
+float2 GetWorldPosToUV(float3 position, float4x4 vp) {
+	float3 pos = mul(vp, position);
+	float2 uv = float2(pos.x * 0.5 + 0.5, pos.y * 0.5 + 0.5);
+
+	return uv;
+}
+
+// UV座標からテクスチャのカラーを取得
+float4 GetUVToColor(float2 uv, Texture2D<float4> tex, SamplerState samplerState) {
+	float4 color = tex.SampleLevel(samplerState, uv, 0);
+
+	return color;
+}
+
+// 座標からテクスチャのカラーを取得
+float4 GetWorldPosToColor(float3 position, Texture2D<float4> tex, SamplerState samplerState, float4x4 vp) {
+	float2 uv = GetWorldPosToUV(position, vp);
+	float4 color = tex.SampleLevel(samplerState, uv, 0);
+
+	return color;
+}
+
+// 座標から対流ベクトル取得（補完付き）
+float4 GetWorldPosToFlow(float3 position) {
+	float3 pos = position;
+	float3 pos2 = pos + _FlowGridNum;
+	float3 ratio = frac(GetFlowGridIndex(pos));
+
+	float4 grid1 = _FlowGridBufferRead[GetFlowGridHash(pos)];
+	float4 grid2 = _FlowGridBufferRead[GetFlowGridHash(pos2)];
+
+	return lerp(grid1, grid2, ratio.xyzz);
+	//return lerp(grid1, grid2, ratio);
+}
+
+float3 limit(float3 vec, float max)
+{
+	float lengthSquared = (vec.x * vec.x + vec.y * vec.y + vec.z * vec.z);
+	if (lengthSquared > max * max && lengthSquared > 0) {
+		float ratio = max / (float)sqrt(lengthSquared);
+		vec.x *= ratio;
+		vec.y *= ratio;
+		vec.z *= ratio;
+	}
+	return vec;
+}
+
+float3 avoidSDF(in float3 position)
+{
+	float4 proj = mul(_MVP, float4(position.xyz, 1));
+	float2 uv = (proj.xy + 1.0) * 0.5;
+
+	float2 v = gradient(uv);
+	return float3(v, 0);
+}
+
+//apply force to keep boid swimming to wall and move left/right on wall
+float4 SwimingUpToWall(inout float3 position, in float4 flow)
+{
+	float2 uv = GetWorldPosToUV(position, _MVP);
+
+	float maxHeight = clamp(_WaterLevelValue, 0.5, 0.75);
+	//b chanel is [0,1] from floor to ceil
+	float boidHeight = _UVField.SampleLevel(_PointClamp, uv, 0).b;
+	//we need to swimming to mid of maxHeight
+	float4 upForce = float4(1, (maxHeight - boidHeight) * 15, 1, 1);
+
+	//increse flow up and decrease flow down
+	if (flow.y > 0)
+	{
+		flow *= upForce;
+	}
+	else
+	{
+		flow.y *= 0.5;
+	}
+
+	float hor = sin(_Time * 0.05);
+	float4 center = float4(2 * boidHeight * hor + 0.1 * sign(hor), 0, 0, 0);
+	flow += center;
+
+	return flow;
+}
+
+float GetSizeWithDepth(float3 position)
+{
+	float3 wc = _WallCenter.xyz;
+	float3 ws = _WallSize.xyz * 0.5f;
+
+	float4 proj = mul(_MVP, float4(position.xyz, 1));
+	float2 uv = (proj.xy + 1.0) * 0.5;
+	float isFloor = 1 - _UVField.SampleLevel(_PointClamp, uv, 0).b;
+
+	float size = lerp(_SizeRange.x, _SizeRange.y, (position.z - (wc.z - ws.z)) / _WallSize.z);	// 深さで大きさ変える
+	return size * isFloor;
+}
+
+
+float3 ApplyWallResist(float3 position, float3 max, float3 min)
+{
+	float3 deltaMax = position - max;
+	float3 deltaMin = position - min;
+
+	float lengthMax = length(deltaMax);
+	float lengthMin = length(deltaMin);
+
+	float clampLength = 40;
+	if (lengthMax > clampLength || lengthMin > clampLength)
+	{
+		return float3(0, 0, 0);
+	}
+
+	float3 acc = 1 / deltaMax;
+	acc += 1 / deltaMin;
+	acc = clamp(acc, float3(-10, -20, 2), float3(10, 20, 2));
+	acc.z = 0;
+	return acc;
+}
+// 壁に当たったら跳ね返る
+float3 avoidWall(inout float3 position, float3 velocity)
+{
+	float3 wc = _WallCenter.xyz;
+	float3 ws = _WallSize.xyz * 0.5f;
+	float3 acc = float3(0, 0, 0);
+	// x
+	if (position.x < wc.x - ws.x)
+	{
+		acc.x += 1.0f;
+		position.x = wc.x - ws.x;
+	}
+	if (position.x > wc.x + ws.x)
+	{
+		acc.x -= 1.0f;
+		position.x = wc.x + ws.x;
+	}
+	// y
+	if (position.y < wc.y - ws.y)
+	{
+		acc.y += 1.0f;
+		position.y = wc.y - ws.y;
+	}
+	if (position.y > wc.y + ws.y)
+	{
+		acc.y -= 1.0f;
+		position.y = wc.y + ws.y;
+	}
+	// z
+	if (position.z < wc.z - ws.z)
+	{
+		acc.z += 1.0f;
+		position.z = wc.z - ws.z;
+	}
+	if (position.z > wc.z + ws.z)
+	{
+		acc.z -= 1.0f;
+		position.z = wc.z + ws.z;
+	}
+
+	float3 max = wc + ws;
+	max.y = min(max.y, _WaterLevel);
+	float3 min = wc - ws;
+	//acc += ApplyWallResist(position, max, min) * length(velocity) * 0.03;
+
+	return acc;
+}
+
+float4 eulerToQuaternion(float3 axis, float angle) {
+	return float4 (
+		axis.x * sin(angle * 0.5),
+		axis.y * sin(angle * 0.5),
+		axis.z * sin(angle * 0.5),
+		cos(angle * 0.5)
+		);
+}
+
+float4 qmul(float4 a, float4 b) {
+	return float4(a.w * b.xyz + b.w * a.xyz + cross(a.xyz, b.xyz), a.w * b.w - dot(a.xyz, b.xyz));
+}
+
+float4 slerp(float4 from, float4 to, float t) {
+	float cos_theta = dot(from, to);
+	float theta = acos(cos_theta);
+	float sin_theta = sin(theta);
+	if (sin_theta <= 0.0000001)
+		return to;
+
+	float w1 = sin((1.0 - t) * theta) / sin_theta;
+	float w2 = sin(t * theta) / sin_theta;
+
+	return from * w1 + to * w2;
+}
+
+float3 slerp(float3 from, float3 to, float t) {
+	float cos_theta = dot(from, to);
+	float theta = acos(cos_theta);
+	float sin_theta = sin(theta);
+	if (sin_theta <= 0.0000001)
+		return to;
+
+	float w1 = sin((1.0 - t) * theta) / sin_theta;
+	float w2 = sin(t * theta) / sin_theta;
+
+	return from * w1 + to * w2;
+}
+
+
+// --------------------------------------------------------------------------------
+// Init
+// --------------------------------------------------------------------------------
+[numthreads(SIMULATION_BLOCK_SIZE, 1, 1)]
+void InitData(uint3 DTid : SV_DispatchThreadID,
+	uint3 Gid : SV_GroupID,
+	uint3 GTid : SV_GroupThreadID,
+	uint  GI : SV_GroupIndex
+)
+{
+	int idx = DTid.x;
+	_BoidDataBufferWrite[idx].velocity = float3(0, 0, 0);
+	_BoidDataBufferWrite[idx].position = float3(0, 0, 0);
+	_BoidDataBufferWrite[idx].rotation = float4(0, 0, 0, 0);
+	_BoidDataBufferWrite[idx].size = 1;
+}
+
+// 総当り版
+groupshared struct { float3 velocity; float3 position; } force_boid_data[SIMULATION_BLOCK_SIZE];
+[numthreads(SIMULATION_BLOCK_SIZE, 1, 1)]
+void Force(uint3 DTid : SV_DispatchThreadID,
+	uint3 Gid : SV_GroupID,
+	uint3 GTid : SV_GroupThreadID,
+	uint  GI : SV_GroupIndex
+)
+{
+	const unsigned int P_ID = DTid.x;
+	float3 P_position = _BoidDataBufferRead[P_ID].position;
+	float3 P_velocity = _BoidDataBufferRead[P_ID].velocity;
+
+
+	float4 proj = mul(_MVP, float4(P_position.xyz, 1));
+	float2 uv = (proj.xy + 1.0) * 0.5;
+	float3 P_uv_position = _UVField.SampleLevel(_PointClamp, uv, 0).rgb;
+
+	float3 acceleration = float3(0, 0, 0);
+
+	[loop]
+	for (uint N_block_ID = 0; N_block_ID < (uint)_MaxBoidObjectNum; N_block_ID += SIMULATION_BLOCK_SIZE)
+	{
+		force_boid_data[GI].velocity = _BoidDataBufferRead[N_block_ID + GI].velocity;
+		force_boid_data[GI].position = _BoidDataBufferRead[N_block_ID + GI].position;
+
+		float3 sepPosSum = float3(0, 0, 0);
+
+		float3 aliVelSum = float3(0, 0, 0);
+		int aliCount = 0;
+
+		float3 cohPosSum = float3(0, 0, 0);
+		float3 cohSteer = float3(0, 0, 0);
+		int cohCount = 0;
+
+		GroupMemoryBarrierWithGroupSync();
+
+		//[unroll]
+		for (int N_tile_ID = 0; N_tile_ID < SIMULATION_BLOCK_SIZE; N_tile_ID++)
+		{
+			if (N_tile_ID == P_ID) continue;
+
+			float3 N_position = force_boid_data[N_tile_ID].position;
+			float3 N_velocity = force_boid_data[N_tile_ID].velocity;
+
+			float4 proj = mul(_MVP, float4(N_position.xyz, 1));
+			float2 uv = (proj.xy + 1.0) * 0.5;
+			float3 N_uv_position = _UVField.SampleLevel(_PointClamp, uv, 0).rgb;
+
+			float3 diff = P_position - N_position;
+			bool isSameFloor = false;// N_uv_position.b <= 0 && P_uv_position.b <= 0;
+			if (isSameFloor)
+			{
+				_FloorScale *= 0.01;
+				P_uv_position.b = N_uv_position.b = 0;
+				diff = (P_uv_position * _FloorScale) - (N_uv_position * _FloorScale);
+			}
+
+			// 視界範囲チェック
+			float eyesight = dot(normalize(P_velocity), normalize(diff));
+			if (eyesight < _EyeSightRange) continue;
+
+			float  r_sq = sqrt(dot(diff, diff));
+
+			// --- Separation ---
+			//sepPosSum += (r_sq > 0.0 && r_sq <= _SeparateNeighborhoodRadius) ? (normalize(diff) / r_sq) : float3(0, 0, 0);
+			if (r_sq > 0.0 && r_sq <= _SeparateNeighborhoodRadius)
+			{
+				float3 sepRepulse = diff;
+				sepRepulse = normalize(sepRepulse);
+				sepRepulse /= r_sq;
+				sepPosSum += normalize(diff) / r_sq;
+			}
+
+
+			// --- Alignment ---
+			//bool isAl = (r_sq > 0.0 && r_sq <= _AlignmentNeighborhoodRadius);
+			//aliVelSum += (isAl) ? N_velocity : float3(0, 0, 0);
+			//aliCount = (isAl) ? aliCount + 1 : aliCount;
+			if (r_sq > 0.0 && r_sq <= _AlignmentNeighborhoodRadius)
+			{
+				aliVelSum += N_velocity;
+				aliCount++;
+			}
+
+
+			// --- Cohesion ---
+			//bool isCo = (r_sq > 0.0 && r_sq <= _CohesionNeighborhoodRadius);
+			//cohPosSum += (isCo) ? N_position : float3(0, 0, 0);
+			//cohCount = (isCo) ? cohCount + 1 : cohCount;
+			if (r_sq > 0.0 && r_sq <= _CohesionNeighborhoodRadius)
+			{
+				cohPosSum += N_position;
+				cohCount++;
+			}
+
+		}
+
+		GroupMemoryBarrierWithGroupSync();
+
+		acceleration += sepPosSum * _SeparateWeight;
+
+		//acceleration += (aliCount > 0) ? normalize(aliVelSum / (float)aliCount) * _AlignmentWeight : float3(0, 0, 0);
+		if (aliCount > 0)
+		{
+			aliVelSum /= (float)aliCount;
+			//aliVelSum = limit(aliVelSum, _MaxSteerForce);
+			aliVelSum = normalize(aliVelSum);
+			acceleration += aliVelSum * _AlignmentWeight;
+		}
+
+		//acceleration += (cohCount > 0) ? normalize(cohPosSum / (float)cohCount - P_position) * _CohesionWeight : float3(0, 0, 0);
+		if (cohCount > 0)
+		{
+			cohPosSum /= (float)cohCount;
+			cohSteer = normalize(cohPosSum - P_position);
+			//cohSteer = cohPosSum - P_position;
+			//cohSteer = limit(cohSteer, _MaxSteerForce);
+			acceleration += cohSteer * _CohesionWeight;
+		}
+
+		//float3 alignment = aliVelSum;
+		//float3 cohesion = cohSteer;
+		//float3 separate = sepPosSum;
+
+		//acceleration += alignment * _AlignmentWeight;
+		//acceleration += cohesion  * _CohesionWeight;
+		//acceleration += separate  * _SeparateWeight;
+		////acceleration = limit(acceleration, _MaxSteerForce);
+	}
+
+	// 縦方向の移動を抑える
+	//acceleration.y *= 0.25;
+	acceleration *= _AccelerationScale;
+
+	_BoidForceBufferWrite[P_ID] = acceleration * _AccelerationWeight;
+}
+//TODO use Quaternion.hlsl
+float3 rotate_vector_by_quaternion(const float3 v, const float4 q)
+{
+	// Extract the vector part of the quaternion
+	float3 u = float3(q.x, q.y, q.z);
+
+	// Extract the scalar part of the quaternion
+	float s = q.w;
+
+	// Do the math
+	return  2.0f * dot(u, v) * u
+		+ (s*s - dot(u, u)) * v
+		+ 2.0f * s * cross(u, v);
+}
+
+float3 GetProjectionInPlane(float3 v, float3 normal)
+{
+	normal = normalize(normal);
+	return v - (length(v) * dot(normal, normalize(v))) * normal;
+}
+
+float4 GetRotation(float3 newForward, float3 forward)
+{
+	newForward = normalize(newForward);
+	forward = normalize(forward);
+	float angle = dot(forward, newForward);
+
+	if (abs(angle - (-1.0f)) < 0.000001f)
+	{
+		return float4(0, 1, 0, PI);
+	}
+	if (abs(angle - (1.0f)) < 0.000001f)
+	{
+		return float4(0, 0, 0, 1);
+	}
+
+	float rotAngle = acos(angle);
+	float3 rotAxis = cross(forward, newForward);
+	rotAxis = normalize(rotAxis);
+
+	return eulerToQuaternion(rotAxis, rotAngle);
+}
+
+float4 GetRotationByUp(float3 newUp, float3 up, float3 velocity, float3 forward)
+{
+	//newUp = float3(0, 0, -1);
+	float4 upRotation = GetRotation(newUp, up);
+	//return upRotation;
+	float3 newForward = rotate_vector_by_quaternion(forward, upRotation);
+
+	//newForward = float3(0, 1, 0);
+	//newForward = forward;
+
+	float3 normal = normalize(newUp);
+	float3 leftRightProjection = GetProjectionInPlane(velocity, normal);
+
+	leftRightProjection = normalize(leftRightProjection);
+	newForward = normalize(newForward);
+	float angle = dot(leftRightProjection, newForward);
+
+	float3 detNormal = cross(leftRightProjection, newForward);
+	float det = dot(newUp, detNormal);
+	//det = determinant(float3x3(leftRightProjection, newForward, float3(0, 1, 0)));
+
+	//det = dot(float3(0, 1, 0), float3(1, 1, 0));
+	//det = length(detNormal);
+	det = -sign(det);
+
+	float4 rotationLeftRight = eulerToQuaternion(float3(0, 1, 0), acos(angle)*det);
+
+	//return qmul(upRotation, rotationLeftRight);
+
+	float3 upDownNormal = cross(newUp, leftRightProjection);
+	float3 upDownProjection = GetProjectionInPlane(velocity, upDownNormal);
+	float upDownAngle = dot(upDownProjection, leftRightProjection);
+
+
+	detNormal = cross(upDownProjection, leftRightProjection);
+	det = dot(upDownNormal, detNormal);
+	det = -sign(det);
+
+	float4 rotationUpDown = eulerToQuaternion(float3(1, 0, 0), acos(upDownAngle) *det);
+
+	return qmul(upRotation, qmul(rotationLeftRight, rotationUpDown));
+}
+
+
+// --------------------------------------------------------------------------------
+// Integrate
+// --------------------------------------------------------------------------------
+[numthreads(SIMULATION_BLOCK_SIZE, 1, 1)]
+void Integrate(uint3 DTid : SV_DispatchThreadID,
+	uint3 Gid : SV_GroupID,
+	uint3 GTid : SV_GroupThreadID,
+	uint  GI : SV_GroupIndex
+)
+{
+	const unsigned int P_ID = DTid.x;
+
+	float3 velocity = _BoidDataBufferRead[P_ID].velocity;
+	float3 position = _BoidDataBufferRead[P_ID].position;
+	float3 acceleration = _BoidForceBufferRead[P_ID];
+	float animeTime = _BoidDataBufferRead[P_ID].animeTime;
+	float speed = _BoidDataBufferRead[P_ID].speed;
+	float oldSpeed = speed;
+
+	float3 wc = _WallCenter.xyz;
+	float3 ws = _WallSize.xyz * 0.5f;
+
+	// 対流の影響
+	//float3 flow = _FlowGridBufferRead[GetFlowGridHash(position)];
+	float4 flow = GetWorldPosToFlow(position);
+	//flow = SwimingUpToWall(position, flow);
+	acceleration += flow * _FlowWeight;
+	acceleration += avoidWall(position, velocity) * _AvoidWallWeight + velocity * _AvoidWallWeight;
+	acceleration += avoidSDF(position) * _AvoidWallWeight + velocity * _AvoidWallWeight;
+
+	// 障害物避け
+	float3 avoidAccel = float3(0, 0, 0);
+	float burstSpeed = 0;	// 逃げるときの速度
+
+	if (CheckWortlPosToViewport(position, _ViewMatrix)) {
+		float2 uv = GetWorldPosToUV(position, _ViewMatrix);
+		float4 col = GetUVToColor(uv, _EnemyTex, _LinearClamp);
+		float4 col2 = GetUVToColor(uv, _EnemyTex2, _LinearClamp);
+
+		float3 normal = float3((col.r - 0.5) * 2, (col.g - 0.5) * 2, 0);
+		float distance = col.a * 2 * _CameraOrthographicSize;
+		if ((distance > 0.0) && (distance <= _AvoidEnemyNeighborhoodRadius))
+		{
+			// 障害物の進行ベクトル
+			float2 vel = float2((col2.r - 0.5) * 2.0, (col2.g - 0.5) * 2.0);
+			float len = length(vel);
+			if (len > 0.0) {
+				float2 tpos = position.xy - normal.xy * distance;	// 自分の位置(UV)とその法線の逆＊距離の位置にターゲットがいる計算
+
+				float2 vel2 = position.xy - tpos;
+				float cr = vel2.x * vel.y - vel2.y * vel.x;	// 2次元外積でターゲットの進行方向の左右どちら側にいるか判定
+															// ターゲットの進行方向の垂直方向のベクトル
+				float3 crvel = float3(0, 0, 0);
+
+				crvel = (cr <= 0.0) ? float3(-vel.y, vel.x, 0) : float3(vel.y, -vel.x, 0);
+				float metaballScale = (col.b > 0.0) ? col.b : 0.00001;
+
+				if (position.y >= _HumanDepth) {
+					crvel = normalize(crvel);
+					avoidAccel += (crvel * _AvoidVerticalEnemyWeight + normal) / distance * _AvoidEnemyWeight * metaballScale * len;
+					burstSpeed = len / distance * _BurstSpeed * metaballScale;
+				}
+				else {
+					float3 tpos3d = float3(tpos.x, _HumanDepth, tpos.y);
+					float3 diff3d = position - tpos3d;
+					float distance3d = length(diff3d);
+					if (distance3d <= _AvoidEnemyNeighborhoodRadius) {
+						float3 normal3d = normalize(diff3d);
+						//crvel.y = normal3d.y;
+						crvel = normalize(crvel) * 0.25;
+						float height = col.b > 0 ? col.b : 0.0001;
+						avoidAccel += (crvel + normal3d) * _AvoidVerticalEnemyWeight / distance3d * _AvoidEnemyWeight * height * len * _BoidDataBufferRead[P_ID].colorChangePower;
+						//avoidAccel += normal3d * _AvoidVerticalEnemyWeight / distance3d * _AvoidEnemyWeight * col.b * len;
+						burstSpeed = len / distance3d * _BurstSpeed * metaballScale;
+					}
+					//avoidCol = _ColorAddSpeed * _AvoidColor * (1 - distance / _AvoidEnemyNeighborhoodRadius);
+				}
+			}
+		}
+	}
+
+	// 友好周回(静止している人の周りを回る）
+	float3 friendAccel = float3(0, 0, 0);
+	if (CheckWortlPosToViewport(position, _ViewMatrix)) {
+		float4 col = GetWorldPosToColor(position, _FriendTex, _LinearClamp, _ViewMatrix);
+		float4 col2 = GetWorldPosToColor(position, _FriendTex2, _LinearClamp, _ViewMatrix);
+
+		float3 normal = float3((col.r - 0.5) * 2, 0, (col.g - 0.5) * 2);
+		float3 tangent = float3((col2.b - 0.5) * 2, 0, (col2.a - 0.5) * 2);
+		float distance = col.a * 2 * _CameraOrthographicSize;
+		if ((distance > 0.0) && (distance <= _FriendNeighborhoodRadius))
+		{
+			// 魚の進行方向
+			float2 vel = float2(velocity.x, velocity.y);
+			float len = length(vel);
+			if (len > 0.0) {
+				float2 tpos = position.xy - normal.xz * distance;	// 自分の位置(UV)とその法線の逆＊距離の位置にターゲットがいる計算
+
+				float2 vel2 = tpos - position.xy;
+				float cr = vel2.x * vel.y - vel2.y * vel.x;	// 2次元外積でターゲットの進行方向の左右どちら側にいるか判定
+															// 魚の進行方向の垂直方向のベクトル
+				float3 crvel = float3(0, 0, 0);
+
+				crvel = (cr <= 0.0) ? float3(vel.y, -vel.x, 0) : float3(-vel.y, vel.x, 0);	// 離れる
+				if (position.y >= (_HumanDepth - distance)) {
+					crvel = normalize(crvel);
+					// 魚の進行方向と、魚から見たターゲットの方向の内積
+					float tdot = dot(normalize(vel2), normalize(vel));
+					if (tdot > 0.0) {
+						friendAccel += crvel * _FriendWeight * tdot * col.b / distance * _BoidDataBufferRead[P_ID].colorChangePower;
+					}
+				}
+			}
+		}
+
+	}
+
+	// 角度と速度で処理するテスト
+	float offsetLimit = _BoidDataBufferRead[P_ID].offsetLimit;
+	float diffAngle2 = dot(normalize(velocity), normalize(velocity + acceleration));
+	speed = speed + (diffAngle2 - 0.5) * _SpeedK * _TimeStep;
+
+	float flowNoiseMaxSpeed = flow.w * _VelocityMaxNoisePower;
+	speed = clamp(speed + speed * flowNoiseMaxSpeed, _VelocityMin, _VelocityMax + offsetLimit + _VelocityMaxNoisePower * 2);	// test
+																																//float3 next = velocity + acceleration;
+	float3 diffAngle = lerp(velocity, acceleration + avoidAccel + friendAccel, clamp(_TimeStep * _MaxSteerForce, 0, 1));
+
+	velocity = normalize(diffAngle);
+	position += velocity * (speed + burstSpeed) * _TimeStep;
+
+	//velocity = float3(1, 0, 0);
+
+	_BoidDataBufferWrite[P_ID].velocity = velocity;
+	_BoidDataBufferWrite[P_ID].position = position;
+	_BoidDataBufferWrite[P_ID].speed = speed;
+
+	_BoidDataBufferWrite[P_ID].animeTime = animeTime + _AnimeTimeStep * (1 + (speed - oldSpeed));
+
+
+	float4 proj = mul(_MVP, float4(position.xyz, 1));
+	float2 uv = (proj.xy + 1.0) * 0.5;
+	float3 upVecotr = _UpVectorField.SampleLevel(_PointClamp, uv, 0).rgb;
+	//map from [0,1] to [-1,1]
+	upVecotr = 2 * (upVecotr - 0.5);
+
+	float wallDepth = _UVField.SampleLevel(_PointClamp, uv, 0).b;
+
+	// 回転
+	float4 rotX90 = eulerToQuaternion(float3(1, 0, 0), -PI * 0.5);
+	float4 rotY = eulerToQuaternion(float3(0, 1, 0), atan2(-velocity.y, velocity.x) + PI * 0.5);
+	float4 rotX = eulerToQuaternion(float3(1, 0, 0), asin(velocity.z / length(velocity.xyz)));
+
+	float4 rotYold = eulerToQuaternion(float3(0, 1, 0), atan2(-velocity.z, velocity.x) + PI * 0.5);
+	float4 rotXold = eulerToQuaternion(float3(1, 0, 0), -asin(velocity.y / length(velocity.xyz)));
+
+	upVecotr = lerp(_BoidDataBufferWrite[P_ID].up, upVecotr, 0.1);
+	float4 newRot = GetRotationByUp(upVecotr, float3(0, 1, 0), velocity, float3(0, 0, 1));//GetRotation(velocity, float3(0,0,1));
+	//_BoidDataBufferWrite[P_ID].rotation = qmul(qmul(rotY, rotX), rotZ);
+	_BoidDataBufferWrite[P_ID].rotation = newRot;// slerp(_BoidDataBufferWrite[P_ID].rotation, newRot, 0.2);// 
+	_BoidDataBufferWrite[P_ID].up = upVecotr;
+	//_BoidDataBufferWrite[P_ID].rotation = slerp(qmul(rotX90, qmul(rotY, rotX)), qmul(rotYold, rotXold), saturate(upVecotr.y * wallDepth * 2));
+	//_BoidDataBufferWrite[P_ID].rotation = qmul(rotX90, rotY);// float4(0, 0, 0, 1); qmul(rotYold, rotXold);
+	//_BoidDataBufferWrite[P_ID].rotation = rotY;
+	//_BoidDataBufferWrite[P_ID].rotation = rotX;
+
+	// 色合成
+	float3 fluidColor = GetWorldPosToColor(position, _FluidTex, _LinearClamp, _ViewMatrix).rgb;
+	//fluidColor.rgb = float3(1,0,0);//test
+	float3 fluidHSV = rgb2hsv(fluidColor);
+	fluidHSV.x = fluidHSV.x + _BoidDataBufferRead[P_ID].hueShiftPower;	// 色相ずらし
+
+	// 人から流れ出る色に染まる(色相をLerpするので、彩度が0だとおかしくなるので注意)
+	float3 bodyHSV = rgb2hsv(_BoidDataBufferRead[P_ID].bodyColor.rgb);
+
+	//fluidHSV.y = bodyHSV.y;
+	//fluidHSV.z = bodyHSV.z;
+
+	//float a = saturate(length(fluidColor.rgb));
+	float a = fluidHSV.z;
+	//float colPow = saturate(_TimeStep * _BoidDataBufferRead[P_ID].colorChangePower);
+	float colPow = _TimeStep * _BoidDataBufferRead[P_ID].colorChangePower * _ColorAddSpeed;
+	float3 col = min(hsv2rgb(hsvLerp(bodyHSV, fluidHSV, a * colPow)), _ColorMax);
+	//float3 col = min(hsv2rgb(bodyHSV), _ColorMax);
+	///
+	col = lerp(col, _BaseColor.rgb, _TimeStep * _ColorReturnSpeed);
+
+	_BoidDataBufferWrite[P_ID].bodyColor = float4(col, 1);
+	//_BoidDataBufferWrite[P_ID].color = _BoidDataBufferRead[P_ID].bodyColor;
+
+	// 高さを考慮して明暗つける
+	float valPer = lerp(_DepthPerAlphaRange.x, _DepthPerAlphaRange.y, (position.y + _WallSize.y * 0.5) / _WallSize.y);	// 0～1
+	_BoidDataBufferWrite[P_ID].color = float4(col * valPer, valPer *  saturate(_WorldParameter.x));	// 奥に行くほど薄くする
+
+	// サイズ
+	float size = lerp(_SizeRange.x, _SizeRange.y, (position.y - (wc.y - ws.y)) / _WallSize.y);	// 深さで大きさ変える
+
+	_BoidDataBufferWrite[P_ID].size = size * _WorldParameter.x;
+
+}

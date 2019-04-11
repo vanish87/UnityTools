@@ -9,6 +9,7 @@
 // with cs.SetTexture
 RWTexture2D<float4> _Result;
 RWTexture2D<float4> _LapTex;
+RWTexture2D<float4> _SourceLapTex;
 Texture2D<float4> _SourceTex;
 Texture2D<float4> _TargetTex;
 Texture2D<float4> _MaskTex;
@@ -137,6 +138,12 @@ void Lap(uint3 id : SV_DispatchThreadID)
 			- _SourceTex[id.xy - _SizeOffset.zw].rgb;
 	}
 	_LapTex[id.xy] = float4(result, 1.0);
+	float3 sourceLap = _SourceTex[id.xy].rgb * 4
+		- _SourceTex[id.xy + _SizeOffset.xy].rgb
+		- _SourceTex[id.xy - _SizeOffset.xy].rgb
+		- _SourceTex[id.xy + _SizeOffset.zw].rgb
+		- _SourceTex[id.xy - _SizeOffset.zw].rgb;
+	_SourceLapTex[id.xy] = float4(sourceLap.rgb,1);
 	_Result[id.xy] = useMask ? float4(0, 0, 0, 1.0) : source;
 }
 
@@ -164,8 +171,14 @@ void Solver(uint3 id : SV_DispatchThreadID)
 				+ GetOutMaskValue(_SourceTex, _MaskTex, id.xy + _SizeOffset.zw)
 				+ GetOutMaskValue(_SourceTex, _MaskTex, id.xy - _SizeOffset.zw);
 
+			float3 source = _SourceLapTex[id.xy];
+			float3 lap = _LapTex[id.xy];
+			float3 mix = float3(abs(source.r) > abs(lap.r) ? source.r : lap.r, 
+								abs(source.g) > abs(lap.g) ? source.g : lap.g, 
+								abs(source.b) > abs(lap.b) ? source.b : lap.b);
 
-			float3 xk = (_LapTex[id.xy].rgb + outMask)/*b*/ - inMask/*Rx(k)*/;
+			float3 xk = (lap + outMask)/*b*/ - inMask/*Rx(k)*/;
+			//float3 xk = (mix + outMask)/*b*/ - inMask/*Rx(k)*/;
 			
 			result = xk * 0.25/*D-1*/;			
 		}

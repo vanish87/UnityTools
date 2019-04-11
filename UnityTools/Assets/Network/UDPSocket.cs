@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using UnityEngine;
+using UnityEngine.Assertions;
 
 namespace Network
 {
@@ -13,53 +14,78 @@ namespace Network
     {
         public string time;
     }
+    public class SocketData
+    {
+        public IPEndPoint endPoint;
+
+        public SocketData(IPEndPoint end)
+        {
+            this.endPoint = new IPEndPoint(end.Address, end.Port);
+        }
+        public SocketData(int port = 0)
+        {
+            this.endPoint = new IPEndPoint(IPAddress.Any, port);
+        }
+
+        public SocketData(string ip, int port)
+        {
+            IPAddress local = IPAddress.Any;
+            if (ip.ToLower() == "localhost" || ip == "127.0.0.1")
+            {
+                IPAddress[] localIPs = Dns.GetHostAddresses(Dns.GetHostName());
+                foreach (var addr in localIPs)
+                {
+                    if (addr.AddressFamily == AddressFamily.InterNetwork)
+                    {
+                        local = addr;
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                if (IPAddress.TryParse(ip, out local))
+                {
+                    //nothing to do
+                }
+                else
+                {
+                    local = IPAddress.Any;
+                    port = 0;
+                }
+            }
+
+            Assert.IsTrue(IPEndPoint.MinPort <= port && port <= IPEndPoint.MaxPort);
+            this.endPoint = new IPEndPoint(local, port);
+        }
+    }
+
+    public class State
+    {
+        private const int bufferSize = 32 * 1024; //32K
+        public byte[] buffer = new byte[bufferSize];
+    }
+    public class RecieveState : State
+    {
+        public SocketData remote = new SocketData();
+    }
 
     //code from https://gist.github.com/darkguy2008/413a6fea3a5b4e67e5e0d96f750088a9
     //for testing latency of UDP
     public class UDPSocket<T> where T : CustomSocketData
-    {
-        public class SocketData
+    {        
+        
+        public RecieveState recieveState = new RecieveState();
+        public bool DebugLog = false;
+
+        ~UDPSocket()
         {
-            public IPEndPoint endPoint;
-            
-
-            public SocketData(IPEndPoint end)
-            {
-                this.endPoint = end;
-            }
-            public SocketData(int port = 0)
-            {
-                this.endPoint = new IPEndPoint(IPAddress.Any, port);
-            }
-
-            public SocketData(string ip, int port)
-            {
-                IPAddress addr;
-                if(ip.ToLower() == "localhost")
-                {
-                    ip = "127.0.0.1";
-                }
-                if(IPAddress.TryParse(ip, out addr))
-                {
-                    this.endPoint = new IPEndPoint(addr, port);
-                }
-                else
-                {
-                    this.endPoint = new IPEndPoint(IPAddress.Any, 0);
-                }
-            }
+            this.Disconnect();
         }
 
-        public class ConnectionData
+        public void Disconnect()
         {
-            public class State
-            {
-                private const int bufferSize = 32 * 1024; //32K
-                public byte[] buffer = new byte[bufferSize];
-            }
-
-            public SocketData socketData = new SocketData();
-            public State state = new State();
+            this.socket.Close();
         }
 
         public enum Connection
@@ -80,13 +106,13 @@ namespace Network
             {SocketRole.Reciever    , false },
             {SocketRole.Broadcast   , false },
         };
-        protected Dictionary<Connection, List<ConnectionData>> connections = new Dictionary<Connection, List<ConnectionData>>()
+        protected Dictionary<Connection, List<SocketData>> connections = new Dictionary<Connection, List<SocketData>>()
         {
-            { Connection.Incoming   , new List<ConnectionData>() },
-            { Connection.Outcoming  , new List<ConnectionData>() },
+            { Connection.Incoming   , new List<SocketData>() },
+            { Connection.Outcoming  , new List<SocketData>() },
         };
 
-        public void Setup(SocketRole role)
+        public void Setup(SocketRole role, SocketData data = null)
         {
             if (this.roleState[role]) return;
 
@@ -102,7 +128,8 @@ namespace Network
                     {
                         this.socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.ReuseAddress, true);
                         //this.socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.PacketInformation, true);
-                        this.socket.Bind(this.socketConfigure.endPoint);
+                        Assert.IsNotNull(data);
+                        this.socket.Bind(data.endPoint);
                     }
                     break;
                 case SocketRole.Broadcast:
@@ -122,23 +149,12 @@ namespace Network
 
         public virtual void Send(SocketData socket, T data)
         {
-            ConnectionData connection = new ConnectionData();
-            foreach (var c in this.connections[Connection.Outcoming])
-            {
-                if (c.socketData.endPoint == socket.endPoint)
-                {
-                    connection = c;
-                    break;
-                }
-            }
-            connection.socketData = socket;
-            EndPoint epFrom = connection.socketData.endPoint;
-
-            var byteData = Helper.ObjectToByteArray(data);
+            this.Setup(SocketRole.Sender);
 
             try
             {
-                this.socket.BeginSendTo(byteData, 0, byteData.Length, SocketFlags.None, epFrom, this.SendCallback, connection);
+                var byteData = Helper.ObjectToByteArray(data);
+                this.socket.BeginSendTo(byteData, 0, byteData.Length, SocketFlags.None, socket.endPoint, this.SendCallback, socket);
             }
             catch (Exception e)
             {
@@ -148,15 +164,15 @@ namespace Network
         public virtual void Broadcast(T data, int port)
         {
             this.Setup(SocketRole.Broadcast);
-            ConnectionData connection = new ConnectionData();
-            connection.socketData.endPoint.Address = IPAddress.Broadcast;
-            connection.socketData.endPoint.Port = port;
-            EndPoint epFrom = connection.socketData.endPoint;
 
-            var byteData = Helper.ObjectToByteArray(data);
+            var epTo = new SocketData();
+            epTo.endPoint.Address = IPAddress.Broadcast;
+            epTo.endPoint.Port = port;
+
             try
             {
-                this.socket.BeginSendTo(byteData, 0, byteData.Length, SocketFlags.None, epFrom, this.SendCallback, connection);
+                var byteData = Helper.ObjectToByteArray(data);
+                this.socket.BeginSendTo(byteData, 0, byteData.Length, SocketFlags.None, epTo.endPoint, this.SendCallback, epTo);
             }
             catch (Exception e)
             {
@@ -165,45 +181,37 @@ namespace Network
         }
         public virtual void StartRecieve(int port = 0)
         {
-            this.socketConfigure.endPoint.Port = port;
+            this.recieveState.remote = new SocketData(port);
 
-            this.Setup(SocketRole.Reciever);
-            var connection = new ConnectionData();
-            EndPoint epFrom = connection.socketData.endPoint;
+            this.Setup(SocketRole.Reciever, this.recieveState.remote);
+            
+            EndPoint epFrom = this.recieveState.remote.endPoint;
 
             try
             {
-                this.socket.BeginReceiveFrom(connection.state.buffer, 0, connection.state.buffer.Length, SocketFlags.None, ref epFrom, this.RecieveCallback, connection);
+                this.socket.BeginReceiveFrom(this.recieveState.buffer, 0, this.recieveState.buffer.Length, SocketFlags.None, ref epFrom, this.RecieveCallback, this.recieveState);
             }
             catch (Exception e)
             {
                 Debug.Log(e.ToString());
             }
         }
-
-        protected virtual void OnConfigure(ref SocketData configureData) { }
-
+        
         private Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-        private SocketData socketConfigure = new SocketData("localhost", 0);
-
-        private void Setup()
-        {
-            this.OnConfigure(ref this.socketConfigure);
-        }
 
         protected void SendCallback(IAsyncResult ar)
         {
             try
             {
-                var connection = ar.AsyncState as ConnectionData;
+                var socketData = ar.AsyncState as SocketData;
                 int bytes = socket.EndSendTo(ar);
 
-                if (this.connections[Connection.Outcoming].Contains(connection) == false && connection.socketData.endPoint.Address != IPAddress.Broadcast)
+                if (this.connections[Connection.Outcoming].Contains(socketData) == false && socketData.endPoint.Address != IPAddress.Broadcast)
                 {
-                    this.connections[Connection.Outcoming].Add(connection);
-                    Debug.LogFormat("Add out connection: {0}", connection.socketData.endPoint.ToString());
+                    this.connections[Connection.Outcoming].Add(socketData);
+                    if (DebugLog) Debug.LogWarningFormat("Add out connection: {0}", socketData.endPoint.ToString());
                 }
-                Debug.LogFormat("SEND: {0} To {1}", bytes, connection.socketData.endPoint.ToString());
+                if(DebugLog)Debug.LogFormat("SEND: {0} To {1}", bytes, socketData.endPoint.ToString());
             }
             catch (Exception e)
             {
@@ -214,23 +222,37 @@ namespace Network
         {
             try
             {
-                var connection = ar.AsyncState as ConnectionData;
-                EndPoint epFrom = connection.socketData.endPoint;
+                var stateFrom = ar.AsyncState as RecieveState;
+                Assert.IsTrue(stateFrom == this.recieveState);
+
+                EndPoint epFrom = stateFrom.remote.endPoint;
                 int bytes = socket.EndReceiveFrom(ar, ref epFrom);
 
                 if (bytes > 0)
                 {
-                    Debug.LogFormat("RECV: {0}: {1}, {2}", epFrom.ToString(), bytes, Helper.ByteArrayToObject<CustomSocketData>(connection.state.buffer).time);
+                    if (DebugLog) Debug.LogFormat("RECV: {0}: {1}, {2}", epFrom.ToString(), bytes, Helper.ByteArrayToObject<CustomSocketData>(stateFrom.buffer).time);
+                    this.OnMessage(stateFrom.remote, Helper.ByteArrayToObject<T>(stateFrom.buffer));
                 }
 
-                connection.socketData.endPoint = epFrom as IPEndPoint;
-
-                if (this.connections[Connection.Incoming].Contains(connection) == false)
+                var ipFrom = epFrom as IPEndPoint;
+                bool found = false;
+                foreach(var c in this.connections[Connection.Incoming])
                 {
-                    this.connections[Connection.Incoming].Add(connection);
-                    Debug.LogFormat("Add in connection: {0}", connection.socketData.endPoint.ToString());
+                    if(c.endPoint.Address.Equals(ipFrom.Address))
+                    {
+                        found = true;
+                        break;
+                    }
                 }
-                this.socket.BeginReceiveFrom(connection.state.buffer, 0, connection.state.buffer.Length, SocketFlags.None, ref epFrom, this.RecieveCallback, connection);
+                if (found == false)
+                {
+                    this.connections[Connection.Incoming].Add(new SocketData(ipFrom));
+                    if (DebugLog) Debug.LogWarningFormat("Add in connection: {0}", ipFrom.ToString());
+                }
+
+                Assert.IsTrue(stateFrom.remote.endPoint.Address == IPAddress.Any);
+                epFrom = this.recieveState.remote.endPoint;
+                this.socket.BeginReceiveFrom(this.recieveState.buffer, 0, this.recieveState.buffer.Length, SocketFlags.None, ref epFrom, this.RecieveCallback, this.recieveState);
             }
             catch (Exception e)
             {
