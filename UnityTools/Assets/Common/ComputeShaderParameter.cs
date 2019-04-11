@@ -63,7 +63,7 @@ namespace UnityTools.Common
                 Directory.CreateDirectory(outputPath);
             }
 
-            var candidates = this.VarList.Where(v => v.IsSerializable() == true);
+            var candidates = this.VarList.Where(v => v.IsSerializable() == true).ToList();
 
             var fi = new FileInfo(Path.Combine(outputPath, fileName));
             using (var binaryFile = fi.Create())
@@ -215,6 +215,10 @@ namespace UnityTools.Common
             {
                 this.variableName = newValue.variableName;
                 this.Value = newValue.Value;
+            }
+            else
+            {
+                Debug.LogWarning("Cannot update value for type " + this.GetType().ToString());
             }
         }
 
