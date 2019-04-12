@@ -2,15 +2,12 @@
 //#define USE_PREFS
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
-using System.Runtime.Serialization.Json;
-using System.Text;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
@@ -187,24 +184,39 @@ namespace UnityTools.Common
 
         /*internal abstract void OnSerialize(Stream stream, IFormatter formater);
         internal abstract void OnDeserialize(Stream stream, IFormatter formater);*/
+
     }
     [Serializable]
     public abstract class ComputeShaderParameter<T> : ComputeShaderParameterBase, ISerializable, IXmlSerializable
     {
         protected ComputeShader shader = null;
         
+        protected string VariableName
+        {
+            get { return this.variableName; }
+            set
+            {
+                Assert.IsNotNull(value);
+                this.variableName = value;
+                this.propertyID = Shader.PropertyToID(this.variableName);
+            }
+        }
         protected string variableName = null;
+        /// <summary>
+        /// PropertyID for set shader object
+        /// </summary>
+        protected int propertyID = -1;
         [SerializeField] protected T data;
 
         #region ISerializable
         public ComputeShaderParameter(SerializationInfo info, StreamingContext context)
         {
-            variableName = (string)info.GetValue("variableName", typeof(string));
+            this.VariableName = (string)info.GetValue("variableName", typeof(string));
             data = (T)info.GetValue("data", typeof(T));
         }
         public virtual void GetObjectData(SerializationInfo info, StreamingContext context)
         {
-            info.AddValue("variableName", variableName);
+            info.AddValue("variableName", this.VariableName);
             info.AddValue("data", data);
         }
         //only update value that has been Serialized above
@@ -213,7 +225,7 @@ namespace UnityTools.Common
             var newValue = other as ComputeShaderParameter<T>;
             if (newValue != null)
             {
-                this.variableName = newValue.variableName;
+                this.VariableName = newValue.VariableName;
                 this.Value = newValue.Value;
             }
             else
@@ -267,7 +279,7 @@ namespace UnityTools.Common
         internal override void OnDeserialize(Stream stream, IFormatter formater)
         {
             var obj = (ComputeShaderParameter<T>)formater.Deserialize(stream);
-            this.variableName = obj.variableName;
+            this.VariableName = obj.VariableName;
             this.data = obj.data;
         }*/
         #endregion
@@ -275,7 +287,7 @@ namespace UnityTools.Common
         protected virtual bool IsShaderValid(string kernal = null)
         {
             //only ComputeShaderKernalParameter use kernal string
-            return this.shader != null && this.variableName != null;
+            return this.shader != null && this.VariableName != null;
         }
 
         public ComputeShaderParameter(string name, T defaultValue = default(T))
@@ -286,12 +298,12 @@ namespace UnityTools.Common
                 Debug.LogWarningFormat("Name is null");
                 return;
             }
-            this.variableName = name;
+            this.VariableName = name;
             this.data = defaultValue;
         }
         public ComputeShaderParameter(ComputeShader shader, string varName)
         {
-            this.variableName = varName;
+            this.VariableName = varName;
             this.Bind(shader);
         }
 
@@ -319,11 +331,11 @@ namespace UnityTools.Common
             {
                 if (this.data == null)
                 {
-                    Debug.LogWarningFormat(this.variableName + " Data is null");
+                    Debug.LogWarningFormat(this.VariableName + " Data is null");
                 }
                 else
                 {
-                    Debug.LogWarningFormat("Please bind {0} with compute shader first/or supply kernal name", this.variableName);
+                    Debug.LogWarningFormat("Please bind {0} with compute shader first/or supply kernal name", this.VariableName);
                 }
             }
         }
@@ -385,7 +397,14 @@ namespace UnityTools.Common
 
         protected override void Set(string kernal = null)
         {
-            this.shader.SetInt(this.variableName, this.data);
+            if (this.propertyID != -1)
+            {
+                this.shader.SetInt(this.propertyID, this.data);
+            }
+            else
+            {
+                this.shader.SetInt(this.VariableName, this.data);
+            }
         }
     }
 
@@ -398,7 +417,14 @@ namespace UnityTools.Common
 
         protected override void Set(string kernal = null)
         {
-            this.shader.SetFloat(this.variableName, this.data);
+            if (this.propertyID != -1)
+            {
+                this.shader.SetFloat(this.propertyID, this.data);
+            }
+            else
+            {
+                this.shader.SetFloat(this.VariableName, this.data);
+            }
         }
     }
 
@@ -410,7 +436,15 @@ namespace UnityTools.Common
 
         protected override void Set(string kernal = null)
         {
-            this.shader.SetFloats(this.variableName, this.data);
+            if (this.propertyID != -1)
+            {
+                this.shader.SetFloats(this.propertyID, this.data);
+            }
+            else
+            {
+                this.shader.SetFloats(this.VariableName, this.data);
+            }
+                
         }
     }
 
@@ -438,7 +472,14 @@ namespace UnityTools.Common
 
         protected override void Set(string kernal = null)
         {
-            this.shader.SetVector(this.variableName, this.data);
+            if (this.propertyID != -1)
+            {
+                this.shader.SetVector(this.propertyID, this.data);
+            }
+            else
+            {
+                this.shader.SetVector(this.VariableName, this.data);
+            }
         }
     }
     [Serializable]
@@ -451,7 +492,14 @@ namespace UnityTools.Common
 
         protected override void Set(string kernal = null)
         {
-            this.shader.SetVectorArray(this.variableName, this.data);
+            if (this.propertyID != -1)
+            {
+                this.shader.SetVectorArray(this.propertyID, this.data);
+            }
+            else
+            {
+                this.shader.SetVectorArray(this.VariableName, this.data);
+            }
         }
     }
     [Serializable]
@@ -476,7 +524,14 @@ namespace UnityTools.Common
         }
         protected override void Set(string kernal = null)
         {
-            this.shader.SetVector(this.variableName, this.data);
+            if (this.propertyID != -1)
+            {
+                this.shader.SetVector(this.propertyID, this.data);
+            }
+            else
+            {
+                this.shader.SetVector(this.VariableName, this.data);
+            }
         }
     }
 
@@ -488,7 +543,14 @@ namespace UnityTools.Common
         public override bool IsSerializable() { return false; }
         protected override void Set(string kernal = null)
         {
-            this.shader.SetMatrix(this.variableName, this.data);
+            if (this.propertyID != -1)
+            {
+                this.shader.SetMatrix(this.propertyID, this.data);
+            }
+            else
+            {
+                this.shader.SetMatrix(this.VariableName, this.data);
+            }
         }
     }
 
@@ -505,17 +567,24 @@ namespace UnityTools.Common
         {
             if (this.kernal.ContainsKey(kernal) && this.data != null)
             {
-                this.shader.SetTexture(this.kernal[kernal], this.variableName, this.data);
+                if (this.propertyID != -1)
+                {
+                    this.shader.SetTexture(this.kernal[kernal], this.propertyID, this.data);
+                }
+                else
+                {
+                    this.shader.SetTexture(this.kernal[kernal], this.VariableName, this.data);
+                }
             }
             else
             {
                 if (this.data == null)
                 {
-                    Debug.LogWarningFormat("var name {0} instance: {1} is null", this.variableName, this.data);
+                    Debug.LogWarningFormat("var name {0} instance: {1} is null", this.VariableName, this.data);
                 }
                 else
                 {
-                    Debug.LogWarningFormat("Can not found {0} in shader {1} with var name {2} instance: {3}", kernal, this.shader.name, this.variableName, this.data);
+                    Debug.LogWarningFormat("Can not found {0} in shader {1} with var name {2} instance: {3}", kernal, this.shader.name, this.VariableName, this.data);
                 }
             }
         }
@@ -549,17 +618,24 @@ namespace UnityTools.Common
         {
             if (this.kernal.ContainsKey(kernal) && this.data != null)
             {
-                this.shader.SetBuffer(this.kernal[kernal], this.variableName, this.data);
+                if (this.propertyID != -1)
+                {
+                    this.shader.SetBuffer(this.kernal[kernal], this.propertyID, this.data);
+                }
+                else
+                {
+                    this.shader.SetBuffer(this.kernal[kernal], this.VariableName, this.data);
+                }
             }
             else
             {
                 if (this.data == null)
                 {
-                    Debug.LogWarningFormat("var name {0} instance: {1} is null", this.variableName, this.data);
+                    Debug.LogWarningFormat("var name {0} instance: {1} is null", this.VariableName, this.data);
                 }
                 else
                 {
-                    Debug.LogWarningFormat("Can not found {0} in shader {1} with var name {2} instance: {3}", kernal, this.shader.name, this.variableName, this.data);
+                    Debug.LogWarningFormat("Can not found {0} in shader {1} with var name {2} instance: {3}", kernal, this.shader.name, this.VariableName, this.data);
                 }
             }
         }
@@ -578,7 +654,14 @@ namespace UnityTools.Common
         public override bool IsSerializable() { return false; }
         protected override void Set(string kernal = null)
         {
-            this.shader.SetInt(this.variableName, this.data);
+            if (this.propertyID != -1)
+            {
+                this.shader.SetInt(this.propertyID, this.data);
+            }
+            else
+            {
+                this.shader.SetInt(this.VariableName, this.data);
+            }
         }
     }
     [Serializable]
@@ -594,7 +677,14 @@ namespace UnityTools.Common
         public override bool IsSerializable() { return false; }
         protected override void Set(string kernal = null)
         {
-            this.shader.SetFloat(this.variableName, this.data);
+            if (this.propertyID != -1)
+            {
+                this.shader.SetFloat(this.propertyID, this.data);
+            }
+            else
+            {
+                this.shader.SetFloat(this.VariableName, this.data);
+            }
         }
     }
     [Serializable]
@@ -610,7 +700,14 @@ namespace UnityTools.Common
         public override bool IsSerializable() { return false; }
         protected override void Set(string kernal = null)
         {
-            this.shader.SetVector(this.variableName, this.data);
+            if (this.propertyID != -1)
+            {
+                this.shader.SetVector(this.propertyID, this.data);
+            }
+            else
+            {
+                this.shader.SetVector(this.VariableName, this.data);
+            }
         }
     }
     [Serializable]
@@ -626,7 +723,14 @@ namespace UnityTools.Common
         public override bool IsSerializable() { return false; }
         protected override void Set(string kernal = null)
         {
-            this.shader.SetVector(this.variableName, this.data);
+            if (this.propertyID != -1)
+            {
+                this.shader.SetVector(this.propertyID, this.data);
+            }
+            else
+            {
+                this.shader.SetVector(this.VariableName, this.data);
+            }
         }
     }
 #endif
