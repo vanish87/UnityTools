@@ -29,7 +29,7 @@ namespace Network
             Debug.LogFormat("Diff is {0:0.000000}", diff);
         }
         [System.Serializable]
-        public class GPUData : CustomSocketData
+        public class GPUData
         {
             public double serverTime;
             public float deltaTime;

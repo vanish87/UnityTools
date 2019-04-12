@@ -78,10 +78,7 @@ namespace UnityTools.Common
         {
             get
             {
-                if (this.variableList == null)
-                {
-                    this.InitVariableList();
-                }
+                this.InitVariableList();
                 return this.variableList;
             }
         }
@@ -138,6 +135,8 @@ namespace UnityTools.Common
         /// </summary>
         protected void InitVariableList()
         {
+            if (this.variableList != null) return;
+
             Assert.IsTrue(this.variableList == null);
             var bindingFlags = BindingFlags.Instance |
                               BindingFlags.NonPublic |
@@ -301,9 +300,9 @@ namespace UnityTools.Common
             this.VariableName = name;
             this.data = defaultValue;
         }
-        public ComputeShaderParameter(ComputeShader shader, string varName)
+        public ComputeShaderParameter(ComputeShader shader, string name)
         {
-            this.VariableName = varName;
+            this.VariableName = name;
             this.Bind(shader);
         }
 
