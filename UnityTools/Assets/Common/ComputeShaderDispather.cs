@@ -8,12 +8,11 @@ namespace UnityTools.Common
 {
     public class ComputeShaderDispatcher
     {
-        protected Dictionary<string, List<ComputeShaderParameterContainer>> parameters = new Dictionary<string, List<ComputeShaderParameterContainer>>();
-
         public class KernalInfo
         {
             public int kernal = -1;
             public Vector3Int kernalDimesion = Vector3Int.zero;
+            public List<ComputeShaderParameterContainer> parameters = new List<ComputeShaderParameterContainer>();
         }
 
         protected ComputeShader cs = null;
@@ -31,17 +30,17 @@ namespace UnityTools.Common
         }
         public void AddParameter(string kernal, ComputeShaderParameterContainer parameter)
         {
-            if (this.parameters.ContainsKey(kernal))
+            if (this.kernal.ContainsKey(kernal))
             {
-                if (this.parameters[kernal].Contains(parameter) == false)
+                if (this.kernal[kernal].parameters.Contains(parameter) == false)
                 {
-                    this.parameters[kernal].Add(parameter);
+                    this.kernal[kernal].parameters.Add(parameter);
                 }
             }
             else
             {
-                this.parameters.Add(kernal, new List<ComputeShaderParameterContainer>());
-                this.parameters[kernal].Add(parameter);
+                this.AddNewKernalInfo(kernal);
+                this.kernal[kernal].parameters.Add(parameter);
             }
         }
         public void Dispatch(string kernal, int X = 0, int Y = 0, int Z = 0)
@@ -50,12 +49,7 @@ namespace UnityTools.Common
             Assert.IsNotNull(this.cs);
             if(this.kernal.ContainsKey(kernal) == false)
             {
-                var kernalId = this.cs.FindKernel(kernal);
-                Assert.IsTrue(kernalId >= 0);
-
-                uint x = 0, y = 0, z = 0;
-                this.cs.GetKernelThreadGroupSizes(kernalId, out x, out y, out z);
-                this.kernal.Add(kernal, new KernalInfo() { kernal = kernalId, kernalDimesion = new Vector3Int((int)x, (int)y, (int)z) });
+                this.AddNewKernalInfo(kernal);
             }
 
             var kernalInfo = this.kernal[kernal];
@@ -64,11 +58,26 @@ namespace UnityTools.Common
             this.UpdateParameter(kernal);
             this.cs.Dispatch(kernalInfo.kernal, this.GetDispatchSize(X, threadNum.x), this.GetDispatchSize(Y, threadNum.y), this.GetDispatchSize(Z, threadNum.z));
         }
+
+        protected void AddNewKernalInfo(string kernal)
+        {
+            var kernalId = this.cs.FindKernel(kernal);
+            Assert.IsTrue(kernalId >= 0);
+
+            uint x = 0, y = 0, z = 0;
+            this.cs.GetKernelThreadGroupSizes(kernalId, out x, out y, out z);
+            this.kernal.Add(kernal, new KernalInfo()
+            {
+                kernal = kernalId,
+                kernalDimesion = new Vector3Int((int)x, (int)y, (int)z),
+                parameters = new List<ComputeShaderParameterContainer>(),
+            });
+        }
         protected void UpdateParameter(string kernal)
         {
-            if(this.parameters.ContainsKey(kernal))
+            if(this.kernal.ContainsKey(kernal))
             {
-                foreach(var p in this.parameters[kernal])
+                foreach(var p in this.kernal[kernal].parameters)
                 {
                     p.UpdateGPU(kernal);
                 }
