@@ -50,7 +50,7 @@ namespace UnityTools.Common
                 this.kernal[kernal].parameters.Add(parameter);
             }
         }
-        public void Dispatch(string kernal, int X = 0, int Y = 0, int Z = 0)
+        public void Dispatch(string kernal, int X = 1, int Y = 1, int Z = 1)
         {
             Assert.IsNotNull(kernal);
             Assert.IsNotNull(this.cs);
@@ -92,7 +92,8 @@ namespace UnityTools.Common
         }
         protected int GetDispatchSize(int desired, int threadNum)
         {
-            if (desired == 0) return 1;
+            Assert.IsTrue(desired > 0);
+            Assert.IsTrue(threadNum > 0);
 
             return (desired + threadNum - 1) / threadNum;
         }

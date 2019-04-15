@@ -92,10 +92,6 @@ public class GPUParticleBase<T> : MonoBehaviour where T : AlignedGPUData
             
         }
     }
-    protected virtual void OnUpdateParameter(string kernalName)
-    {
-        
-    }
     protected void UpdateGPUDataBuffer()
     {        
         this.bufferParameter.particlesDataBufferRead.Value.SetData(this.CPUData);
@@ -121,7 +117,7 @@ public class GPUParticleBase<T> : MonoBehaviour where T : AlignedGPUData
 
     #region MonoBehaviour
     // Start is called before the first frame update
-    protected void Start()
+    protected virtual void Start()
     {
         Assert.IsNotNull(this.cs);
 
@@ -136,24 +132,24 @@ public class GPUParticleBase<T> : MonoBehaviour where T : AlignedGPUData
         this.ResizeBuffer(1024);
     }
 
-    protected void OnEnable()
+    protected virtual void OnEnable()
     {
     }
-    protected void OnDisable()
+    protected virtual void OnDisable()
     {
     }
 
-    protected void OnDestroy()
+    protected virtual void OnDestroy()
     {
         this.bufferParameter.ReleaseBuffer();
     }
 
     // Update is called once per frame
-    protected void Update()
+    protected virtual void Update()
     {
         //this.parameter.UpdateGPU();
         //this.bufferParameter.UpdateGPU("Force");
-        this.dispather.Dispatch("Force", this.parameter.numberOfParticles.Value);
+        this.dispather.Dispatch("Force", this.bufferParameter.CurrentBufferLength);
     }
     #endregion
 }
