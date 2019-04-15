@@ -7,10 +7,12 @@ using UnityEngine;
 using UnityEngine.Assertions;
 using UnityTools.Common;
 
-[StructLayout(LayoutKind.Sequential, Size = 32)]
 public class AlignedGPUData
 {
-
+    //cbuffer data is packed in vector-4 size(16 bytes)
+    //https://docs.microsoft.com/en-us/windows/desktop/direct3dhlsl/dx-graphics-hlsl-packing-rules
+    //and it is better to align data as same as cbuffer did
+    //https://developer.nvidia.com/content/understanding-structured-buffer-performance
 }
 
 /// <summary>
@@ -27,7 +29,41 @@ public class GPUParticleCBufferParameterContainer : ComputeShaderParameterFileCo
     public ComputeShaderParameterInt numberOfParticles = new ComputeShaderParameterInt("_NumberOfParticles", 1024);
 }
 
-public class GPUParticleBase<T> : MonoBehaviour where T : AlignedGPUData
+/// <summary>
+/// GPUParticleClassBase will be able to use subclass of AlignedGPUData for reuse of class field
+/// But it does not have a CPU data because ComputeBuffer.SetData does not accept class array parameter
+/// So use compute shader to init data, it also support non-blittable type(eg. bool)
+/// </summary>
+/// <typeparam name="T"></typeparam>
+public class GPUParticleClassBase<T> : GPUParticleBase<T> where T : AlignedGPUData
+{
+
+}
+
+/// <summary>
+/// GPUParticleStructBase will be able to use struct, and keep a CPU data for init
+/// </summary>
+/// <typeparam name="T"></typeparam>
+public class GPUParticleStructBase<T> : GPUParticleBase<T> where T : struct
+{
+    protected T[] CPUData = null;
+    protected override void UpdateGPUDataBuffer()
+    {
+        base.UpdateGPUDataBuffer();
+
+        Assert.IsNotNull(this.CPUData);
+
+        this.bufferParameter.particlesDataBufferRead.Value.SetData(this.CPUData);
+        this.bufferParameter.particlesDataBufferWrite.Value.SetData(this.CPUData);
+
+    }
+    protected override void OnCreateParticleData(int desiredNum)
+    {
+        base.OnCreateParticleData(desiredNum);
+        this.CPUData = new T[desiredNum];
+    }
+}
+public class GPUParticleBase<T> : MonoBehaviour
 {
     public class GPUParticleBufferParameterContainer : ComputeShaderParameterContainer
     {
@@ -51,14 +87,22 @@ public class GPUParticleBase<T> : MonoBehaviour where T : AlignedGPUData
             this.currentBufferLength = bufferLength;
 
             int dataSize = Marshal.SizeOf<T>();
+            if(dataSize % 16 != 0)
+            {
+                Debug.LogWarning("Data size " + dataSize + " is not aligned with 16 bytes");
+            }
+            
             this.particlesDataBufferRead.Value = new ComputeBuffer(bufferLength, dataSize);
             this.particlesDataBufferWrite.Value = new ComputeBuffer(bufferLength, dataSize);
+            
+            if (DebugOutput) Debug.Log(this.ToString() + " DataSize " + dataSize);
 
             #if USE_APPEND_BUFFER
             dataSize = Marshal.SizeOf<uint>();
             this.particlesIndexBufferActive.Value = new ComputeBuffer(bufferLength, dataSize, ComputeBufferType.Append);
             this.particlesIndexBufferDead.Value = this.particlesIndexBufferActive.Value;
             #endif
+
         }
 
         public void ReleaseBuffer()
@@ -83,20 +127,17 @@ public class GPUParticleBase<T> : MonoBehaviour where T : AlignedGPUData
     [SerializeField] protected ComputeShader cs;
 
     protected GPUParticleBufferParameterContainer bufferParameter = new GPUParticleBufferParameterContainer();
-    protected T[] CPUData = null;
 
+    protected virtual void OnCreateParticleData(int desiredNum)
+    {
+        this.bufferParameter.InitBuffer(desiredNum);
+    }
     protected virtual void OnResetParticlesData()
     {
-        foreach(var boid in this.CPUData)
-        {
-            
-        }
-    }
-    protected void UpdateGPUDataBuffer()
-    {        
-        this.bufferParameter.particlesDataBufferRead.Value.SetData(this.CPUData);
-        this.bufferParameter.particlesDataBufferWrite.Value.SetData(this.CPUData);
 
+    }
+    protected virtual void UpdateGPUDataBuffer()
+    {
         #if USE_APPEND_BUFFER
         this.bufferParameter.particlesIndexBufferActive.Value.SetCounterValue(0);
         this.bufferParameter.particlesIndexBufferDead.Value.SetCounterValue(0);
@@ -107,8 +148,7 @@ public class GPUParticleBase<T> : MonoBehaviour where T : AlignedGPUData
         Assert.IsTrue(desiredNum > 0);
         if (this.bufferParameter.CurrentBufferLength != desiredNum)
         {
-            this.bufferParameter.InitBuffer(desiredNum);
-            this.CPUData = new T[desiredNum];
+            this.OnCreateParticleData(desiredNum);
         }
 
         this.OnResetParticlesData();

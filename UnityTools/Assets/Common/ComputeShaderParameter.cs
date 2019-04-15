@@ -84,6 +84,9 @@ namespace UnityTools.Common
         }
         protected List<ComputeShaderParameterBase> variableList = null;
         protected ComputeShader currentCS = null;
+
+        public const bool DebugOutput = true;
+        
         public ComputeShaderParameterContainer(ComputeShader cs)
         {
             this.Bind(cs);
