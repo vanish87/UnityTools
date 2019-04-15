@@ -19,7 +19,9 @@ public class GPUParticleClass : GPUParticleClassBase<ParticleDataClass>
 {
     protected override void OnResetParticlesData()
     {
+        base.OnResetParticlesData();
 
+        //use a kernal to init data
     }
 }
 

@@ -3,21 +3,60 @@
 
 // Each #kernel tells which function to compile; you can have many kernels
 #pragma kernel Force
-#pragma kernel Intergration
+#pragma kernel Integration
+#pragma kernel Init
+#pragma kernel Emit
 
+cbuffer cb
+{
+    int _NumberOfParticles;
+    int _ActiveNumberOfParticles;
+}
 
-RWStructuredBuffer<ParticleData> _ParticlesDataBufferRead;
+StructuredBuffer<ParticleData> _ParticlesDataBufferRead;
 RWStructuredBuffer<ParticleData> _ParticlesDataBufferWrite;
 
-[numthreads(8,8,1)]
-void Force (uint3 id : SV_DispatchThreadID)
+AppendStructuredBuffer<uint> _ParticlesIndexBufferActive;
+ConsumeStructuredBuffer<uint> _ParticlesIndexBufferDead;
+
+AppendStructuredBuffer<uint> _ParticlesIndexBufferInit;
+
+
+[numthreads(8,1,1)]
+void Init (uint3 DTid : SV_DispatchThreadID)
+{
+	uint idx = DTid.x;
+
+	_ParticlesDataBufferWrite[idx].position = float3(0,0,0);
+	_ParticlesDataBufferWrite[idx].active = false;
+
+	_ParticlesIndexBufferInit.Append(idx);
+}
+
+[numthreads(8, 1, 1)]
+void Emit(uint3 DTid : SV_DispatchThreadID)
+{
+	uint idx = _ParticlesIndexBufferDead.Consume();
+
+	ParticleData p = _ParticlesDataBufferRead[idx];
+	p.active = true;
+	p.position = float3(0, 0, 0);
+	p.velocity = float3(0, 0, 0);
+	p.life = 10;
+	p.color = float4(1, 0, 0, 1);
+
+	_ParticlesDataBufferWrite[idx] = p;
+}
+
+[numthreads(8,1,1)]
+void Force (uint3 DTid : SV_DispatchThreadID)
 {
     // TODO: insert actual code here!
 
 }
 
-[numthreads(8, 8, 1)]
-void Intergration(uint3 id : SV_DispatchThreadID)
+[numthreads(8, 1, 1)]
+void Integration(uint3 DTid : SV_DispatchThreadID)
 {
 	// TODO: insert actual code here!
 

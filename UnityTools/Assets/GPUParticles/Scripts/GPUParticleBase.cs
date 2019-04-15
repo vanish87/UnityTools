@@ -16,20 +16,6 @@ public class AlignedGPUData
 }
 
 /// <summary>
-/// Defined outside of GPUParticleBase to make it Serializable for Unity inspector
-/// </summary>
-[Serializable]
-public class GPUParticleCBufferParameterContainer : ComputeShaderParameterFileContainer
-{
-
-    /// <summary>
-    /// The desired number of particles, the particle buffer count may bigger than this 
-    /// to achieve better data performance by making data aligned in 32 bytes 
-    /// </summary>
-    public ComputeShaderParameterInt numberOfParticles = new ComputeShaderParameterInt("_NumberOfParticles", 1024);
-}
-
-/// <summary>
 /// GPUParticleClassBase will be able to use subclass of AlignedGPUData for reuse of class field
 /// But it does not have a CPU data because ComputeBuffer.SetData does not accept class array parameter
 /// So use compute shader to init data, it also support non-blittable type(eg. bool)
@@ -63,6 +49,20 @@ public class GPUParticleStructBase<T> : GPUParticleBase<T> where T : struct
         this.CPUData = new T[desiredNum];
     }
 }
+
+/// <summary>
+/// Defined outside of GPUParticleBase to make it Serializable for Unity inspector
+/// </summary>
+[Serializable]
+public class GPUParticleCBufferParameterContainer : ComputeShaderParameterFileContainer
+{
+    /// <summary>
+    /// The desired number of particles, the particle buffer count may bigger than this 
+    /// to achieve better data performance by making data aligned in 32 bytes 
+    /// </summary>
+    public ComputeShaderParameterInt numberOfParticles = new ComputeShaderParameterInt("_NumberOfParticles", 1024);
+    public ComputeShaderParameterInt activeNumberOfParticles = new ComputeShaderParameterInt("_ActiveNumberOfParticles", 0);
+}
 public class GPUParticleBase<T> : MonoBehaviour
 {
     public class GPUParticleBufferParameterContainer : ComputeShaderParameterContainer
@@ -74,6 +74,7 @@ public class GPUParticleBase<T> : MonoBehaviour
         #if USE_APPEND_BUFFER
         public ComputeShaderParameterBuffer particlesIndexBufferActive = new ComputeShaderParameterBuffer("_ParticlesIndexBufferActive");
         public ComputeShaderParameterBuffer particlesIndexBufferDead   = new ComputeShaderParameterBuffer("_ParticlesIndexBufferDead");
+        public ComputeShaderParameterBuffer particlesIndexBufferInit = new ComputeShaderParameterBuffer("_ParticlesIndexBufferInit");
         #endif
 
         public int CurrentBufferLength { get { return this.currentBufferLength; } }
@@ -101,6 +102,7 @@ public class GPUParticleBase<T> : MonoBehaviour
             dataSize = Marshal.SizeOf<uint>();
             this.particlesIndexBufferActive.Value = new ComputeBuffer(bufferLength, dataSize, ComputeBufferType.Append);
             this.particlesIndexBufferDead.Value = this.particlesIndexBufferActive.Value;
+            this.particlesIndexBufferInit.Value = this.particlesIndexBufferActive.Value;
             #endif
 
         }
@@ -125,6 +127,7 @@ public class GPUParticleBase<T> : MonoBehaviour
     [SerializeField] protected ComputeShaderDispatcher dispather;
     [SerializeField] protected GPUParticleCBufferParameterContainer parameter = new GPUParticleCBufferParameterContainer();
     [SerializeField] protected ComputeShader cs;
+    [SerializeField] protected Material m;
 
     protected GPUParticleBufferParameterContainer bufferParameter = new GPUParticleBufferParameterContainer();
 
@@ -134,14 +137,27 @@ public class GPUParticleBase<T> : MonoBehaviour
     }
     protected virtual void OnResetParticlesData()
     {
-
-    }
-    protected virtual void UpdateGPUDataBuffer()
-    {
         #if USE_APPEND_BUFFER
         this.bufferParameter.particlesIndexBufferActive.Value.SetCounterValue(0);
-        this.bufferParameter.particlesIndexBufferDead.Value.SetCounterValue(0);
+        //they refer to same buffer instance, so only set count once
+        //this.bufferParameter.particlesIndexBufferDead.Value.SetCounterValue(0);
+        //this.bufferParameter.particlesIndexBufferInit.Value.SetCounterValue(0);
+        this.dispather.Dispatch("Init", this.parameter.numberOfParticles.Value);
         #endif
+    }
+    protected virtual void UpdateGPUDataBuffer()
+    {        
+    }
+
+    protected virtual void Emit(int num)
+    {
+        this.parameter.activeNumberOfParticles.Value += num;
+        
+        #if USE_APPEND_BUFFER
+        this.dispather.Dispatch("Emit", num);
+        ComputeShaderParameterBuffer.SwapBuffer(this.bufferParameter.particlesDataBufferRead, this.bufferParameter.particlesDataBufferWrite);
+        #endif
+
     }
     protected void ResizeBuffer(int desiredNum)
     {
@@ -168,8 +184,17 @@ public class GPUParticleBase<T> : MonoBehaviour
         this.dispather.AddParameter("Force", this.parameter);
         this.dispather.AddParameter("Force", this.bufferParameter);
 
-        this.ResizeBuffer(1024);
-        this.ResizeBuffer(1024);
+        this.dispather.AddParameter("Integration", this.parameter);
+        this.dispather.AddParameter("Integration", this.bufferParameter);
+
+        #if USE_APPEND_BUFFER
+        this.dispather.AddParameter("Init", this.bufferParameter);
+        this.dispather.AddParameter("Emit", this.bufferParameter);
+        #endif
+
+        this.ResizeBuffer(this.parameter.numberOfParticles.Value);
+
+        //this.Emit(512);
     }
 
     protected virtual void OnEnable()
@@ -190,6 +215,18 @@ public class GPUParticleBase<T> : MonoBehaviour
         //this.parameter.UpdateGPU();
         //this.bufferParameter.UpdateGPU("Force");
         this.dispather.Dispatch("Force", this.bufferParameter.CurrentBufferLength);
+        this.dispather.Dispatch("Integration", this.bufferParameter.CurrentBufferLength);
+    }
+    protected virtual void OnRenderObject()
+    {
+        var inverseViewMatrix = Camera.main.worldToCameraMatrix.inverse;
+
+        m.SetPass(0);
+        m.SetMatrix("_InvViewMatrix", inverseViewMatrix);
+        m.SetFloat("_ParticleSize", 1);
+        m.SetBuffer("_ParticleBuffer", this.bufferParameter.particlesDataBufferRead.Value);
+
+        Graphics.DrawProcedural(MeshTopology.Points, this.parameter.numberOfParticles.Value);
     }
     #endregion
 }

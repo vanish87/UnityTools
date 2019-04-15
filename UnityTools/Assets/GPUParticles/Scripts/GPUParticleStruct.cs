@@ -18,9 +18,9 @@ public class GPUParticleStruct : GPUParticleStructBase<ParticleData>
 {
     protected override void OnResetParticlesData()
     {
-        foreach(var p in this.CPUData)
+        for(var i = 0; i< this.CPUData.Length; ++i)
         {
-
+            //this.CPUData[i].color = Color.red;
         }
     }
 }

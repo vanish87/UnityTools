@@ -128,7 +128,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &571886786
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -144,7 +144,10 @@ MonoBehaviour:
   parameter:
     numberOfParticles:
       data: 1024
+    activeNumberOfParticles:
+      data: 0
   cs: {fileID: 7200000, guid: b7e4048c2805d044492a5db68e3e133e, type: 3}
+  m: {fileID: 0}
 --- !u!4 &571886787
 Transform:
   m_ObjectHideFlags: 0
@@ -342,7 +345,10 @@ MonoBehaviour:
   parameter:
     numberOfParticles:
       data: 1024
+    activeNumberOfParticles:
+      data: 0
   cs: {fileID: 7200000, guid: b7e4048c2805d044492a5db68e3e133e, type: 3}
+  m: {fileID: 2100000, guid: 5f716a445c45f9d4f854edf65bbb0ddf, type: 2}
 --- !u!4 &1918678563
 Transform:
   m_ObjectHideFlags: 0
