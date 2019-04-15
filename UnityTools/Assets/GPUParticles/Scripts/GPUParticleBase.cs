@@ -40,15 +40,19 @@ public class GPUParticleBase<T> : MonoBehaviour where T : AlignedGPUData
         public ComputeShaderParameterBuffer particlesIndexBufferDead   = new ComputeShaderParameterBuffer("_ParticlesIndexBufferDead");
         #endif
 
+        public int CurrentBufferLength { get { return this.currentBufferLength; } }
+        protected int currentBufferLength = 0;
+
 
         public void InitBuffer(int bufferLength)
         {
             this.ReleaseBuffer();
 
+            this.currentBufferLength = bufferLength;
+
             int dataSize = Marshal.SizeOf<T>();
             this.particlesDataBufferRead.Value = new ComputeBuffer(bufferLength, dataSize);
             this.particlesDataBufferWrite.Value = new ComputeBuffer(bufferLength, dataSize);
-
 
             #if USE_APPEND_BUFFER
             dataSize = Marshal.SizeOf<uint>();
@@ -65,7 +69,7 @@ public class GPUParticleBase<T> : MonoBehaviour where T : AlignedGPUData
                 return buffer != null && buffer.Value != null;
             });
 
-            bufferList.ToList().ForEach(b => 
+            bufferList?.ToList().ForEach(b => 
             {
                 var buffer = (b as ComputeShaderParameterBuffer);
                 //TODO Release called multiple time, is it safe?
@@ -105,14 +109,14 @@ public class GPUParticleBase<T> : MonoBehaviour where T : AlignedGPUData
     protected void ResizeBuffer(int desiredNum)
     {
         Assert.IsTrue(desiredNum > 0);
-        this.bufferParameter.InitBuffer(desiredNum);
-        this.CPUData = new T[desiredNum];
+        if (this.bufferParameter.CurrentBufferLength != desiredNum)
+        {
+            this.bufferParameter.InitBuffer(desiredNum);
+            this.CPUData = new T[desiredNum];
+        }
 
         this.OnResetParticlesData();
         this.UpdateGPUDataBuffer();
-
-        this.dispather.AddParameter("Force", this.parameter);
-        this.dispather.AddParameter("Force", this.bufferParameter);
     }
 
     #region MonoBehaviour
@@ -122,7 +126,11 @@ public class GPUParticleBase<T> : MonoBehaviour where T : AlignedGPUData
         Assert.IsNotNull(this.cs);
 
         this.parameter.Bind(this.cs);
+        this.bufferParameter.Bind(this.cs);
+
         this.dispather = new ComputeShaderDispatcher(this.cs);
+        this.dispather.AddParameter("Force", this.parameter);
+        this.dispather.AddParameter("Force", this.bufferParameter);
 
         this.ResizeBuffer(1024);
         this.ResizeBuffer(1024);

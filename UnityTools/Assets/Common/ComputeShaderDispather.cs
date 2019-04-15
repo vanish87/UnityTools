@@ -28,6 +28,13 @@ namespace UnityTools.Common
             this.cs = cs;
             this.kernal.Clear();
         }
+        public void ClearParameters()
+        {
+            foreach(var k in this.kernal)
+            {
+                k.Value.parameters.Clear();
+            }
+        }
         public void AddParameter(string kernal, ComputeShaderParameterContainer parameter)
         {
             if (this.kernal.ContainsKey(kernal))
