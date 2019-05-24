@@ -19,6 +19,8 @@ public class AlignedGPUData
 /// GPUParticleClassBase will be able to use subclass of AlignedGPUData for reuse of class field
 /// But it does not have a CPU data because ComputeBuffer.SetData does not accept class array parameter
 /// So use compute shader to init data, it also support non-blittable type(eg. bool)
+/// It is better to use GPUParticleClassBase other than GPUParticleStructBase to keep extensible 
+/// but init particles in init kernal function 
 /// </summary>
 /// <typeparam name="T"></typeparam>
 public class GPUParticleClassBase<T> : GPUParticleBase<T> where T : AlignedGPUData
@@ -105,23 +107,7 @@ public class GPUParticleBase<T> : MonoBehaviour
             this.particlesIndexBufferInit.Value = this.particlesIndexBufferActive.Value;
             #endif
 
-        }
-
-        public void ReleaseBuffer()
-        {
-            var bufferList = this.VarList.Where(b =>
-            {
-                var buffer = b as ComputeShaderParameterBuffer;
-                return buffer != null && buffer.Value != null;
-            });
-
-            bufferList?.ToList().ForEach(b => 
-            {
-                var buffer = (b as ComputeShaderParameterBuffer);
-                //TODO Release called multiple time, is it safe?
-                buffer.Release();
-            });
-        }
+        }        
     }
 
     [SerializeField] protected ComputeShaderDispatcher dispather;

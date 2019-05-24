@@ -132,6 +132,22 @@ namespace UnityTools.Common
             }
         }
 
+        public virtual void ReleaseBuffer()
+        {
+            var bufferList = this.VarList.Where(b =>
+            {
+                var buffer = b as ComputeShaderParameterBuffer;
+                return buffer != null && buffer.Value != null;
+            });
+
+            bufferList?.ToList().ForEach(b =>
+            {
+                var buffer = (b as ComputeShaderParameterBuffer);
+                //TODO Release called multiple time, is it safe?
+                buffer.Release();
+            });
+        }
+
         /// <summary>
         /// This function will get all ComputeShaderParameterBase parameters
         /// Stores them into list and used to update GPU data
@@ -153,6 +169,7 @@ namespace UnityTools.Common
 
             Assert.IsTrue(this.variableList != null);
         }
+
 
     }
 

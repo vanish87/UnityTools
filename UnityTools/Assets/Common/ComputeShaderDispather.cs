@@ -49,6 +49,8 @@ namespace UnityTools.Common
                 this.AddNewKernalInfo(kernal);
                 this.kernal[kernal].parameters.Add(parameter);
             }
+
+            parameter.Bind(this.cs);
         }
         public void Dispatch(string kernal, int X = 1, int Y = 1, int Z = 1)
         {
