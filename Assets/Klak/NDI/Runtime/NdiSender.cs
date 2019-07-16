@@ -129,6 +129,7 @@ namespace Klak.Ndi
 
             // Request readback.
             _frameQueue.Enqueue(new Frame{
+                //note this is source width/height, not texture size
                 width = sw, height = sh, format = _dataFormat,
                 readback = AsyncGPUReadback.Request(_converted)
             });
