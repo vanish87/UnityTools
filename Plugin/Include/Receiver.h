@@ -9,9 +9,25 @@ namespace KlakNDI
     {
     public:
 
-        Receiver(const NDIlib_source_t& source)
+        Receiver(const NDIlib_source_t& source, uint32_t fourCC)
         {
-            NDIlib_recv_create_v3_t create(source, NDIlib_recv_color_format_fastest);
+			//default is NDIlib_recv_color_format_fastest
+			//This will provide UYVY and UYVA format
+			//but if you set RGBA, it will convert data to RGBA
+			auto format = NDIlib_recv_color_format_fastest;
+
+			switch (fourCC)
+			{
+			case NDIlib_FourCC_type_RGBA:
+				format = NDIlib_recv_color_format_RGBX_RGBA;
+				break;
+			case NDIlib_FourCC_type_BGRA:
+				format = NDIlib_recv_color_format_BGRX_BGRA;
+				break;
+			default:
+				break;
+			}
+			NDIlib_recv_create_v3_t create(source, format);
             instance_ = NDIlib_recv_create_v3(&create);
             id_ = generateID();
             getInstanceMap()[id_] = this;

@@ -51,9 +51,9 @@ extern "C" void UNITY_INTERFACE_EXPORT NDI_SyncSender(Sender* sender)
 
 // Receiver functions
 
-extern "C" Receiver UNITY_INTERFACE_EXPORT *NDI_CreateReceiver(const char* sourceName)
+extern "C" Receiver UNITY_INTERFACE_EXPORT *NDI_CreateReceiver(const char* sourceName, uint32_t fourCC)
 {
-    return new Receiver(NDIlib_source_t(sourceName));
+    return new Receiver(NDIlib_source_t(sourceName), fourCC);
 }
 
 extern "C" void UNITY_INTERFACE_EXPORT NDI_DestroyReceiver(Receiver* receiver)
