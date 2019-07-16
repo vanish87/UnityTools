@@ -87,6 +87,9 @@ namespace Klak.Ndi
             var sw = source.width;
             var sh = source.height;
 
+            var tw = sw;
+            var th = sh;
+
             var alphaSupport = _dataFormat == FourCC.UYVA;
             var isRGBA = true;
             switch (_dataFormat)
@@ -94,8 +97,8 @@ namespace Klak.Ndi
                 case FourCC.UYVA:
                 case FourCC.UYVY:
                     {
-                        sw = sw / 2;
-                        sh = sh * (alphaSupport ? 3 : 2) / 2;
+                        tw = sw / 2;
+                        th = sh * (alphaSupport ? 3 : 2) / 2;
                         isRGBA = false;
                     }
                     break;
@@ -103,7 +106,7 @@ namespace Klak.Ndi
 
             // Allocate a new render texture.
             _converted = RenderTexture.GetTemporary(
-                sw, sh, 0,
+                tw, th, 0,
                 RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear
             );
 
