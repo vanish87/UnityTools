@@ -19,11 +19,24 @@ namespace
             if (receiver != nullptr && receiver->receiveFrame())
             {
                 // Check if it's an alpha supported frame.
-                auto alpha = (receiver->getFrameFourCC() == NDIlib_FourCC_type_UYVA);
+				auto width = receiver->getFrameWidth();
+				auto height = receiver->getFrameHeight();
+				
+				auto format = receiver->getFrameFourCC();
+				switch (format)
+				{
+				case NDIlib_FourCC_type_UYVA:
+				case NDIlib_FourCC_type_UYVY:
+				{
+					auto alpha = (format == NDIlib_FourCC_type_UYVA);
 
-                // Calculate the texture dimensions.
-                auto width = receiver->getFrameWidth() / 2;
-                auto height = receiver->getFrameHeight() * (alpha ? 3 : 2) / 2;
+					// Calculate the texture dimensions.
+					width = receiver->getFrameWidth() / 2;
+					height = receiver->getFrameHeight() * (alpha ? 3 : 2) / 2;
+				}
+				break;
+				}
+
 
                 // Check if the texture dimensions match.
                 if (params->width == width && params->height == height)
