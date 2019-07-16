@@ -22,6 +22,18 @@ namespace Klak.Ndi
             }
         }
 
+        [SerializeField] FourCC _dataFormat = FourCC.UYVA;
+        public FourCC DataFormat
+        {
+            get { return _dataFormat; }
+            set
+            {
+                if (_dataFormat == value) return;
+                _dataFormat = value;
+                RequestReconnect();
+            }
+        }
+
         #endregion
 
         #region Target settings
@@ -104,7 +116,7 @@ namespace Klak.Ndi
             // Plugin lazy initialization
             if (_plugin == System.IntPtr.Zero)
             {
-                _plugin = PluginEntry.CreateReceiver(_sourceName);
+                _plugin = PluginEntry.CreateReceiver(_sourceName, _dataFormat);
                 if (_plugin == System.IntPtr.Zero) return; // No receiver support
             }
 
@@ -127,9 +139,24 @@ namespace Klak.Ndi
             if (width == 0 || height == 0) return; // Not yet ready
 
             // Source data dimensions
-            var alpha = PluginEntry.GetFrameFourCC(_plugin) == FourCC.UYVA;
-            var sw = width / 2;
-            var sh = height * (alpha ? 3 : 2) / 2;
+            var sw = width;
+            var sh = height;
+
+            var frameFormat = PluginEntry.GetFrameFourCC(_plugin);
+            var isRGBA = true;
+            var alpha = true;
+            switch (frameFormat)
+            {
+                case FourCC.UYVA:
+                case FourCC.UYVY:
+                    {
+                        alpha = frameFormat == FourCC.UYVA;
+                        sw = width / 2;
+                        sh = height * (alpha ? 3 : 2) / 2;
+                        isRGBA = false;
+                    }
+                    break;
+            }
 
             // Renew the textures when the dimensions are changed.
             if (_sourceTexture.width != sw || _sourceTexture.height != sh)
@@ -157,7 +184,14 @@ namespace Klak.Ndi
 
             // Texture format conversion using the blit shader
             var receiver = _targetTexture != null ? _targetTexture : _receivedTexture;
-            Graphics.Blit(_sourceTexture, receiver, _blitMaterial, alpha ? 1 : 0);
+            if (isRGBA)
+            {
+                Graphics.Blit(_sourceTexture, receiver);
+            }
+            else
+            {
+                Graphics.Blit(_sourceTexture, receiver, _blitMaterial, alpha ? 1 : 0);
+            }
             receiver.IncrementUpdateCount();
 
             // Renderer override

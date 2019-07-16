@@ -104,6 +104,11 @@ namespace Klak.Ndi
 
             EditorGUILayout.EndHorizontal();
 
+            EditorGUI.BeginChangeCheck();
+            var rev = (NdiReceiver)target;
+            rev.DataFormat = (FourCC)EditorGUILayout.EnumPopup("Data Format", rev.DataFormat);
+            if (EditorGUI.EndChangeCheck()) RequestReconnect();
+
             // Target texture/renderer
             EditorGUILayout.PropertyField(_targetTexture);
             EditorGUILayout.PropertyField(_targetRenderer);

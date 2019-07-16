@@ -17,10 +17,15 @@ using System.Runtime.InteropServices;
 namespace Klak.Ndi
 {
     // FourCC code definitions used in NDI
-    enum FourCC : uint
+    public enum FourCC : uint
     {
         UYVY = 0x59565955,
-        UYVA = 0x41565955
+        UYVA = 0x41565955,
+
+        BGRA = 1095911234,
+
+        RGBA = 1094862674,//same 0x41424752
+        RGBX = 1480738642,//same 0x58424752
     }
 
     static class PluginEntry
@@ -108,7 +113,7 @@ namespace Klak.Ndi
         #if NDI_ENABLED && !NDI_SENDER_ONLY
 
         [DllImport(_dllName, EntryPoint = "NDI_CreateReceiver")]
-        internal static extern IntPtr CreateReceiver(string clause);
+        internal static extern IntPtr CreateReceiver(string clause, FourCC fourCC);
 
         [DllImport(_dllName, EntryPoint = "NDI_DestroyReceiver")]
         internal static extern void DestroyReceiver(IntPtr receiver);
