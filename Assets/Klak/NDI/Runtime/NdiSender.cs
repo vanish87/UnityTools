@@ -45,6 +45,28 @@ namespace Klak.Ndi
         }
 
         #endregion
+        #region Name
+
+
+        [SerializeField] string _name = "NDISender";
+        public string Name
+        {
+            get { return _name; }
+            set
+            {
+                if (_name == value) return;
+                _name = value;
+
+                //create a new sender with new name
+                if (_plugin != IntPtr.Zero)
+                {
+                    PluginEntry.DestroySender(_plugin);
+                    _plugin = IntPtr.Zero;
+                }
+            }
+        }
+
+        #endregion
 
         #region Private members
 
@@ -158,7 +180,7 @@ namespace Klak.Ndi
                 // Okay, we're going to send this frame.
 
                 // Lazy initialization of the plugin sender instance.
-                if (_plugin == IntPtr.Zero) _plugin = PluginEntry.CreateSender(gameObject.name);
+                if (_plugin == IntPtr.Zero) _plugin = PluginEntry.CreateSender(this.Name);
 
                 // Feed the frame data to the sender. It encodes/sends the
                 // frame asynchronously.
