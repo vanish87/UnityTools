@@ -34,6 +34,11 @@ namespace Klak.Ndi
             }
         }
 
+        public FourCC RecievedFormat { get { return this.recievedFormat; } }
+        protected FourCC recievedFormat = FourCC.RGBA;
+        public Vector2Int RecievedResolution { get { return this.recievedResolution; } }
+        protected Vector2Int recievedResolution = new Vector2Int(0,0);
+
         #endregion
 
         #region Target settings
@@ -136,13 +141,18 @@ namespace Klak.Ndi
             // Texture information retrieval
             var width = PluginEntry.GetFrameWidth(_plugin);
             var height = PluginEntry.GetFrameHeight(_plugin);
+            var frameFormat = PluginEntry.GetFrameFourCC(_plugin);
+
+            this.recievedResolution.x = width;
+            this.recievedResolution.y = height;
+            this.recievedFormat = frameFormat;
+
             if (width == 0 || height == 0) return; // Not yet ready
 
             // Source data dimensions
             var sw = width;
             var sh = height;
 
-            var frameFormat = PluginEntry.GetFrameFourCC(_plugin);
             var isRGBA = true;
             var alpha = true;
             switch (frameFormat)
