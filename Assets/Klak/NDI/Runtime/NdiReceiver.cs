@@ -35,9 +35,9 @@ namespace Klak.Ndi
         }
 
         public FourCC RecievedFormat { get { return this.recievedFormat; } }
-        protected FourCC recievedFormat = FourCC.RGBA;
+        private FourCC recievedFormat = FourCC.RGBA;
         public Vector2Int RecievedResolution { get { return this.recievedResolution; } }
-        protected Vector2Int recievedResolution = new Vector2Int(0,0);
+        private Vector2Int recievedResolution = new Vector2Int(0,0);
 
         #endregion
 
