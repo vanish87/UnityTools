@@ -34,6 +34,8 @@ namespace Klak.Ndi
             }
         }
 
+        [SerializeField] bool _invertY = false;
+
         public FourCC RecievedFormat { get { return this.recievedFormat; } }
         private FourCC recievedFormat = FourCC.RGBA;
         public Vector2Int RecievedResolution { get { return this.recievedResolution; } }
@@ -196,7 +198,14 @@ namespace Klak.Ndi
             var receiver = _targetTexture != null ? _targetTexture : _receivedTexture;
             if (isRGBA)
             {
-                Graphics.Blit(_sourceTexture, receiver);
+                if (_invertY)
+                {
+                    Graphics.Blit(_sourceTexture, receiver, _blitMaterial, 2);//pass 2 is invert y pass
+                }
+                else
+                {
+                    Graphics.Blit(_sourceTexture, receiver);
+                }
             }
             else
             {

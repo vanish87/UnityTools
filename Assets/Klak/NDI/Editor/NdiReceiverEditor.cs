@@ -15,6 +15,7 @@ namespace Klak.Ndi
         SerializedProperty _sourceName;
         SerializedProperty _targetTexture;
         SerializedProperty _targetRenderer;
+        SerializedProperty _invertY;
         SerializedProperty _targetMaterialProperty;
 
         List<string> _sourceNames = new List<string>();
@@ -76,6 +77,7 @@ namespace Klak.Ndi
             _sourceName = serializedObject.FindProperty("_sourceName");
             _targetTexture = serializedObject.FindProperty("_targetTexture");
             _targetRenderer = serializedObject.FindProperty("_targetRenderer");
+            _invertY = serializedObject.FindProperty("_invertY");
             _targetMaterialProperty = serializedObject.FindProperty("_targetMaterialProperty");
 
             EditorApplication.update += CheckRepaint;
@@ -112,6 +114,7 @@ namespace Klak.Ndi
             // Target texture/renderer
             EditorGUILayout.PropertyField(_targetTexture);
             EditorGUILayout.PropertyField(_targetRenderer);
+            EditorGUILayout.PropertyField(_invertY);
 
             EditorGUI.indentLevel++;
 
