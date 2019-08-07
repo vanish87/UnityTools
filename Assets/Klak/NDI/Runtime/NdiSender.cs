@@ -28,6 +28,8 @@ namespace Klak.Ndi
             set { _sourceTexture = value; }
         }
 
+        [SerializeField] bool _invertY = true;
+
         #endregion
 
         #region Format option
@@ -142,7 +144,14 @@ namespace Klak.Ndi
             // Apply the conversion shader.
             if (isRGBA)
             {
-                Graphics.Blit(source, _converted);
+                if (_invertY)
+                {
+                    Graphics.Blit(source, _converted, _material, 2);//pass 2 is invert y pass
+                }
+                else
+                {
+                    Graphics.Blit(source, _converted);
+                }
             }
             else
             {

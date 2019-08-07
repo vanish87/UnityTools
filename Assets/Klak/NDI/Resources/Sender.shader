@@ -73,6 +73,11 @@ Shader "Hidden/KlakNDI/Sender"
         return uv_a.y < 1 ? half4(a1, a2, a3, a4) : half4(u, yuv1.x, v, yuv2.x);
     }
 
+	half4 Fragment_InvertY(v2f_img input) : SV_Target
+	{
+		float2 invY = float2(input.uv.x, 1 - input.uv.y);
+		return tex2D(_MainTex, invY);
+	}
     ENDCG
 
     SubShader
@@ -93,5 +98,13 @@ Shader "Hidden/KlakNDI/Sender"
             #pragma fragment Fragment_UYVA
             ENDCG
         }
+		Pass
+		{
+			CGPROGRAM
+			#pragma target 3.0
+			#pragma vertex vert_img
+			#pragma fragment Fragment_InvertY
+			ENDCG
+		}
     }
 }

@@ -11,10 +11,12 @@ namespace Klak.Ndi
     public sealed class NdiSenderEditor : Editor
     {
         SerializedProperty _sourceTexture;
+        SerializedProperty _invertY;
 
         void OnEnable()
         {
             _sourceTexture = serializedObject.FindProperty("_sourceTexture");
+            _invertY = serializedObject.FindProperty("_invertY");
         }
 
         public override void OnInspectorGUI()
@@ -48,6 +50,7 @@ namespace Klak.Ndi
             else
                 EditorGUILayout.PropertyField(_sourceTexture);
             
+            EditorGUILayout.PropertyField(this._invertY);
             sender.DataFormat = (FourCC)EditorGUILayout.EnumPopup("Data Format", sender.DataFormat);
 
             serializedObject.ApplyModifiedProperties();
