@@ -175,9 +175,11 @@ namespace Klak.Ndi
             {
                 Util.Destroy(_sourceTexture);
                 Util.Destroy(_receivedTexture);
-                _sourceTexture = new Texture2D(sw, sh, TextureFormat.RGBA32, false, true);
+                _sourceTexture = new Texture2D(sw, sh, TextureFormat.ARGB32, false, true);
                 _sourceTexture.hideFlags = HideFlags.DontSave;
+
                 _sourceTexture.filterMode = FilterMode.Point;
+                _sourceTexture.anisoLevel = 0;
             }
 
             // Blit shader lazy initialization
@@ -190,8 +192,15 @@ namespace Klak.Ndi
             // Receiver texture lazy initialization
             if (_targetTexture == null && _receivedTexture == null)
             {
-                _receivedTexture = new RenderTexture(width, height, 0);
+                _receivedTexture = new RenderTexture(width, height, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear);
                 _receivedTexture.hideFlags = HideFlags.DontSave;
+
+                _receivedTexture.useMipMap = false;
+                _receivedTexture.filterMode = FilterMode.Point;
+                _receivedTexture.anisoLevel = 0;
+                _receivedTexture.antiAliasing = 1;
+                _receivedTexture.autoGenerateMips = false;
+                _receivedTexture.Create();
             }
 
             // Texture format conversion using the blit shader
