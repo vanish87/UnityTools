@@ -36,10 +36,10 @@ namespace UnityTools
         public void UnregisterOnConfigureChanged(EventHandler handler) { this.OnConfigureChanged -= handler; }
         protected void OnConfigureChange() { this.OnConfigureChanged?.Invoke(this, new EventArgs()); }
 
-        protected event EventHandler OnConfigureGUI;
+        /*protected event EventHandler OnConfigureGUI;
         public void RegisterOnDrawConfigureGUI(EventHandler handler) { this.OnConfigureGUI -= handler; this.OnConfigureGUI += handler; }
         public void UnregisterOnDrawConfigureGUI(EventHandler handler) { this.OnConfigureGUI -= handler; }
-        protected void OnDrawConfigureGUI() { this.OnConfigureGUI?.Invoke(this, new EventArgs()); }
+        protected void OnDrawConfigureGUI() { this.OnConfigureGUI?.Invoke(this, new EventArgs()); }*/
         #endregion
 
         protected virtual void OnDrawGUI()
@@ -86,7 +86,6 @@ namespace UnityTools
                         GetHashCode(), this.windowRect, (id) =>
                         {
                             this.OnDrawGUI();
-                            this.OnDrawConfigureGUI();
                             GUI.DragWindow();
                         },
                 "",
@@ -237,10 +236,11 @@ namespace UnityTools
         public void UnregisterOnConfigureChanged(EventHandler handler) { this.OnConfigureChanged -= handler; }
         protected void OnConfigureChange() { this.OnConfigureChanged?.Invoke(this, new EventArgs()); }
 
+        /*
         protected event EventHandler OnConfigureGUI;
         public void RegisterOnDrawConfigureGUI(EventHandler handler) { this.OnConfigureGUI -= handler; this.OnConfigureGUI += handler; }
         public void UnregisterOnDrawConfigureGUI(EventHandler handler) { this.OnConfigureGUI -= handler; }
-        protected void OnDrawConfigureGUI() { this.OnConfigureGUI?.Invoke(this, new EventArgs()); }
+        protected void OnDrawConfigureGUI() { this.OnConfigureGUI?.Invoke(this, new EventArgs()); }*/
         #endregion
 
         protected virtual void OnDrawGUI()
@@ -295,7 +295,6 @@ namespace UnityTools
                         GetHashCode(), this.windowRect, (id) =>
                         {
                             this.OnDrawGUI();
-                            this.OnDrawConfigureGUI();
                             GUI.DragWindow();
                         },
                 "",
@@ -343,6 +342,28 @@ namespace UnityTools
             }
         }
 
+        public static void OnGUISlider<T>(ref T value, float min = 0, float max = 1, string displayName = null)
+        {
+            OnGUI(ref value, displayName);
+
+            var isSliderable = typeof(T) == typeof(float)
+                            || typeof(T) == typeof(int)
+                            || typeof(T) == typeof(uint);
+
+            if (isSliderable == false) return;
+
+            using (var h = new GUILayout.HorizontalScope())
+            {
+                var floatValue = (float)Convert.ChangeType(value, typeof(float));
+                OnGUISliderFloat(ref floatValue, min, max);
+                value = (T)Convert.ChangeType(floatValue, typeof(T));
+            }
+        }
+
+        public static void OnGUISliderFloat(ref float value, float min = 0, float max = 1)
+        {
+            value = GUILayout.HorizontalSlider(value, min, max, GUILayout.MinWidth(70));
+        }
         static public void OnGUI<T>(ref T value, string displayName = null)
         {
             var op = new[] { GUILayout.MinWidth(70f) };
@@ -400,6 +421,16 @@ namespace UnityTools
                 OnGUI(ref vector.y, "y");
             }
         }
+        static public void OnGUISlider(ref Vector2 vector, Vector2 min, Vector2 max, string displayName = null)
+        {
+            var op = new[] { GUILayout.MinWidth(70f) };
+            using (var h = new GUILayout.HorizontalScope())
+            {
+                GUILayout.Label(displayName == null ? nameof(Vector2) : displayName);
+                OnGUI(ref vector.x, "x"); OnGUISliderFloat(ref vector.x, min.x, max.x);
+                OnGUI(ref vector.y, "y"); OnGUISliderFloat(ref vector.y, min.y, max.y);
+            }
+        }
         static public void OnGUI(ref Vector2Int vector, string displayName = null)
         {
             var op = new[] { GUILayout.MinWidth(70f) };
@@ -425,6 +456,18 @@ namespace UnityTools
                 OnGUI(ref vector.z, "z");
             }
         }
+
+        static public void OnGUISlider(ref Vector3 vector, Vector3 min, Vector3 max, string displayName = null)
+        {
+            var op = new[] { GUILayout.MinWidth(70f) };
+            using (var h = new GUILayout.HorizontalScope())
+            {
+                GUILayout.Label(displayName == null ? typeof(Vector3).ToString() : displayName);
+                OnGUI(ref vector.x, "x"); OnGUISliderFloat(ref vector.x, min.x, max.x);
+                OnGUI(ref vector.y, "y"); OnGUISliderFloat(ref vector.y, min.y, max.y);
+                OnGUI(ref vector.z, "z"); OnGUISliderFloat(ref vector.z, min.z, max.z);
+            }
+        }
         static public void OnGUI(ref Vector4 vector, string displayName = null)
         {
             var op = new[] { GUILayout.MinWidth(70f) };
@@ -435,6 +478,18 @@ namespace UnityTools
                 OnGUI(ref vector.y, "y");
                 OnGUI(ref vector.z, "z");
                 OnGUI(ref vector.w, "w");
+            }
+        }
+        static public void OnGUISlider(ref Vector4 vector, Vector4 min, Vector4 max, string displayName = null)
+        {
+            var op = new[] { GUILayout.MinWidth(70f) };
+            using (var h = new GUILayout.HorizontalScope())
+            {
+                GUILayout.Label(displayName == null ? typeof(Vector4).ToString() : displayName);
+                OnGUI(ref vector.x, "x"); OnGUISliderFloat(ref vector.x, min.x, max.x);
+                OnGUI(ref vector.y, "y"); OnGUISliderFloat(ref vector.y, min.y, max.y);
+                OnGUI(ref vector.z, "z"); OnGUISliderFloat(ref vector.z, min.z, max.z);
+                OnGUI(ref vector.w, "w"); OnGUISliderFloat(ref vector.w, min.w, max.w);
             }
         }
 
