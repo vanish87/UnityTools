@@ -1,7 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityTools.Common;
+using UnityTools;
+using UnityTools.Rendering;
 
 namespace Test
 {
@@ -37,7 +38,7 @@ namespace Test
             var t1 = list[0];
             list.Clear();
 
-            RenderTexUtil.Clear(t1, Color.red);
+            RenderTextureTool.Clear(t1, Color.red);
 
             t1.Release();
 
@@ -47,12 +48,14 @@ namespace Test
             Graphics.CopyTexture(t1, t1copy);
 
             list.Add(t1);
+
+            list.Add(TextureManager.Create(new RenderTextureDescriptor(128, 128)));
         }
 
         private void OnApplicationQuit()
         {
             #if DEBUG
-            RenderTexUtil.tracking.ReportTextures();
+            TextureManager.tracking.ReportTextures();
             #endif
         }
 

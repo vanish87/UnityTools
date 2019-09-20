@@ -6,7 +6,7 @@ using UnityEngine.Assertions;
 
 namespace UnityTools.Rendering
 {
-    public class RenderTextureTool
+    public static class RenderTextureTool
     {
         public class RenderTextureScope : Scope
         {
@@ -112,7 +112,7 @@ namespace UnityTools.Rendering
                 {
                     RenderTexture s = this.source;
                     RenderTexture t = this.target;
-                    return ShouldRebuild(s, t) == false;
+                    return CheckNullAndSize(s, t) == false;
                 });
             }
 
@@ -134,7 +134,7 @@ namespace UnityTools.Rendering
                 {
                     Texture2D s = this.source;
                     Texture2D t = this.target;
-                    return ShouldRebuild(s,t) == false;
+                    return CheckNullAndSize(s,t) == false;
                 });
             }
 
@@ -146,26 +146,35 @@ namespace UnityTools.Rendering
                 this.target = TextureManager.Create(s.width, s.height, s.format);
             }
         }
-        static public void MatchSource(RenderTexture src, ref RenderTexture target)
+
+        /// <summary>
+        /// Return true if target should rebuild
+        /// </summary>
+        /// <param name="src"></param>
+        /// <param name="target"></param>
+        /// <returns></returns>
+        public delegate bool RebuildChecker(Texture src, Texture target);
+        public static void MatchSource(this RenderTexture src, ref RenderTexture target, RebuildChecker checker = null)
         {
-            if(ShouldRebuild(src, target))
+            var c = checker ?? CheckNullAndSize;
+            if(c(src, target))
             {
                 target?.DestoryObj();
                 target = TextureManager.Create(src.descriptor);
             }
         }
 
-        static public bool ShouldRebuild(Texture src, Texture target)
+        public static bool CheckNullAndSize(Texture src, Texture target)
         {
             return src != null && (target == null || target.width != src.width || target.height != src.height);
         }
-        
-        static public void Clear(RenderTexture target)
+
+        public static void Clear(this RenderTexture target)
         {
             Clear(target, Color.clear);
         }
 
-        static public void Clear(RenderTexture target, Color color)
+        public static void Clear(this RenderTexture target, Color color)
         {
             if (target == null) return;
             using (new RenderTextureScope(target))

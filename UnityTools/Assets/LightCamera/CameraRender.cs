@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
-using UnityTools.Common;
+using UnityTools.Rendering;
 
 namespace UnityTools.LightCamera
 {
@@ -30,7 +30,7 @@ namespace UnityTools.LightCamera
 
             for (var i = 0; i < this.mrtTex.Length; ++i)
             {
-                RenderTexUtil.CheckAndRebuild(source, ref this.mrtTex[i]);
+                source.MatchSource(ref this.mrtTex[i]);
                 this.mrtRB[i] = mrtTex[i].colorBuffer;
             }
 
@@ -39,9 +39,9 @@ namespace UnityTools.LightCamera
 
         private void OnPreRender()
         {
-            for (var i = 0; i < this.mrtTex.Length; ++i)
+            foreach(var t in this.mrtTex)
             {
-                RenderTexUtil.Clear(this.mrtTex[i]);
+                t.Clear();
             }
 
         }

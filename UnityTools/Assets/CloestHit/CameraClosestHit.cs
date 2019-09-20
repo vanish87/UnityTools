@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using UnityEngine;
-using UnityTools.Common;
+using UnityTools.Rendering;
 
 namespace UnityTools.CloestHit
 {
@@ -171,7 +171,7 @@ namespace UnityTools.CloestHit
 
         private void OnRenderImage(RenderTexture source, RenderTexture destination)
         {
-            RenderTexUtil.CheckAndRebuild(source, ref this.depthTextureCache);
+            source.MatchSource(ref this.depthTextureCache);
 
             Graphics.Blit(source, this.depthTextureCache, this.renderToDepthMat);
 

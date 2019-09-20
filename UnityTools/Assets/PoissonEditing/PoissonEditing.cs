@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
-using UnityTools.Common;
+using UnityTools;
+using UnityTools.Rendering;
 
 public class PoissonEditing : MonoBehaviour
 {
@@ -36,14 +37,20 @@ public class PoissonEditing : MonoBehaviour
         Assert.IsNotNull(this.maskImage);
         Assert.IsNotNull(this.blendCS);
 
-        this.outputImage = RenderTexUtil.Create(this.sourceImage.width, this.sourceImage.height, 24, RenderTextureFormat.ARGBFloat, true);
-        this.outputImage1 = RenderTexUtil.Create(this.sourceImage.width, this.sourceImage.height, 24, RenderTextureFormat.ARGBFloat, true);
-        this.lapTex = RenderTexUtil.Create(this.sourceImage.width, this.sourceImage.height, 24, RenderTextureFormat.ARGBFloat, true);
-        this.sourceLapTex = RenderTexUtil.Create(this.sourceImage.width, this.sourceImage.height, 24, RenderTextureFormat.ARGBFloat, true);
+        var desc = new RenderTextureDescriptor();
+        desc.width = this.sourceImage.width;
+        desc.height = this.sourceImage.height;
+        desc.colorFormat = RenderTextureFormat.ARGBFloat;
+        desc.enableRandomWrite = true;
+
+        this.outputImage = TextureManager.Create(desc);
+        this.outputImage1 = TextureManager.Create(desc);
+        this.lapTex = TextureManager.Create(desc);
+        this.sourceLapTex = TextureManager.Create(desc);
 
 
-        this.gradientX = RenderTexUtil.Create(this.sourceImage.width, this.sourceImage.height, 24, RenderTextureFormat.ARGBFloat, true);
-        this.gradientY = RenderTexUtil.Create(this.sourceImage.width, this.sourceImage.height, 24, RenderTextureFormat.ARGBFloat, true);
+        this.gradientX = TextureManager.Create(desc);
+        this.gradientY = TextureManager.Create(desc);
 
         this.kernal = this.blendCS.FindKernel("Lap");
         this.solverKernal = this.blendCS.FindKernel("Solver");
