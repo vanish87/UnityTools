@@ -8,100 +8,150 @@ namespace UnityTools.Common
 {
     public class FileTool
     {
+        /// <summary>
+        /// if target is not exsit, rename source to target,
+        /// else replace target file with source file
+        /// </summary>
+        /// <param name="target"></param>
+        /// <param name="source"></param>
+        public static void ReplaceOrRename(string target, string source)
+        {
+            if (File.Exists(target))
+            {
+                File.Delete(target);
+            }
+            File.Move(source, target);
+        }
+        public static string GetTempFileName(string filePath)
+        {
+            return filePath + ".temp";
+        }
+
         static public void WriteXML<T>(string filePath, T data)
         {
-            //System.IO.FileStream fs = new System.IO.FileStream(filePath, System.IO.FileMode.Create);
-            using (var fs = new StreamWriter(filePath, false, System.Text.Encoding.UTF8))
+            var temp = GetTempFileName(filePath);
+            bool ret = false;
+
+            try
             {
-                //シリアル化し、XMLファイルに保存する
-                try
-                {
+                using (var fs = new StreamWriter(temp, false, System.Text.Encoding.UTF8))
+                {   
                     XmlSerializer serializer = new XmlSerializer(typeof(T));
                     serializer.Serialize(fs, data);
+                    fs.Flush();
+                    fs.Close();
                 }
-                catch (System.Exception e)
-                {
-                    Debug.LogWarning(e.Message);
-                }
+                ret = true;
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning(e.Message);
+                ret = false;
+            }
 
-                fs.Flush();
-                fs.Close();
-            };
+            try
+            {
+                if(ret)
+                {
+                    ReplaceOrRename(filePath, temp);
+                }
+                else
+                {
+                    File.Delete(temp);
+                }
+            }
+            catch(Exception e)
+            {
+                Debug.Log(e.Message);
+            }
         }
 
         static public void WriteBinary<T>(string filePath, T data)
         {
-            using (var fs = new FileStream(filePath, FileMode.Create))
+            var temp = GetTempFileName(filePath);
+            bool ret = false;
+            try
             {
-                //シリアル化し、XMLファイルに保存する
-                try
+                using (var fs = new FileStream(filePath, FileMode.Create))
                 {
+            
                     var serializer = new BinaryFormatter();
                     serializer.Serialize(fs, data);
+                    fs.Flush();
+                    fs.Close();
                 }
-                catch (System.Exception e)
-                {
-                    Debug.LogWarning(e.Message);
-                }
+                ret = true;
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning(e.Message);
+                ret = false;
+            }
 
-                fs.Flush();
-                fs.Close();
-            };
+            try
+            {
+                if (ret)
+                {
+                    ReplaceOrRename(filePath, temp);
+                }
+                else
+                {
+                    File.Delete(temp);
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.Log(e.Message);
+            }
         }
         static public T ReadXML<T>(string filePath) where T : new()
         {
             var ret = default(T);
             if (File.Exists(filePath))
             {
-                //読み込むファイルを開く
-                //System.IO.FileStream fs = new System.IO.FileStream(filePath, System.IO.FileMode.Open);
-                using (var xs = new StreamReader(filePath, System.Text.Encoding.UTF8))
+                try
                 {
-                    //XmlSerializerオブジェクトを作成
-
-                    //XMLファイルから読み込み、逆シリアル化する
-                    try
+                    using (var xs = new StreamReader(filePath, System.Text.Encoding.UTF8))
                     {
                         XmlSerializer serializer = new XmlSerializer(typeof(T));
                         ret = (T)serializer.Deserialize(xs);
-                    }
-                    catch (Exception e)
-                    {
-                        Debug.LogWarning(e.Message + " " + filePath);
-                    }
+                        xs.Close();                    }
+                }
+                catch (Exception e)
+                {
+                    Debug.LogWarning(e.Message + " " + filePath);
                 }
             }
             else
             {
                 Debug.LogWarning(filePath + " not found, create new one");
-                WriteXML(filePath, new T());
+                ret = new T();
+                WriteXML(filePath, ret);
             }
 
             return ret;
         }
 
-        static public T ReadBinary<T>(string filePath)
+        static public T ReadBinary<T>(string filePath) where T : new()
         {
             var ret = default(T);
-            if (File.Exists(filePath) == false) return ret;
+            if (File.Exists(filePath) == false) return new T();
 
-            using (var fs = new FileStream(filePath, FileMode.Open))
+            try
             {
-                //シリアル化し、XMLファイルに保存する
-                try
+                using (var fs = new FileStream(filePath, FileMode.Open))
                 {
                     var serializer = new BinaryFormatter();
                     ret = (T)serializer.Deserialize(fs);
+                    fs.Flush();
+                    fs.Close();
                 }
-                catch (Exception e)
-                {
-                    Debug.LogWarning("File Name " + filePath);
-                    Debug.LogWarning(e.Message);
-                }
-
-                fs.Flush();
-                fs.Close();
-            };
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning("File Name " + filePath);
+                Debug.LogWarning(e.Message);
+            }
 
             return ret;
         }
