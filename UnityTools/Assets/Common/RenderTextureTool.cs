@@ -47,9 +47,9 @@ namespace UnityTools.Rendering
             }
         }
 
-        public class RTMatcher : TextureMatcher<AutoRenderTexture>
+        public class RTMatcher : TextureMatcher<DisposableRenderTexture>
         {
-            public RTMatcher(AutoRenderTexture source, AutoRenderTexture target) : base(source, target)
+            public RTMatcher(DisposableRenderTexture source, DisposableRenderTexture target) : base(source, target)
             {
                 this.validator.Validation += () => this.CreateTexture();
                 this.validator.SetCheckers(() =>
@@ -69,9 +69,9 @@ namespace UnityTools.Rendering
             }
         }
 
-        public class Texture2DMatcher : TextureMatcher<AutoTexture2D>
+        public class Texture2DMatcher : TextureMatcher<DisposableTexture2D>
         {
-            public Texture2DMatcher(AutoTexture2D source, AutoTexture2D target) : base(source, target)
+            public Texture2DMatcher(DisposableTexture2D source, DisposableTexture2D target) : base(source, target)
             {
                 this.validator.Validation += () => this.CreateTexture();
                 this.validator.SetCheckers(() =>

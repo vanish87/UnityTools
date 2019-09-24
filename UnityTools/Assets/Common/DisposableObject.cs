@@ -5,21 +5,21 @@ using UnityEngine;
 
 namespace UnityTools.Common
 {
-    public class AutoObject<T> : Disposable
+    public class DisposableObject<T> : Disposable
     {
         public T Data { get => this.data; set => this.data = value; }
         [SerializeField] protected T data;
 
-        public AutoObject(T data)
+        public DisposableObject(T data)
             : base()
         {
             this.data = data;
         }
     }
 
-    public class AutoRenderTexture : AutoObject<RenderTexture>
+    public class DisposableRenderTexture : DisposableObject<RenderTexture>
     {
-        public AutoRenderTexture(RenderTexture data) : base(data)
+        public DisposableRenderTexture(RenderTexture data) : base(data)
         {
         }
 
@@ -31,18 +31,18 @@ namespace UnityTools.Common
                 data.DestoryObj();
             }
         }
-        public static implicit operator AutoRenderTexture(RenderTexture data)
+        public static implicit operator DisposableRenderTexture(RenderTexture data)
         {
-            return new AutoRenderTexture(data);
+            return new DisposableRenderTexture(data);
         }
-        public static implicit operator RenderTexture(AutoRenderTexture source)
+        public static implicit operator RenderTexture(DisposableRenderTexture source)
         {
             return source.Data;
         }
     }
-    public class AutoTexture2D : AutoObject<Texture2D>
+    public class DisposableTexture2D : DisposableObject<Texture2D>
     {
-        public AutoTexture2D(Texture2D data) : base(data)
+        public DisposableTexture2D(Texture2D data) : base(data)
         {
         }
 
@@ -54,39 +54,37 @@ namespace UnityTools.Common
                 data.DestoryObj();
             }
         }
-        public static implicit operator AutoTexture2D(Texture2D data)
+        public static implicit operator DisposableTexture2D(Texture2D data)
         {
-            return new AutoTexture2D(data);
+            return new DisposableTexture2D(data);
         }
-        public static implicit operator Texture2D(AutoTexture2D source)
+        public static implicit operator Texture2D(DisposableTexture2D source)
         {
             return source.Data;
         }
     }
 
-    public class AutoMaterial : AutoObject<Material>
+    public class DisposableMaterial : DisposableObject<Material>
     {
-        public AutoMaterial(Material data) : base(data)
+        public DisposableMaterial(Material data) : base(data)
         {
         }
 
-        public AutoMaterial(Shader shader) : base(new Material(shader))
+        public DisposableMaterial(Shader shader) : base(new Material(shader))
         {
-            Debug.Log("AutoMaterial");
+
         }
 
         protected override void DisposeUnmanaged()
         {
             base.DisposeUnmanaged();
-            if (Data == null) Debug.Log("data null");
-
             data?.DestoryObj();
         }
-        public static implicit operator AutoMaterial(Material data)
+        public static implicit operator DisposableMaterial(Material data)
         {
-            return new AutoMaterial(data);
+            return new DisposableMaterial(data);
         }
-        public static implicit operator Material(AutoMaterial source)
+        public static implicit operator Material(DisposableMaterial source)
         {
             return source.Data;
         }

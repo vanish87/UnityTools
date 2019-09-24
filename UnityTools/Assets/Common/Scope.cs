@@ -1,4 +1,5 @@
 ﻿using System;
+using UnityEngine;
 
 namespace UnityTools
 {
@@ -38,8 +39,18 @@ namespace UnityTools
             disposed = true;
         }
 
-        protected virtual void DisposeManaged() { }
-        protected virtual void DisposeUnmanaged() { }
+        protected virtual void DisposeManaged()
+        {
+            #if DEBUG_LOG
+            Debug.Log("DisposeManaged");
+            #endif
+        }
+        protected virtual void DisposeUnmanaged()
+        {
+            #if DEBUG_LOG
+            Debug.Log("DisposeUnmanaged");
+            #endif
+        }
 
         ~Disposable()
         {

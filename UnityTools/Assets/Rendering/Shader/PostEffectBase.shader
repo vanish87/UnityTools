@@ -1,4 +1,4 @@
-﻿Shader "ImageEffect/Base"
+﻿Shader "Rendering/PostEffectBase"
 {
     Properties
     {
