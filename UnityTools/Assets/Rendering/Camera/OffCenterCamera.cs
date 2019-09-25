@@ -11,16 +11,28 @@ public class OffCenterCamera : MonoBehaviour
     public float top = 0.5f;
     public float bottom = -0.5f;
 
-    //Note left/right/top/bottom of off center camera will not change
-    //the source resolution of OnRenderImage
+    public Vector2 pos = Vector2.zero;
+    public Vector2 size = Vector2.one;
+
+    //Note left/right/top/bottom of off center camera will not change the source resolution of OnRenderImage
+    //But Camera Rect will change the resolution of source texture on OnRenderImage
+    //The destination resolution of camera will be cam.targetTexture's resolution
+    //The destination will be null if there is no targetTexture specified.
     public Vector2Int currentSourceRes;
     public Vector2Int currentDestinationRes;
+
+    public Camera cam;
+
+    private void Start()
+    {
+        this.cam = this.GetComponent<Camera>();
+        this.cam.targetTexture = new RenderTexture(256, 128, 24);
+    }
     void LateUpdate()
     {
-        Camera cam = Camera.main;
-
+        cam.rect = new Rect(pos, size);        
         Matrix4x4 m = cam.orthographic?OrthograhicOffCenter(left, right, bottom, top, cam.nearClipPlane, cam.farClipPlane): 
-            PerspectiveOffCenter(left, right, bottom, top, cam.nearClipPlane, cam.farClipPlane);
+                                       PerspectiveOffCenter(left, right, bottom, top, cam.nearClipPlane, cam.farClipPlane);
         cam.projectionMatrix = m;
     }
 
