@@ -37,19 +37,20 @@ namespace UnityTools.Rendering
             var width = source.width;
             var height = source.height;
 
-            RenderTexture rt = RenderTexture.GetTemporary(width, height, 0);
-            using (new RenderTextureTool.RenderTextureScope(rt))
+            using (var rt = new RenderTextureTool.RenderTextureTemp(source))
             {
-                //apple post effect
-                var mat = new DisposableMaterial(shader);
-                Graphics.Blit(source, rt, mat);
-                mat.Dispose();
+                using (new RenderTextureTool.RenderTextureActive(rt))
+                {
+                    //apple post effect
+                    var mat = new DisposableMaterial(shader);
+                    Graphics.Blit(source, rt, mat);
+                    mat.Dispose();
 
-                //read data back
-                source.ReadPixels(new Rect(0, 0, width, height), 0, 0);
-                source.Apply();
+                    //read data back
+                    source.ReadPixels(new Rect(0, 0, width, height), 0, 0);
+                    source.Apply();
+                }
             }
-            RenderTexture.ReleaseTemporary(rt);
         }
     }
 }

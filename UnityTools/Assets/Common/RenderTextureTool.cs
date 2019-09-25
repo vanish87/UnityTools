@@ -6,15 +6,15 @@ using UnityEngine.Assertions;
 using UnityTools.Common;
 
 namespace UnityTools.Rendering
-{
-    public static class RenderTextureTool
+{    
+    public class RenderTextureTool
     {
-        public class RenderTextureScope : Scope
+        public class RenderTextureActive : Scope
         {
             protected RenderTexture old;
 
-            public RenderTextureScope(RenderTexture next)
-                :base()
+            public RenderTextureActive(RenderTexture next)
+                : base()
             {
                 this.old = RenderTexture.active;
                 RenderTexture.active = next;
@@ -24,9 +24,45 @@ namespace UnityTools.Rendering
                 base.DisposeManaged();
                 RenderTexture.active = this.old;
             }
-        }        
+        }
+        public class RenderTextureTemp : Scope
+        {
+            public RenderTexture Tex { get => this.tex; }
+            protected RenderTexture tex;
+            public RenderTextureTemp(Texture source)
+                : base()
+            {
+                Assert.IsNotNull(source);
+                this.tex = RenderTexture.GetTemporary(source.width, source.height);
+            }
 
-       
+            public RenderTextureTemp(RenderTexture source)
+                : base()
+            {
+                Assert.IsNotNull(source);
+                this.tex = RenderTexture.GetTemporary(source.descriptor);
+            }
+
+            protected override void DisposeManaged()
+            {
+                base.DisposeManaged();
+                if (this.tex != null)
+                {
+                    RenderTexture.ReleaseTemporary(this.tex);
+                    this.tex = null;
+                }
+            }
+
+            public static implicit operator RenderTextureTemp(Texture data)
+            {
+                return new RenderTextureTemp(data);
+            }
+            public static implicit operator RenderTexture(RenderTextureTemp source)
+            {
+                return source.Tex;
+            }
+        }
+
 
         public class TextureMatcher<T>
         {
@@ -78,7 +114,7 @@ namespace UnityTools.Rendering
                 {
                     Texture2D s = this.source;
                     Texture2D t = this.target;
-                    return CheckNullAndSize(s,t) == false;
+                    return RenderTextureTool.CheckNullAndSize(s, t) == false;
                 });
             }
 
@@ -90,7 +126,27 @@ namespace UnityTools.Rendering
                 this.target = TextureManager.Create(s.width, s.height, s.format);
             }
         }
+        public static bool CheckNullAndSize(Texture src, Texture target)
+        {
+            return src != null && (target == null || target.width != src.width || target.height != src.height);
+        }
 
+        public static void savePng(RenderTexture rt, string path)
+        {
+            Texture2D tex = new Texture2D(rt.width, rt.height, TextureFormat.RGBA32, false);
+            using (new RenderTextureActive(rt))
+            {
+                tex.ReadPixels(new Rect(0, 0, rt.width, rt.height), 0, 0);
+                tex.Apply();
+                byte[] bytes = tex.EncodeToPNG();
+                tex.DestoryObj();
+                File.WriteAllBytes(Path.Combine(Application.streamingAssetsPath, path), bytes);
+            }
+        }
+
+    }
+    public static class RenderTextureExtension
+    {
         /// <summary>
         /// Return true if target should rebuild
         /// </summary>
@@ -100,18 +156,13 @@ namespace UnityTools.Rendering
         public delegate bool RebuildChecker(Texture src, Texture target);
         public static void MatchSource(this RenderTexture src, ref RenderTexture target, RebuildChecker checker = null)
         {
-            var c = checker ?? CheckNullAndSize;
+            var c = checker ?? RenderTextureTool.CheckNullAndSize;
             if(c(src, target))
             {
                 target?.DestoryObj();
                 target = TextureManager.Create(src.descriptor);
             }
-        }
-
-        public static bool CheckNullAndSize(Texture src, Texture target)
-        {
-            return src != null && (target == null || target.width != src.width || target.height != src.height);
-        }
+        }        
 
         public static void Clear(this RenderTexture target)
         {
@@ -121,22 +172,9 @@ namespace UnityTools.Rendering
         public static void Clear(this RenderTexture target, Color color)
         {
             if (target == null) return;
-            using (new RenderTextureScope(target))
+            using (new RenderTextureTool.RenderTextureActive(target))
             {
                 GL.Clear(true, true, color);
-            }
-        }
-
-        public static void savePng(RenderTexture rt, string path)
-        {
-            Texture2D tex = new Texture2D(rt.width, rt.height, TextureFormat.RGBA32, false);
-            using (new RenderTextureScope(rt))
-            {
-                tex.ReadPixels(new Rect(0, 0, rt.width, rt.height), 0, 0);
-                tex.Apply();
-                byte[] bytes = tex.EncodeToPNG();
-                tex.DestoryObj();
-                File.WriteAllBytes(Path.Combine(Application.streamingAssetsPath, path), bytes);
             }
         }
     }
