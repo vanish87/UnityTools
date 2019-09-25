@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 
-namespace UnityTools.HttpServer
+namespace UnityTools.Networking
 {
     public class HttpServerExample : MonoBehaviour
     {
@@ -86,7 +86,7 @@ namespace UnityTools.HttpServer
 
                     byte[] buffer = new byte[64 * 1024];
                     int read = 0;
-                    using (BinaryWriter bw = new BinaryWriter(response.OutputStream, System.Text.Encoding.Default, true))
+                    using (BinaryWriter bw = new BinaryWriter(response.OutputStream, System.Text.Encoding.Default))
                     {
                         //If the read operation is successful, 
                         //the current position of the stream is advanced by the number of bytes read.
@@ -97,12 +97,12 @@ namespace UnityTools.HttpServer
                             bw.Write(buffer, 0, read);
                         }
                         bw.Flush(); //seems to have no effect
-
                         bw.Close();
+
+                        response.OutputStream.Flush();
+                        response.OutputStream.Close();
                     }
 
-                    response.OutputStream.Flush();
-                    response.OutputStream.Close();
 
                     fs.Close();
 

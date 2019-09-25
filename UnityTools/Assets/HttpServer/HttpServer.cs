@@ -6,9 +6,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace UnityTools.HttpServer
+namespace UnityTools.Networking
 {
-    class HttpServer
+    public class HttpServer
     {
         public string DocumentRootPath;
 

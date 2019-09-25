@@ -1,19 +1,10 @@
-﻿/********************************************************************
-	Created:		2018/06/15
-	Author:			Li Yuan
-	Email:			liyuan@team-lab.com
-	
-	Description:	This class will download AssetBundles from http server
-                    Then cache them into a cache directory
-*********************************************************************/
-
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using UnityEngine.Networking;
 
-namespace Centrair.BaseSystem
+namespace UnityTools.Common
 {
     public class AssetBundleDownload : MonoBehaviour
     {

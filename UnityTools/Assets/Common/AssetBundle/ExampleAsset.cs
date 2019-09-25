@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace UnityTools.AssetBundle
+namespace UnityTools.Common
 {
     public class ExampleAsset : AssetStruct<ExampleAsset, ExternalStruct>
     {

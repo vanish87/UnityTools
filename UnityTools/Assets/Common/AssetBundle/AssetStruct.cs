@@ -1,16 +1,8 @@
-﻿/********************************************************************
-	Created:		2018/05/22
-	Author:			Li Yuan
-	Email:			liyuan@team-lab.com
-	
-	Description:	This class defines data format that used to store json file
-                    received from websocket server
-*********************************************************************/
-using System.IO;
+﻿using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
 
-namespace UnityTools.AssetBundle
+namespace UnityTools.Common
 {
     public class AssetStruct<T,S> : ScriptableObject
     {

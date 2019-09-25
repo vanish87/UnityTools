@@ -4,7 +4,7 @@ using System.IO;
 using UnityEditor;
 using UnityEngine;
 
-namespace UnityTools.AssetBundle
+namespace UnityTools.Common
 {
     public class BuildAssetBundle
     {
