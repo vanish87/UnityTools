@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Assertions;
 
 namespace UnityTools.Common
 {
@@ -15,6 +16,7 @@ namespace UnityTools.Common
         {
             this.data = data;
         }
+
     }
 
     public class DisposableRenderTexture : DisposableObject<RenderTexture>
@@ -26,10 +28,9 @@ namespace UnityTools.Common
         protected override void DisposeUnmanaged()
         {
             base.DisposeUnmanaged();
-            if (data != null)
-            {
-                data.DestoryObj();
-            }
+            Assert.IsNotNull(this.data);
+            data?.DestoryObj();
+            data = null;
         }
         public static implicit operator DisposableRenderTexture(RenderTexture data)
         {
@@ -49,10 +50,9 @@ namespace UnityTools.Common
         protected override void DisposeUnmanaged()
         {
             base.DisposeUnmanaged();
-            if (data != null)
-            {
-                data.DestoryObj();
-            }
+            Assert.IsNotNull(this.data);
+            data?.DestoryObj();
+            data = null;
         }
         public static implicit operator DisposableTexture2D(Texture2D data)
         {
@@ -78,7 +78,9 @@ namespace UnityTools.Common
         protected override void DisposeUnmanaged()
         {
             base.DisposeUnmanaged();
+            Assert.IsNotNull(this.data);
             data?.DestoryObj();
+            data = null;
         }
         public static implicit operator DisposableMaterial(Material data)
         {
