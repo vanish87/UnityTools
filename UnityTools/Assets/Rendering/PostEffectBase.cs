@@ -26,4 +26,30 @@ namespace UnityTools.Rendering
             Graphics.Blit(source, destination, this.mat);
         }
     }
+
+    public class PostEffectTool
+    {
+        public static void ApplyPostEffectTo(Texture2D source, Shader shader)
+        {
+            Assert.IsNotNull(source);
+            Assert.IsNotNull(shader);
+
+            var width = source.width;
+            var height = source.height;
+
+            RenderTexture rt = RenderTexture.GetTemporary(width, height, 0);
+            using (new RenderTextureTool.RenderTextureScope(rt))
+            {
+                //apple post effect
+                var mat = new DisposableMaterial(shader);
+                Graphics.Blit(source, rt, mat);
+                mat.Dispose();
+
+                //read data back
+                source.ReadPixels(new Rect(0, 0, width, height), 0, 0);
+                source.Apply();
+            }
+            RenderTexture.ReleaseTemporary(rt);
+        }
+    }
 }
