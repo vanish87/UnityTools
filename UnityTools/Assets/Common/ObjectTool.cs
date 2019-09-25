@@ -1,6 +1,5 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
+using UnityEngine.Assertions;
 
 namespace UnityTools
 {
@@ -15,6 +14,27 @@ namespace UnityTools
                 else
                     Object.DestroyImmediate(obj);
             }
+        }
+        public static T FindOrAddTypeInComponentsAndChilden<T>(this GameObject obj) where T : Component
+        {
+            var ret = obj.GetComponent<T>();
+
+            if (ret == null)
+            {
+                ret = obj.GetComponentInChildren<T>();
+            }
+            if (ret == null)
+            {
+                ret = obj.AddComponent<T>();
+            }
+
+            Assert.IsTrue(ret != null);
+
+            return ret;
+        }
+        public static GameObject[] FindRootObject()
+        {
+            return System.Array.FindAll(GameObject.FindObjectsOfType<GameObject>(), (item) => item.transform.parent == null);
         }
     }
 }

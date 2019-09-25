@@ -1,15 +1,18 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Assertions;
 
 [ExecuteInEditMode]
 public class OffCenterCamera : MonoBehaviour
 {
-    public float left = -0.2F;
-    public float right = 0.2F;
-    public float top = 0.2F;
-    public float bottom = -0.2F;
+    public float left = -0.5f;
+    public float right = 0.5f;
+    public float top = 0.5f;
+    public float bottom = -0.5f;
 
+    //Note left/right/top/bottom of off center camera will not change
+    //the source resolution of OnRenderImage
     public Vector2Int currentSourceRes;
     public Vector2Int currentDestinationRes;
     void LateUpdate()
@@ -24,57 +27,14 @@ public class OffCenterCamera : MonoBehaviour
     protected void OnRenderImage(RenderTexture source, RenderTexture destination)
     {
         this.currentSourceRes = new Vector2Int(source.width, source.height);
-        if(destination != null) this.currentDestinationRes = new Vector2Int(destination.width, destination.height);
+        if (destination != null) this.currentDestinationRes = new Vector2Int(destination.width, destination.height);
 
         Graphics.Blit(source, destination);
     }
-    public static void OnDrawOffCenterCamera(Camera camera)
-    {
-        if (camera == null || camera.enabled == false) return;
-        var old = Gizmos.color;
-        Gizmos.color = Color.red;
-        var ndcPos = new Vector3[]
-        {
-                new Vector3(-1,-1,-1), new Vector3(1,-1,-1), new Vector3(-1,1,-1), new Vector3(1,1,-1),
-                new Vector3(-1,-1, 1), new Vector3(1,-1, 1), new Vector3(-1,1, 1), new Vector3(1,1, 1),
-        };
 
-        var viewPos = new Vector3[8];
-        var count = 0;
-        var ndcToViewMat = camera.projectionMatrix.inverse;
-        foreach (var p in ndcPos)
-        {
-            viewPos[count] = ndcToViewMat.MultiplyPoint(p);
-            viewPos[count].z = -viewPos[count].z;
-            count++;
-        }
-
-        var oldMat = Gizmos.matrix;
-        Gizmos.matrix = Matrix4x4.TRS(camera.transform.position, camera.transform.rotation, Vector3.one);
-        //near plane
-        Gizmos.DrawLine(viewPos[0], viewPos[1]);
-        Gizmos.DrawLine(viewPos[1], viewPos[3]);
-        Gizmos.DrawLine(viewPos[3], viewPos[2]);
-        Gizmos.DrawLine(viewPos[0], viewPos[2]);
-
-        //far plane
-        Gizmos.DrawLine(viewPos[4], viewPos[5]);
-        Gizmos.DrawLine(viewPos[5], viewPos[7]);
-        Gizmos.DrawLine(viewPos[7], viewPos[6]);
-        Gizmos.DrawLine(viewPos[4], viewPos[6]);
-
-        //near->far lines
-        Gizmos.DrawLine(viewPos[0], viewPos[4]);
-        Gizmos.DrawLine(viewPos[1], viewPos[5]);
-        Gizmos.DrawLine(viewPos[2], viewPos[6]);
-        Gizmos.DrawLine(viewPos[3], viewPos[7]);
-
-        Gizmos.matrix = oldMat;
-        Gizmos.color = old;
-
-    }
     public static Matrix4x4 OrthograhicOffCenter(float left, float right, float bottom, float top, float near, float far)
     {
+        Assert.IsTrue(left < right && bottom < top);
         float x = 2.0F/ (right - left);
         float y = 2.0F/ (top - bottom);
         float a = (right + left) / (right - left);
@@ -105,6 +65,7 @@ public class OffCenterCamera : MonoBehaviour
 
     public static Matrix4x4 PerspectiveOffCenter(float left, float right, float bottom, float top, float near, float far)
     {
+        Assert.IsTrue(left < right && bottom < top);
         float x = 2.0F * near / (right - left);
         float y = 2.0F * near / (top - bottom);
         float a = (right + left) / (right - left);
