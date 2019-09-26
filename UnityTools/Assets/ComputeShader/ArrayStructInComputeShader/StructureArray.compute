@@ -1,0 +1,25 @@
+﻿// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel StructureArray
+
+struct Data_S
+{
+	float3 pos;
+	float3 vel;
+};
+
+struct CBufferData
+{
+	Data_S data[64];
+};
+
+RWStructuredBuffer<CBufferData> data;
+
+
+[numthreads(1,1,1)]
+void StructureArray(uint3 id : SV_DispatchThreadID)
+{
+	//data[id.x].pos = float3(id.x, 0, 0);
+	//data[id.x].vel = float3(0, id.x, 0);
+}
+
+

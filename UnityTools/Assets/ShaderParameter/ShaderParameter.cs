@@ -3,31 +3,34 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityTools.Common;
 
-public class ShaderParameter : MonoBehaviour
+namespace UnityTools.ComputeShaderTool
 {
-    public ComputeShader cs;
-    [SerializeField] protected ComputeShaderParameterFloat floatTest = new ComputeShaderParameterFloat("_floatGPU");
-
-    float refFloat;
-    // Start is called before the first frame update
-    void Start()
+    public class ShaderParameter : MonoBehaviour
     {
-        //floatTest = 
+        public ComputeShader cs;
+        [SerializeField] protected ComputeShaderParameterFloat floatTest = new ComputeShaderParameterFloat("_floatGPU");
 
-        floatTest.Bind(cs);
+        float refFloat;
+        // Start is called before the first frame update
+        void Start()
+        {
+            //floatTest = 
 
-        var test = new ComputeShaderParameterFloat("_Test");
+            floatTest.Bind(cs);
 
-        test.Value = 10;
+            var test = new ComputeShaderParameterFloat("_Test");
 
-        test.Value = 12;
+            test.Value = 10;
 
-        var l = ComputeShaderParameterManager.Instance.nameList;
-    }
+            test.Value = 12;
 
-    // Update is called once per frame
-    void Update()
-    {
+            var l = ComputeShaderParameterManager.Instance.nameList;
+        }
 
+        // Update is called once per frame
+        void Update()
+        {
+
+        }
     }
 }

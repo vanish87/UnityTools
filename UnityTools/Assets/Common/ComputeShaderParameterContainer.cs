@@ -3,9 +3,9 @@ using System.IO;
 using UnityEngine;
 using UnityEngine.Assertions;
 
-namespace UnityTools.Common
+namespace UnityTools.ComputeShaderTool
 {
-    public class ComputeShaderParameterManager : SystemSingleton<ComputeShaderParameterManager>
+    public class ComputeShaderParameterManager : Common.SystemSingleton<ComputeShaderParameterManager>
     {
         //path after "Assets"
         public List<string> nameList = new List<string>()

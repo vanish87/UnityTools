@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityTools.Common;
+using UnityTools.ComputeShaderTool;
 
 [System.Serializable]
 public class GPUParameterContainer : ComputeShaderParameterFileContainer

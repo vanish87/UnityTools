@@ -4,7 +4,7 @@ using UnityEngine.Assertions;
 using UnityEngine;
 using System;
 
-namespace UnityTools.Common
+namespace UnityTools.ComputeShaderTool
 {
     public class ComputeShaderDispatcher
     {

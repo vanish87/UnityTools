@@ -18,7 +18,7 @@ using UnityEngine.Assertions;
 using PrefsGUI;
 #endif
 
-namespace UnityTools.Common
+namespace UnityTools.ComputeShaderTool
 {
     public class ComputeShaderParameterFileContainer : ComputeShaderParameterContainer
     {
