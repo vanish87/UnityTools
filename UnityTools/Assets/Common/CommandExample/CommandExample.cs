@@ -27,8 +27,27 @@ public class CommandExample : MonoBehaviour
         RunCommand.RunCommandInProcess(command);
     }
 
-    // Update is called once per frame
-    void Update () {
-		
-	}
+    protected void RunBuildAssetBundle()
+    {
+        var exe = "C:\\Program Files\\Unity2017.4.3f1\\Editor\\Unity.exe";
+        var projectPath = "C:\\UnityTools\\UnityTools";
+        var logPath = "C:\\logFile";
+        var functionName = "BuildAssetBundle.BuildToAssets";
+
+        var logFile = logPath + "\\buildAssets_" + string.Format("{0:yyyyMMddHmmss}", System.DateTime.Now) + ".log";
+
+        var args = string.Format("-force-free -quit -batchmode -projectPath {0} -executeMethod {1} -logFile {2}", projectPath, functionName, logFile);
+
+        var command = new RunCommand.CommandInfo();
+        command.exe = exe;
+        command.args = args;
+        command.workingDirectory = Application.streamingAssetsPath;
+        command.async = false;
+        command.exit = this.Exit;
+        command.output = this.Output;
+        command.enableLogging = true;
+        RunCommand.RunCommandInProcess(command);
+    }
+
+    
 }
