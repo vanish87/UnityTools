@@ -1,3 +1,26 @@
-﻿{
-	"name": "TestAssembly"
+{
+    "name": "TestAssembly",
+    "references": [],
+    "includePlatforms": [
+        "Android",
+        "BJM",
+        "Editor",
+        "iOS",
+        "LinuxStandalone64",
+        "Lumin",
+        "macOSStandalone",
+        "PS4",
+        "Switch",
+        "tvOS",
+        "WSA",
+        "WebGL",
+        "XboxOne"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": []
 }
