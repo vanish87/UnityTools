@@ -38,7 +38,7 @@ namespace Test
             var t1 = list[0];
             list.Clear();
 
-            RenderTextureTool.Clear(t1, Color.red);
+            t1.Clear(Color.red);
 
             t1.Release();
 

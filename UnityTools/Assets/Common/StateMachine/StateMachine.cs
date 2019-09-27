@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
 
-namespace UnityTools.StateMachine
+namespace UnityTools.Common
 {
     public class ObjectStateMachine<T> : MonoBehaviour where T : class
     {

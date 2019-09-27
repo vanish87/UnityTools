@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Assertions;
 using UnityTools.Rendering;
 
-namespace UnityTools.LightCamera
+namespace UnityTools.Rendering
 {
     [ExecuteInEditMode]
     [RequireComponent(typeof(Camera))]

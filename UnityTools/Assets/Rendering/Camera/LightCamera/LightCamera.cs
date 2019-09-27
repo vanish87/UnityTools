@@ -4,18 +4,17 @@ using UnityEngine;
 using UnityEngine.Assertions;
 using UnityTools.Common;
 
-namespace UnityTools.LightCamera
+namespace UnityTools.Rendering
 {
     [ExecuteInEditMode]
     [RequireComponent(typeof(Light))]
     public class LightCamera : MonoBehaviour
     {
-
         private Camera targetCamera = null;
         private Light targetLight = null;
 
         [SerializeField] private Vector3 lightSize = new Vector3(10,10,20);
-        [SerializeField] private Vector2 lightTextureSize = new Vector2(512, 512);
+        [SerializeField] private Vector2Int lightTextureSize = new Vector2Int(512, 512);
 
         // Use this for initialization
         void Start()
@@ -35,10 +34,19 @@ namespace UnityTools.LightCamera
                 go.hideFlags = HideFlags.DontSave;
                 this.targetCamera.enabled = false;
                 this.targetCamera.clearFlags = CameraClearFlags.SolidColor;
-                this.targetCamera.targetTexture = new RenderTexture(Mathf.CeilToInt(lightTextureSize.x), Mathf.CeilToInt(lightTextureSize.y), 0);
+                this.targetCamera.targetTexture = TextureManager.Create(new RenderTextureDescriptor(lightTextureSize.x, lightTextureSize.y));
             }
 
             this.OnLightChange();
+        }
+        protected void OnDestroy()
+        {
+            if(this.targetCamera.targetTexture != null)
+            {
+                var temp = this.targetCamera.targetTexture;
+                this.targetCamera.targetTexture = null;
+                temp.DestoryObj();
+            }
         }
 
         private void OnLightChange()

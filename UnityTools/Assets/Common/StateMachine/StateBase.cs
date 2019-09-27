@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace UnityTools.StateMachine
+namespace UnityTools.Common
 {
     public abstract class StateBase<T>
     {
