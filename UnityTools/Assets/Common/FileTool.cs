@@ -68,13 +68,12 @@ namespace UnityTools.Common
 
         static public void WriteBinary<T>(string filePath, T data)
         {
-            var temp = GetTempFileName(filePath);
+            var tempFile = GetTempFileName(filePath);
             bool ret = false;
             try
             {
-                using (var fs = new FileStream(filePath, FileMode.Create))
-                {
-            
+                using (var fs = new FileStream(tempFile, FileMode.Create))
+                {            
                     var serializer = new BinaryFormatter();
                     serializer.Serialize(fs, data);
                     fs.Flush();
@@ -92,11 +91,11 @@ namespace UnityTools.Common
             {
                 if (ret)
                 {
-                    ReplaceOrRename(filePath, temp);
+                    ReplaceOrRename(filePath, tempFile);
                 }
                 else
                 {
-                    File.Delete(temp);
+                    File.Delete(tempFile);
                 }
             }
             catch (Exception e)
