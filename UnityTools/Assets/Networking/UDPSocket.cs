@@ -57,7 +57,7 @@ namespace Networking
 
     public class State
     {
-        private const int bufferSize = 32 * 1024; //32K
+        private const int bufferSize = 64 * 1024; //64K
         public byte[] buffer = new byte[bufferSize];
     }
     public class RecieveState : State
