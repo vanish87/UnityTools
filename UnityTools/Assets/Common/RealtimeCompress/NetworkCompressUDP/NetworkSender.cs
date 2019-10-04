@@ -22,16 +22,24 @@ namespace UnityTools.Common
         }
 
 
+        protected long total = 0;
+        protected long count = 0;
+
         public TextureSocket socket = new TextureSocket();
 
         protected override void OnSuccessed(AsyncGPUReadbackRequest readback)
         {
             var data = readback.GetData<byte>().ToArray();
-            data = CompressTool.Compress(data);
+            var timer = System.Diagnostics.Stopwatch.StartNew();
+            data = CompressTool.Compress(data, CompressTool.CompreeAlgorithm.Zstd); timer.Stop();
+            total += timer.ElapsedMilliseconds;
+            count++;
             var para = new AsyncGPUDataSerializer.Parameter() { x = readback.width, y = readback.height, compressed = true };
             var fileData = new AsyncGPUDataSerializer.FileData() { parameter = para, data = data };
 
             var socketData = new SocketData("localhost", 12345);
+
+            Debug.Log("Data size " + data.Length);
             this.socket.Send(socketData, fileData);
         }
 
@@ -45,6 +53,12 @@ namespace UnityTools.Common
                 this.QueueFrame(temp);
             }
             RenderTexture.ReleaseTemporary(temp);
+
+            if (count > 0)
+            {
+                var avgTime = total * 1.0d / count / 1000;
+                Debug.LogFormat("Average compress time {0}, fps is {1}", avgTime, 1 / avgTime);
+            }
         }
     }
 }

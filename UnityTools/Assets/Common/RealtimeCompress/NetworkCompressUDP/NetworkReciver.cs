@@ -13,6 +13,9 @@ namespace UnityTools.Common
         protected NetworkSender.TextureSocket socket = new NetworkSender.TextureSocket();
 
 
+        protected long total = 0;
+        protected long count = 0;
+
         protected void Start()
         {
             this.socket.StartRecieve(12345);
@@ -34,13 +37,25 @@ namespace UnityTools.Common
                 AsyncGPUDataSerializer.FileData d;
                 if (this.socket.fileQueue.TryDequeue(out d))
                 {
-                    var data = CompressTool.Decompress(d.data);
+                    var timer = System.Diagnostics.Stopwatch.StartNew();
+                    var data = CompressTool.Decompress(d.data, CompressTool.CompreeAlgorithm.Zstd);
+                    timer.Stop();
+                    total += timer.ElapsedMilliseconds;
+                    count++;
                     this.currentTexture.LoadRawTextureData(data);
                     this.currentTexture.Apply();
+
+                    Debug.Log("res is " + d.parameter.x + " " + d.parameter.y);
                 }
             }
 
             Graphics.Blit(this.currentTexture, destination);
+
+            if (count > 0)
+            {
+                var avgTime = total * 1.0d / count / 1000;
+                Debug.LogFormat("Average decompress time {0}, fps is {1}", avgTime, 1/avgTime);
+            }
         }
     }
 }
