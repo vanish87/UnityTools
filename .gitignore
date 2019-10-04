@@ -24,3 +24,4 @@ sysinfo.txt
 *.log
 .DS_Store
 .vs/
+UnityTools/.vscode/
