@@ -17,5 +17,15 @@ public class SingletonMonoBehaviour<T> : MonoBehaviour where T : MonoBehaviour
             }
             return instance;
         }
+
+    }
+
+    protected virtual void Awake()
+    {
+        if (this != Instance)
+        {
+            Destroy(this);
+            Debug.LogFormat("Duplicate {0}", typeof(T).Name);
+        }
     }
 }
