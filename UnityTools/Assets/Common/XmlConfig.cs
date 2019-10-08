@@ -123,6 +123,10 @@ namespace UnityTools
         protected Rect windowRect = new Rect();
         protected bool open = false;
         protected virtual float MinWidth { get { return 500f; } }
+        [SerializeField] protected KeyCode saveKey = KeyCode.S;
+        [SerializeField] protected KeyCode openKey = KeyCode.C;
+        [SerializeField] protected KeyCode loadKey = KeyCode.R;
+
 
         #region IConfigure
         protected event EventHandler OnConfigureChanged;
@@ -148,7 +152,7 @@ namespace UnityTools
             this.Initialize();
         }
 
-        //halder will be registered on enabled
+        //handler will be registered on enabled
         //so at here call notify to call all handlers
         protected virtual void Start()
         {
@@ -157,15 +161,15 @@ namespace UnityTools
 
         protected virtual void Update()
         {
-            if (Input.GetKeyDown(KeyCode.C))
+            if (Input.GetKeyDown(this.openKey))
             {
                 this.Open = !this.Open;
             }
-            if (Input.GetKeyDown(KeyCode.R))
+            if (Input.GetKeyDown(this.loadKey))
             {
                 this.LoadAndNotify();
             }
-            if (Input.GetKeyDown(KeyCode.S))
+            if (Input.GetKeyDown(this.saveKey))
             {
                 this.Save();
             }
@@ -229,6 +233,9 @@ namespace UnityTools
         protected Rect windowRect = new Rect();
         protected bool open = false;
         protected virtual float MinWidth { get { return 500f; } }
+        [SerializeField] protected KeyCode saveKey = KeyCode.S;
+        [SerializeField] protected KeyCode openKey = KeyCode.C;
+        [SerializeField] protected KeyCode loadKey = KeyCode.R;
 
         #region IConfigure
         protected event EventHandler OnConfigureChanged;
@@ -263,15 +270,15 @@ namespace UnityTools
 
         protected virtual void Update()
         {
-            if (Input.GetKeyDown(KeyCode.C))
+            if (Input.GetKeyDown(this.openKey))
             {
                 this.Open = !this.Open;
             }
-            if (Input.GetKeyDown(KeyCode.R))
+            if (Input.GetKeyDown(this.loadKey))
             {
                 this.LoadAndNotify();
             }
-            if (Input.GetKeyDown(KeyCode.S))
+            if (Input.GetKeyDown(this.saveKey))
             {
                 this.Save();
             }
