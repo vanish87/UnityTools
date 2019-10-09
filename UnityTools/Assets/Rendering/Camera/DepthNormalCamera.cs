@@ -83,6 +83,9 @@ namespace UnityTools.Rendering
             this.DepthTexture.DestoryObj();
             this.NormalTexture.DestoryObj();
 
+            //a placeholder texture
+            this.depthTexture = this.normalTexture = TextureManager.Create(new RenderTextureDescriptor(4,4));
+
             if (this.renderCamera == null) return;
             this.renderCamera.depthTextureMode = this.OutputModeToCameraMode[this.outputMode];
             if (this.outputMode == OutputMode.DepthOnly) this.normalSpace = NormalSpace.None;
