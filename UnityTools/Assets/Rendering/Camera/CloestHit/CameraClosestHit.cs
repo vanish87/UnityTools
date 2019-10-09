@@ -10,7 +10,7 @@ namespace UnityTools.CloestHit
     public class CameraClosestHit : MonoBehaviour
     {
         [SerializeField] private bool useCPU = false;
-        [SerializeField] private Material renderToDepthMat;
+        [SerializeField] private Material renderToDepthMat = null;
         [SerializeField] private ComputeShader pointComputeShader = null;
 
         [SerializeField] private GameObject debugTarget = null;
