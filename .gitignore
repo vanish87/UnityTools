@@ -25,3 +25,4 @@ sysinfo.txt
 .DS_Store
 .vs/
 UnityTools/.vscode/
+UnityTools/UnityBuildInResource/Local/
