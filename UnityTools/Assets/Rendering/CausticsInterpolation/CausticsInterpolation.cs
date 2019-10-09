@@ -7,7 +7,7 @@ namespace VolumetricCaustics
     [ExecuteInEditMode]
     public class CausticsInterpolation : MonoBehaviour
     {
-        [SerializeField] private GameObject V0;
+        /*[SerializeField] private GameObject V0;
         [SerializeField] private GameObject V1;
         [SerializeField] private GameObject V2;
 
@@ -122,11 +122,11 @@ namespace VolumetricCaustics
             Gizmos.DrawLine(v0, c0);
             Gizmos.DrawLine(v1, c1);
             Gizmos.DrawLine(v2, c2);
-/*
+/ *
 
             var m = new Mesh();
             m.vertices = new Vector3[] { v0, v1, c0, c1 };
-            Gizmos.DrawMesh(m);*/
+            Gizmos.DrawMesh(m);* /
 
             //Gizmos.DrawLine(v0, v0 + v0Normal * 5);
 
@@ -188,10 +188,10 @@ namespace VolumetricCaustics
             var z = Vector3.Cross(x, y);
 
             return LookAtLH(origin, origin + x, y);
-            /* same as above but need inverse
+            / * same as above but need inverse
             var mat = Matrix4x4.LookAt(origin, origin + x, y);
             return mat.inverse;
-            */
+            * /
         }
 
         Matrix4x4 LookAtLH(Vector3 eye, Vector3 at, Vector3 up)
@@ -229,6 +229,6 @@ namespace VolumetricCaustics
             {
                 return false;
             }
-        }
+        }*/
     }
 }

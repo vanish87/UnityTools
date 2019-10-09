@@ -7,7 +7,7 @@ namespace VolumetricCaustics
     [ExecuteInEditMode]
     public class GPUTranfromTest : MonoBehaviour
     {
-        [SerializeField] private GameObject V0;
+        /*[SerializeField] private GameObject V0;
         [SerializeField] private GameObject V1;
         [SerializeField] private GameObject V2;
 
@@ -157,10 +157,10 @@ namespace VolumetricCaustics
             var z = Vector3.Cross(x, y);
 
             return LookAtLH(origin, origin + x, y);
-            /* same as above but need inverse
+            / * same as above but need inverse
             var mat = Matrix4x4.LookAt(origin, origin + x, y);
             return mat.inverse;
-            */
+            * /
         }
 
         Matrix4x4 LookAtLH(Vector3 eye, Vector3 at, Vector3 up)
@@ -179,6 +179,6 @@ namespace VolumetricCaustics
             ret.SetColumn(3, new Vector4(-Vector3.Dot(xaxis, eye), -Vector3.Dot(yaxis, eye), -Vector3.Dot(zaxis, eye), 1));
 
             return ret;
-        }
+        }*/
     }
 }

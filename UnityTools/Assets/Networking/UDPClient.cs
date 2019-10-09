@@ -8,10 +8,7 @@ namespace Networking
     public class UDPClient : MonoBehaviour
     {
         public GPUSocket socket = new GPUSocket();
-
-        double first = -1;
-        bool start = false;
-
+        
         double currentDalta = 0;
         float sin = 0;
 

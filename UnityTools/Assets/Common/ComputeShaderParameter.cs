@@ -259,13 +259,13 @@ namespace UnityTools.ComputeShaderTool
         public XmlSchema GetSchema()
         {
             throw new NotImplementedException();
-            return null;
+            /*return null;*/
         }
 
         public void ReadXml(XmlReader reader)
         {
             throw new NotImplementedException();
-            while (reader.Read())
+            /*while (reader.Read())
             {
                 // Only detect start elements.
                 if (reader.IsStartElement())
@@ -278,17 +278,17 @@ namespace UnityTools.ComputeShaderTool
 
                     Debug.Log(reader.Name);
                 }
-            }
+            }*/
         }
 
         public void WriteXml(XmlWriter writer)
         {
             throw new NotImplementedException();
-            writer.WriteStartElement("MyList");
+           /* writer.WriteStartElement("MyList");
             {
                 writer.WriteElementString("ListItem", this.data.ToString());
             }
-            writer.WriteEndElement();
+            writer.WriteEndElement();*/
         }
         /*internal override void OnSerialize(Stream stream, IFormatter formater)
         {

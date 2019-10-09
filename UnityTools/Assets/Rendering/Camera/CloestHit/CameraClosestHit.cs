@@ -11,9 +11,9 @@ namespace UnityTools.CloestHit
     {
         [SerializeField] private bool useCPU = false;
         [SerializeField] private Material renderToDepthMat;
-        [SerializeField] private ComputeShader pointComputeShader;
+        [SerializeField] private ComputeShader pointComputeShader = null;
 
-        [SerializeField] private GameObject debugTarget;
+        [SerializeField] private GameObject debugTarget = null;
         [SerializeField] private bool runTest = false;
 
         private ComputeBuffer inputBuffer = null;
