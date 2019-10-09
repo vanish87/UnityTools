@@ -147,7 +147,7 @@ namespace UnityTools
         }
 
         //awake will load configure form file
-        protected virtual void Awake()
+        protected override void Awake()
         {
             this.Initialize();
         }
