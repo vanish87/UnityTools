@@ -66,7 +66,7 @@ namespace UnityTools.Common
 
     public class DisposableMaterial : DisposableObject<Material>
     {
-        public DisposableMaterial(Material data) : base(data)
+        public DisposableMaterial(Material data) : base(new Material(data))
         {
         }
 
