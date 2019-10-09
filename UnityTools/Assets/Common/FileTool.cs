@@ -114,7 +114,8 @@ namespace UnityTools.Common
                     {
                         XmlSerializer serializer = new XmlSerializer(typeof(T));
                         ret = (T)serializer.Deserialize(xs);
-                        xs.Close();                    }
+                        xs.Close();
+                    }
                 }
                 catch (Exception e)
                 {
