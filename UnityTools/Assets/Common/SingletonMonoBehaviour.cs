@@ -1,31 +1,34 @@
 ﻿using UnityEngine;
 
-public class SingletonMonoBehaviour<T> : MonoBehaviour where T : MonoBehaviour
+namespace UnityTools.Common
 {
-    private static T instance;
-    public static T Instance
+    public class SingletonMonoBehaviour<T> : MonoBehaviour where T : MonoBehaviour
     {
-        get
+        private static T instance;
+        public static T Instance
         {
-            if (instance == null)
+            get
             {
-                instance = (T)FindObjectOfType(typeof(T));
                 if (instance == null)
                 {
-                    Debug.LogError(typeof(T) + " is nothing");
+                    instance = (T)FindObjectOfType(typeof(T));
+                    if (instance == null)
+                    {
+                        Debug.LogError(typeof(T) + " is nothing");
+                    }
                 }
+                return instance;
             }
-            return instance;
+
         }
 
-    }
-
-    protected virtual void Awake()
-    {
-        if (this != Instance)
+        protected virtual void Awake()
         {
-            Destroy(this);
-            Debug.LogFormat("Duplicate {0}", typeof(T).Name);
+            if (this != Instance)
+            {
+                Destroy(this);
+                Debug.LogFormat("Duplicate {0}", typeof(T).Name);
+            }
         }
     }
 }
