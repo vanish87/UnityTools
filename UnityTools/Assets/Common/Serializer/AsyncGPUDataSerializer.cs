@@ -34,12 +34,14 @@ namespace UnityTools.Common
         [SerializeField] protected string fileName = "TextureArray.data";
         protected Queue<FileData> data = new Queue<FileData>();
 
-        protected override void OnSuccessed(AsyncGPUReadbackRequest readback)
+        protected override void OnSuccessed(FrameData frame)
         {
             if (this.data.Count > this.maxDataCount)
             {
                 this.data.Dequeue();
             }
+
+            var readback = frame.readback;
 
             var data = readback.GetData<byte>().ToArray();
             if(this.useCompress) data = CompressTool.Compress(data);

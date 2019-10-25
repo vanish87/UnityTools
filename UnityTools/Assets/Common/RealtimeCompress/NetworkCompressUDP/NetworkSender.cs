@@ -27,8 +27,10 @@ namespace UnityTools.Common
 
         public TextureSocket socket = new TextureSocket();
 
-        protected override void OnSuccessed(AsyncGPUReadbackRequest readback)
+        protected override void OnSuccessed(FrameData frame)
         {
+            var readback = frame.readback;
+
             var data = readback.GetData<byte>().ToArray();
             var timer = System.Diagnostics.Stopwatch.StartNew();
             data = CompressTool.Compress(data, CompressTool.CompreeAlgorithm.Zstd); timer.Stop();

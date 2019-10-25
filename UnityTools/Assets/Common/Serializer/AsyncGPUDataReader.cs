@@ -27,14 +27,19 @@ namespace UnityTools.Common
 
         public void NoneSequential(RenderTexture source)
         {
-            AsyncGPUReadback.Request(source, 0, this.OnSuccessed);
+            AsyncGPUReadback.Request(source, 0, this.OnSuccessedInternal);
         }
         public void NoneSequential(ComputeBuffer source)
         {
-            AsyncGPUReadback.Request(source, this.OnSuccessed);
+            AsyncGPUReadback.Request(source, this.OnSuccessedInternal);
         }
 
-        protected virtual void OnSuccessed(AsyncGPUReadbackRequest readback)
+        private void OnSuccessedInternal(AsyncGPUReadbackRequest readback)
+        {
+            this.OnSuccessed(new FrameData() { readback = readback });
+        }
+
+        protected virtual void OnSuccessed(FrameData frame)
         {
             //get data like this
             //var data = readback.GetData<byte>();
@@ -61,7 +66,7 @@ namespace UnityTools.Common
                 
                 // Feed the frame data to the sender. It encodes/sends the
                 // frame asynchronously.
-                this.OnSuccessed(frame.readback);
+                this.OnSuccessed(frame);
                 // Done. Remove the frame from the queue.
                 frameQueue.Dequeue();
             }
