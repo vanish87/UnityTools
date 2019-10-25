@@ -9,20 +9,25 @@ namespace UnityTools.Common
     public class AsyncGPUDataReader: MonoBehaviour
     {
         [Serializable]
-        protected class FrameData
+        public class FrameData
         {
             public AsyncGPUReadbackRequest readback;
         }
 
         protected Queue<FrameData> frameQueue = new Queue<FrameData>();
 
-        public void QueueFrame(RenderTexture source)
+        public void QueueTexture(RenderTexture source)
         {
             this.frameQueue.Enqueue(new FrameData() { readback = AsyncGPUReadback.Request(source) });
         }
-        public void QueueFrame(ComputeBuffer source)
+        public void QueueBuffer(ComputeBuffer source)
         {
             this.frameQueue.Enqueue(new FrameData() { readback = AsyncGPUReadback.Request(source) });
+        }
+
+        public void QueueFrame(FrameData frame)
+        {
+            this.frameQueue.Enqueue(frame);
         }
 
         public void NoneSequential(RenderTexture source)

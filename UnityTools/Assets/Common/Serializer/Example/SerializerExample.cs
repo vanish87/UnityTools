@@ -13,7 +13,7 @@ namespace UnityTools.Common
             var temp = RenderTexture.GetTemporary(source.width, source.height, 0, RenderTextureFormat.ARGB32);
             {
                 Graphics.Blit(source, temp);
-                this.QueueFrame(temp);
+                this.QueueTexture(temp);
             }
             RenderTexture.ReleaseTemporary(temp);
         }
