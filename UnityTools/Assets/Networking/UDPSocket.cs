@@ -147,19 +147,21 @@ namespace Networking
         public virtual void OnDisconnect(SocketData socket) { }
         public virtual void OnError(SocketData socket) { }
 
+        public virtual byte[] OnSerialize(T data)
+        {
+            return Helper.ObjectToByteArray(data);
+        }
+        public virtual T OnDeserialize(byte[] data)
+        {
+            return Helper.ByteArrayToObject<T>(data);
+        }
+
         public virtual void Send(SocketData socket, T data)
         {
             this.Setup(SocketRole.Sender);
 
-            try
-            {
-                var byteData = Helper.ObjectToByteArray(data);
-                this.socket.BeginSendTo(byteData, 0, byteData.Length, SocketFlags.None, socket.endPoint, this.SendCallback, socket);
-            }
-            catch (Exception e)
-            {
-                Debug.Log(e.ToString());
-            }
+            var byteData = this.OnSerialize(data);
+            this.SendByte(socket, byteData);
         }
         public virtual void Broadcast(T data, int port)
         {
@@ -169,15 +171,8 @@ namespace Networking
             epTo.endPoint.Address = IPAddress.Broadcast;
             epTo.endPoint.Port = port;
 
-            try
-            {
-                var byteData = Helper.ObjectToByteArray(data);
-                this.socket.BeginSendTo(byteData, 0, byteData.Length, SocketFlags.None, epTo.endPoint, this.SendCallback, epTo);
-            }
-            catch (Exception e)
-            {
-                Debug.Log(e.ToString());
-            }
+            var byteData = this.OnSerialize(data);
+            this.SendByte(epTo, byteData);
         }
         public virtual void StartRecieve(int port = 0)
         {
@@ -199,6 +194,17 @@ namespace Networking
 
         private Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
 
+        protected void SendByte(SocketData epTo, byte[] byteData)
+        {
+            try
+            {
+                this.socket.BeginSendTo(byteData, 0, byteData.Length, SocketFlags.None, epTo.endPoint, this.SendCallback, epTo);
+            }
+            catch (Exception e)
+            {
+                Debug.Log(e.ToString());
+            }
+        }
         protected void SendCallback(IAsyncResult ar)
         {
             try
@@ -234,7 +240,7 @@ namespace Networking
                 if (bytes > 0)
                 {
                     //if (DebugLog) Debug.LogFormat("RECV: {0}: {1}, {2}", epFrom.ToString(), bytes, Helper.ByteArrayToObject<CustomSocketData>(stateFrom.buffer).time);
-                    this.OnMessage(stateFrom.remote, Helper.ByteArrayToObject<T>(stateFrom.buffer));
+                    this.OnMessage(stateFrom.remote, this.OnDeserialize(stateFrom.buffer));
                 }
 
                 bool found = false;
