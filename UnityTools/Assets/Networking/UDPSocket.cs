@@ -212,7 +212,7 @@ namespace Networking
                 var socketData = ar.AsyncState as SocketData;
                 int bytes = socket.EndSendTo(ar);
 
-                if (this.connections[Connection.Outcoming].Contains(socketData) == false && socketData.endPoint.Address != IPAddress.Broadcast)
+                if (this.connections[Connection.Outcoming].Contains(socketData) == false && socketData.endPoint.Address != IPAddress.Broadcast && false)
                 {
                     this.connections[Connection.Outcoming].Add(socketData);
                     if (DebugLog) Debug.LogWarningFormat("Add out connection: {0}", socketData.endPoint.ToString());
@@ -239,7 +239,7 @@ namespace Networking
 
                 if (bytes > 0)
                 {
-                    //if (DebugLog) Debug.LogFormat("RECV: {0}: {1}, {2}", epFrom.ToString(), bytes, Helper.ByteArrayToObject<CustomSocketData>(stateFrom.buffer).time);
+                    if (DebugLog) Debug.LogFormat("RECV: {0}: {1}", epFrom.ToString(), bytes);
                     this.OnMessage(stateFrom.remote, this.OnDeserialize(stateFrom.buffer));
                 }
 

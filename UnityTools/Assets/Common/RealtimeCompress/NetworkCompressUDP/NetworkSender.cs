@@ -26,6 +26,7 @@ namespace UnityTools.Common
         protected long count = 0;
 
         public TextureSocket socket = new TextureSocket();
+        public SocketData socketData = new SocketData("localhost", 12345);
 
         protected override void OnSuccessed(FrameData frame)
         {
@@ -38,8 +39,6 @@ namespace UnityTools.Common
             count++;
             var para = new AsyncGPUDataSerializer.Parameter() { x = readback.width, y = readback.height, compressed = true };
             var fileData = new AsyncGPUDataSerializer.FileData() { parameter = para, data = data };
-
-            var socketData = new SocketData("localhost", 12345);
 
             Debug.Log("Data size " + data.Length);
             this.socket.Send(socketData, fileData);
