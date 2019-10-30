@@ -151,8 +151,10 @@ namespace Networking
         {
             return Helper.ObjectToByteArray(data);
         }
-        public virtual T OnDeserialize(byte[] data)
+        
+        public virtual T OnDeserialize(byte[] data, int length)
         {
+            //Note data may has different size than length
             return Helper.ByteArrayToObject<T>(data);
         }
 
@@ -212,7 +214,7 @@ namespace Networking
                 var socketData = ar.AsyncState as SocketData;
                 int bytes = socket.EndSendTo(ar);
 
-                if (this.connections[Connection.Outcoming].Contains(socketData) == false && socketData.endPoint.Address != IPAddress.Broadcast && false)
+                if (false && this.connections[Connection.Outcoming].Contains(socketData) == false && socketData.endPoint.Address != IPAddress.Broadcast)
                 {
                     this.connections[Connection.Outcoming].Add(socketData);
                     if (DebugLog) Debug.LogWarningFormat("Add out connection: {0}", socketData.endPoint.ToString());
@@ -232,15 +234,16 @@ namespace Networking
                 Assert.IsTrue(stateFrom == this.recieveState);
 
                 EndPoint epFrom = stateFrom.remote.endPoint;
-                int bytes = socket.EndReceiveFrom(ar, ref epFrom);
+                int bytesReceived = socket.EndReceiveFrom(ar, ref epFrom);
 
                 var ipFrom = epFrom as IPEndPoint;
                 stateFrom.remote.endPoint = ipFrom;
 
-                if (bytes > 0)
+                if (bytesReceived > 0)
                 {
-                    if (DebugLog) Debug.LogFormat("RECV: {0}: {1}", epFrom.ToString(), bytes);
-                    this.OnMessage(stateFrom.remote, this.OnDeserialize(stateFrom.buffer));
+                    //if (DebugLog) Debug.LogFormat("RECV: {0}: {1}, {2}", epFrom.ToString(), bytes, Helper.ByteArrayToObject<CustomSocketData>(stateFrom.buffer).time);
+                    T data = this.OnDeserialize(stateFrom.buffer, bytesReceived);
+                    this.OnMessage(stateFrom.remote, data);
                 }
 
                 bool found = false;
