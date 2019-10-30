@@ -5,7 +5,7 @@ using System.Net;
 using System.Threading.Tasks;
 using UnityEngine;
 
-namespace Networking
+namespace UnityTools.Networking
 {
 
     public class GPUSocket : UDPSocket<UDPServer.GPUData>

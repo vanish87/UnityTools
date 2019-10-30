@@ -7,7 +7,7 @@ using System.Text;
 using UnityEngine;
 using UnityEngine.Assertions;
 
-namespace Networking
+namespace UnityTools.Networking
 {
     public class SocketData
     {
