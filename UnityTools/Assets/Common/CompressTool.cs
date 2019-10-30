@@ -30,7 +30,7 @@ namespace UnityTools.Common
                     break;
                 case CompreeAlgorithm.Zstd:
                     {
-                        var opt = new CompressionOptions(CompressionOptions.DefaultCompressionLevel + 10);
+                        var opt = new CompressionOptions(CompressionOptions.DefaultCompressionLevel);
                         using (var compressor = new Compressor(opt))
                         {
                             return compressor.Wrap(data);
