@@ -9,7 +9,7 @@ using pb = global::Google.Protobuf;
 using pbc = global::Google.Protobuf.Collections;
 using pbr = global::Google.Protobuf.Reflection;
 using scg = global::System.Collections.Generic;
-namespace Imgfile {
+namespace UnityTools.ImageFile {
 
   /// <summary>Holder for reflection information generated from img.proto</summary>
   public static partial class ImgReflection {
@@ -24,15 +24,15 @@ namespace Imgfile {
     static ImgReflection() {
       byte[] descriptorData = global::System.Convert.FromBase64String(
           string.Concat(
-            "CglpbWcucHJvdG8SB2ltZ2ZpbGUiKgoJUGFyYW1ldGVyEg0KBXdpZHRoGAEg",
-            "ASgFEg4KBmhlaWdodBgCIAEoBSI/CghGaWxlRGF0YRIlCglwYXJhbWV0ZXIY",
-            "ASABKAsyEi5pbWdmaWxlLlBhcmFtZXRlchIMCgRkYXRhGAIgASgMYgZwcm90",
-            "bzM="));
+            "CglpbWcucHJvdG8SFFVuaXR5VG9vbHMuSW1hZ2VGaWxlIioKCVBhcmFtZXRl",
+            "chINCgV3aWR0aBgBIAEoBRIOCgZoZWlnaHQYAiABKAUiTAoIRmlsZURhdGES",
+            "MgoJcGFyYW1ldGVyGAEgASgLMh8uVW5pdHlUb29scy5JbWFnZUZpbGUuUGFy",
+            "YW1ldGVyEgwKBGRhdGEYAiABKAxiBnByb3RvMw=="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { },
           new pbr::GeneratedClrTypeInfo(null, null, new pbr::GeneratedClrTypeInfo[] {
-            new pbr::GeneratedClrTypeInfo(typeof(global::Imgfile.Parameter), global::Imgfile.Parameter.Parser, new[]{ "Width", "Height" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Imgfile.FileData), global::Imgfile.FileData.Parser, new[]{ "Parameter", "Data" }, null, null, null, null)
+            new pbr::GeneratedClrTypeInfo(typeof(global::UnityTools.ImageFile.Parameter), global::UnityTools.ImageFile.Parameter.Parser, new[]{ "Width", "Height" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::UnityTools.ImageFile.FileData), global::UnityTools.ImageFile.FileData.Parser, new[]{ "Parameter", "Data" }, null, null, null, null)
           }));
     }
     #endregion
@@ -47,7 +47,7 @@ namespace Imgfile {
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Imgfile.ImgReflection.Descriptor.MessageTypes[0]; }
+      get { return global::UnityTools.ImageFile.ImgReflection.Descriptor.MessageTypes[0]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -204,7 +204,7 @@ namespace Imgfile {
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Imgfile.ImgReflection.Descriptor.MessageTypes[1]; }
+      get { return global::UnityTools.ImageFile.ImgReflection.Descriptor.MessageTypes[1]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -233,9 +233,9 @@ namespace Imgfile {
 
     /// <summary>Field number for the "parameter" field.</summary>
     public const int ParameterFieldNumber = 1;
-    private global::Imgfile.Parameter parameter_;
+    private global::UnityTools.ImageFile.Parameter parameter_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::Imgfile.Parameter Parameter {
+    public global::UnityTools.ImageFile.Parameter Parameter {
       get { return parameter_; }
       set {
         parameter_ = value;
@@ -324,7 +324,7 @@ namespace Imgfile {
       }
       if (other.parameter_ != null) {
         if (parameter_ == null) {
-          Parameter = new global::Imgfile.Parameter();
+          Parameter = new global::UnityTools.ImageFile.Parameter();
         }
         Parameter.MergeFrom(other.Parameter);
       }
@@ -344,7 +344,7 @@ namespace Imgfile {
             break;
           case 10: {
             if (parameter_ == null) {
-              Parameter = new global::Imgfile.Parameter();
+              Parameter = new global::UnityTools.ImageFile.Parameter();
             }
             input.ReadMessage(Parameter);
             break;

@@ -36,8 +36,8 @@ namespace UnityTools.Networking
 
             var data = readback.GetData<byte>().ToArray();
 
-            var fileData = new Imgfile.FileData();
-            fileData.Parameter = new Imgfile.Parameter();
+            var fileData = new ImageFile.FileData();
+            fileData.Parameter = new ImageFile.Parameter();
             fileData.Parameter.Width = readback.width;
             fileData.Parameter.Height = readback.height;
             fileData.Data = ByteString.CopyFrom(data);

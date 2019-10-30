@@ -27,14 +27,14 @@ namespace UnityTools.Networking
 
             if (this.currentTexture == null && this.socket.fileQueue.Count > 0)
             {
-                Imgfile.FileData d;
+                ImageFile.FileData d;
                 this.socket.fileQueue.TryPeek(out d);
                 this.currentTexture = TextureManager.Create(d.Parameter.Width, d.Parameter.Height, TextureFormat.RGBA32, false);
             }
 
             if (this.currentTexture != null)
             {
-                Imgfile.FileData d;
+                ImageFile.FileData d;
                 if (this.socket.fileQueue.TryDequeue(out d))
                 {
                     this.currentTexture.LoadRawTextureData(d.Data.ToByteArray());
