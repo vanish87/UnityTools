@@ -20,21 +20,16 @@ namespace UnityTools.Networking
             this.camera.targetTexture = this.target;
         }
 
-        int count = 0;
         // Update is called once per frame
         protected override void Update()
         {
             base.Update();
-
-            //if (count++ < 1)
+            var temp = RenderTexture.GetTemporary(target.width, target.height, 0, RenderTextureFormat.ARGB32);
             {
-                var temp = RenderTexture.GetTemporary(target.width, target.height, 0, RenderTextureFormat.ARGB32);
-                {
-                    Graphics.Blit(target, temp);
-                    this.QueueTexture(temp);
-                }
-                RenderTexture.ReleaseTemporary(temp);
+                Graphics.Blit(target, temp);
+                this.QueueTexture(temp);
             }
+            RenderTexture.ReleaseTemporary(temp);
         }
 
         protected override void OnSuccessed(FrameData frame)
