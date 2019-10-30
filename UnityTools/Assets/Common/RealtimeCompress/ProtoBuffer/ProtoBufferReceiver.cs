@@ -39,8 +39,6 @@ namespace TeamLab.Bubble
                 {
                     this.currentTexture.LoadRawTextureData(d.Data.ToByteArray());
                     this.currentTexture.Apply();
-
-                    Debug.Log("res is " + d.Parameter.Width + " " + d.Parameter.Height);
                 }
             }
         }

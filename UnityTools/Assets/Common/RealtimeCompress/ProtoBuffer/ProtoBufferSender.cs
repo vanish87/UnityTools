@@ -20,17 +20,21 @@ namespace TeamLab.Bubble
             this.camera.targetTexture = this.target;
         }
 
+        int count = 0;
         // Update is called once per frame
         protected override void Update()
         {
             base.Update();
 
-            var temp = RenderTexture.GetTemporary(target.width, target.height, 0, RenderTextureFormat.ARGB32);
+            //if (count++ < 1)
             {
-                Graphics.Blit(target, temp);
-                this.QueueTexture(temp);
+                var temp = RenderTexture.GetTemporary(target.width, target.height, 0, RenderTextureFormat.ARGB32);
+                {
+                    Graphics.Blit(target, temp);
+                    this.QueueTexture(temp);
+                }
+                RenderTexture.ReleaseTemporary(temp);
             }
-            RenderTexture.ReleaseTemporary(temp);
         }
 
         protected override void OnSuccessed(FrameData frame)
@@ -45,7 +49,7 @@ namespace TeamLab.Bubble
             fileData.Parameter.Height = readback.height;
             fileData.Data = ByteString.CopyFrom(data);
 
-            var socketData = new SocketData("localhost", 22345);
+            var socketData = new SocketData("localhost", 12345);
 
             this.sender.Send(socketData, fileData);
         }

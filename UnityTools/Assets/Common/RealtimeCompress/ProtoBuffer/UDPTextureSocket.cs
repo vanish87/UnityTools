@@ -1,9 +1,12 @@
 ﻿using Google.Protobuf;
 using Networking;
+using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
+using UnityTools;
 using UnityTools.Common;
 
 namespace TeamLab.Bubble
@@ -20,13 +23,13 @@ namespace TeamLab.Bubble
         {
             var rawData = data.ToByteArray();
             var newData = CompressTool.Compress(rawData, CompressTool.CompreeAlgorithm.Zstd);
-            //Debug.Log("Data size " + newData.Length);
             return newData;
         }
 
-        public override Imgfile.FileData OnDeserialize(byte[] data)
+        public override Imgfile.FileData OnDeserialize(byte[] data, int length)
         {
-            var newData = CompressTool.Decompress(data, CompressTool.CompreeAlgorithm.Zstd);
+            var dataValid = data.SubArray(0, length);
+            var newData = CompressTool.Decompress(dataValid, CompressTool.CompreeAlgorithm.Zstd);
             return Imgfile.FileData.Parser.ParseFrom(newData);
         }
     }
