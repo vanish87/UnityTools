@@ -11,13 +11,12 @@ namespace UnityTools.Networking
         // Start is called before the first frame update
 
         protected UDPTextureSocket sender = new UDPTextureSocket();
-        protected Camera camera;
         [SerializeField] protected RenderTexture target;
         void Start()
         {
             this.target = TextureManager.Create(new RenderTextureDescriptor(256, 256));
-            this.camera = this.GetComponent<Camera>();
-            this.camera.targetTexture = this.target;
+            var camera = this.GetComponent<Camera>();
+            camera.targetTexture = this.target;
         }
 
         // Update is called once per frame
