@@ -4,12 +4,9 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
-using UnityEngine;
-using UnityTools;
 using UnityTools.Common;
 
-namespace TeamLab.Bubble
+namespace UnityTools.Networking
 {
     public class UDPTextureSocket : UDPSocket<Imgfile.FileData>
     {

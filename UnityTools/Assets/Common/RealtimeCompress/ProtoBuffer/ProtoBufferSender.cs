@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityTools.Common;
 using UnityTools.Rendering;
 
-namespace TeamLab.Bubble
+namespace UnityTools.Networking
 {
     public class ProtoBufferSender : AsyncGPUDataReader
     {
