@@ -130,6 +130,8 @@ namespace UnityTools.Networking
                         //this.socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.PacketInformation, true);
                         Assert.IsNotNull(data);
                         this.socket.Bind(data.endPoint);
+
+                        if (DebugLog) Debug.Log("Start Reciever on " + data.endPoint);
                     }
                     break;
                 case SocketRole.Broadcast:
@@ -241,7 +243,7 @@ namespace UnityTools.Networking
 
                 if (bytesReceived > 0)
                 {
-                    //if (DebugLog) Debug.LogFormat("RECV: {0}: {1}, {2}", epFrom.ToString(), bytes, Helper.ByteArrayToObject<CustomSocketData>(stateFrom.buffer).time);
+                    if (DebugLog) Debug.LogFormat("RECV: {0}: {1}", epFrom.ToString(), bytesReceived);
                     T data = this.OnDeserialize(stateFrom.buffer, bytesReceived);
                     this.OnMessage(stateFrom.remote, data);
                 }
