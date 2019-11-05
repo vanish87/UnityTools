@@ -64,7 +64,7 @@ namespace UnityTools.Common
         }
     }
 
-    [SerializeField]
+    [Serializable]
     public class DisposableMaterial : DisposableObject<Material>
     {
         public DisposableMaterial(Material data) : base(new Material(data))
