@@ -62,5 +62,16 @@ namespace UnityTools.Rendering
 
             return ret;
         }
+        
+        public static Texture2DArray Create(int width, int heigh, int NumOfTexture, TextureFormat format = TextureFormat.ARGB32, bool mipChain = true, bool linear = false)
+        {
+            var ret = new Texture2DArray(width, heigh, NumOfTexture, format, mipChain, linear);
+
+            #if DEBUG
+            tracking.Add(ret);
+            #endif
+
+            return ret;
+        }
     }
 }
