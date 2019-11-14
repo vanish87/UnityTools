@@ -30,6 +30,10 @@ namespace UnityTools
         protected bool open = false;
         protected virtual float MinWidth { get { return 500f; } }
 
+        [SerializeField] protected KeyCode saveKey = KeyCode.None;
+        [SerializeField] protected KeyCode openKey = KeyCode.None;
+        [SerializeField] protected KeyCode loadKey = KeyCode.None;
+
         #region IConfigure
         protected event EventHandler OnConfigureChanged;
         public void RegisterOnConfigureChanged(EventHandler handler) { this.OnConfigureChanged -= handler; this.OnConfigureChanged += handler; }
@@ -54,15 +58,15 @@ namespace UnityTools
 
         protected virtual void Update()
         {
-            if (Input.GetKeyDown(KeyCode.C))
+            if (Input.GetKeyDown(this.openKey))
             {
                 this.Open = !this.Open;
             }
-            if (Input.GetKeyDown(KeyCode.R))
+            if (Input.GetKeyDown(this.loadKey))
             {
                 this.LoadAndNotify();
             }
-            if (Input.GetKeyDown(KeyCode.S))
+            if (Input.GetKeyDown(this.saveKey))
             {
                 this.Save();
             }
@@ -123,9 +127,9 @@ namespace UnityTools
         protected Rect windowRect = new Rect();
         protected bool open = false;
         protected virtual float MinWidth { get { return 500f; } }
-        [SerializeField] protected KeyCode saveKey = KeyCode.S;
-        [SerializeField] protected KeyCode openKey = KeyCode.C;
-        [SerializeField] protected KeyCode loadKey = KeyCode.R;
+        [SerializeField] protected KeyCode saveKey = KeyCode.None;
+        [SerializeField] protected KeyCode openKey = KeyCode.None;
+        [SerializeField] protected KeyCode loadKey = KeyCode.None;
 
 
         #region IConfigure
@@ -233,9 +237,10 @@ namespace UnityTools
         protected Rect windowRect = new Rect();
         protected bool open = false;
         protected virtual float MinWidth { get { return 500f; } }
-        [SerializeField] protected KeyCode saveKey = KeyCode.S;
-        [SerializeField] protected KeyCode openKey = KeyCode.C;
-        [SerializeField] protected KeyCode loadKey = KeyCode.R;
+
+        [SerializeField] protected KeyCode saveKey = KeyCode.None;
+        [SerializeField] protected KeyCode openKey = KeyCode.None;
+        [SerializeField] protected KeyCode loadKey = KeyCode.None;
 
         #region IConfigure
         protected event EventHandler OnConfigureChanged;
