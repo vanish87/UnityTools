@@ -27,14 +27,15 @@ namespace UnityTools.Rendering
         [SerializeField] protected RenderTexture finalOutput;
         [SerializeField] protected List<TextureObject> textureList = new List<TextureObject>();
 
-        protected void OnEnable()
+        protected virtual void OnEnable()
         {
             this.combineMat = new DisposableMaterial(this.shader);
         }
 
-        protected void OnDisable()
+        protected virtual void OnDisable()
         {
             this.combineMat.Dispose();
+            this.finalOutput.DestoryObj();
         }
 
         protected void AddTexture(Texture tex)
@@ -42,7 +43,7 @@ namespace UnityTools.Rendering
             this.textureList.Add(new TextureObject() { texture = tex });
         }
 
-        protected void CleanUp()
+        protected virtual void CleanUp()
         {
             foreach( var t in this.textureList)
             {
@@ -63,7 +64,7 @@ namespace UnityTools.Rendering
             }
         }
 
-        protected void RecalculateTextureParameter(TextureLayout layout)
+        protected void RecalculateTextureParameter(TextureLayout layout = TextureLayout.Auto)
         {
             Assert.IsNotNull(this.textureList);
             Assert.IsTrue(this.textureList.Count > 0);
@@ -73,11 +74,11 @@ namespace UnityTools.Rendering
             //use max width or height as total width/height
             //another size of texture is sum up of width/height size
             var horizontal = layout == TextureLayout.Auto ?
-                             maxW < maxH :
+                             maxW <= maxH :
                              layout == TextureLayout.Horizontal;
 
             var newSize = new Vector2Int(0, 0);
-            var currentSize = new Vector2Int(0, 0);
+            var currentSize = new Vector2Int(maxW, maxH);
             
             var maxLineSize = (horizontal?maxW:maxH) * Mathf.CeilToInt(Mathf.Sqrt(this.textureList.Count));
 
@@ -134,7 +135,7 @@ namespace UnityTools.Rendering
                 {
                     currentST.x += sizeX;
 
-                    if (currentST.x > maxLineSize / newSize.x)
+                    if (currentST.x >= maxLineSize / newSize.x)
                     {
                         currentST.x = 0;
                         currentST.y += maxH * 1.0f / newSize.y;
@@ -143,7 +144,7 @@ namespace UnityTools.Rendering
                 else
                 {
                     currentST.y += sizeY;
-                    if (currentST.y > maxLineSize / newSize.y)
+                    if (currentST.y >= maxLineSize / newSize.y)
                     {
                         currentST.y = 0;
                         currentST.x += maxW * 1.0f / newSize.x;
