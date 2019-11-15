@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEditor;
 
-public class PackageTool
+public class NDIPackageTool
 {
     [MenuItem("Package/Update Package")]
     static void UpdatePackage()
