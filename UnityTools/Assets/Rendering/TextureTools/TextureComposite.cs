@@ -45,11 +45,8 @@ namespace UnityTools.Rendering
 
         protected virtual void CleanUp()
         {
-            foreach (var t in this.textureList)
-            {
-                t.texture.DestoryObj();
-            }
-
+            //this is only a container
+            //so it is not responsible for texture resource management
             this.textureList.Clear();
         }
         protected void CombineTextures()
@@ -64,7 +61,7 @@ namespace UnityTools.Rendering
             }
         }
 
-        protected void RecalculateTextureParameter(TextureLayout layout = TextureLayout.Auto)
+        protected virtual void RecalculateTextureParameter(TextureLayout layout = TextureLayout.Auto)
         {
             Assert.IsNotNull(this.textureList);
             Assert.IsTrue(this.textureList.Count > 0);
@@ -77,47 +74,64 @@ namespace UnityTools.Rendering
                              maxW <= maxH :
                              layout == TextureLayout.Horizontal;
 
-            var newSize = new Vector2Int(0, 0);
-            var currentSize = new Vector2Int(maxW, maxH);
+            var compacked = layout != TextureLayout.Auto;
 
-            var maxLineSize = (horizontal ? maxW : maxH) * Mathf.CeilToInt(Mathf.Sqrt(this.textureList.Count));
+            var newSize = new Vector2Int(0, 0);
+            var currentSize = new Vector2Int(0, 0);
+            
+            var maxLineSize = (horizontal?maxW:maxH) * (compacked?this.textureList.Count:Mathf.CeilToInt(Mathf.Sqrt(this.textureList.Count)));
+            
 
             foreach (var t in textureList)
             {
+                var offSetX = compacked ? t.texture.width : maxW;
+                var offSetY = compacked ? t.texture.height : maxH;
                 if (horizontal)
                 {
-                    currentSize.x += maxW;
+                    currentSize.x += offSetX;
                     if (currentSize.x > maxLineSize)
                     {
-                        currentSize.x = maxW;
-                        currentSize.y += maxH;
+                        currentSize.x = offSetX;
+                        currentSize.y += offSetY;
                     }
                 }
                 else
                 {
-                    currentSize.y += maxH;
+                    currentSize.y += offSetY;
                     if (currentSize.y > maxLineSize)
                     {
-                        currentSize.y = maxH;
-                        currentSize.x += maxW;
+                        currentSize.y = offSetY;
+                        currentSize.x += offSetX;
                     }
                 }
             }
 
-            newSize = currentSize;
-
-            if (currentSize.y > maxH)
+            if (horizontal)
             {
-                if (horizontal)
+                if(compacked)
                 {
-                    newSize.x = maxLineSize;
+                    newSize.x = currentSize.x;
                 }
                 else
                 {
-                    newSize.y = maxLineSize;
+                    bool newLine = currentSize.y >= maxH;
+                    newSize.x = newLine ? maxLineSize : currentSize.x;
                 }
+                newSize.y = currentSize.y + maxH;
             }
-
+            else
+            {
+                if (compacked)
+                {
+                    newSize.y = currentSize.y;
+                }
+                else
+                {
+                    bool newLine = currentSize.x >= maxW;
+                    newSize.y = newLine ? maxLineSize : currentSize.y;
+                }
+                newSize.x = currentSize.x + maxW;
+            }
             //xy is start uv coordinates
             //zw is texture size in uv space
             var currentST = new Vector4(0, 0, 1, 1);
@@ -131,23 +145,26 @@ namespace UnityTools.Rendering
 
                 t.st = currentST;
 
+                var offSetX = compacked ? sizeX : (maxW * 1.0f / newSize.x);
+                var offSetY = compacked ? sizeY : (maxH * 1.0f / newSize.y);
+
                 if (horizontal)
                 {
-                    currentST.x += sizeX;
+                    currentST.x += offSetX;
 
-                    if (currentST.x >= maxLineSize / newSize.x)
+                    if (currentST.x >= maxLineSize * 1.0f / newSize.x)
                     {
                         currentST.x = 0;
-                        currentST.y += maxH * 1.0f / newSize.y;
+                        currentST.y += offSetY;
                     }
                 }
                 else
                 {
-                    currentST.y += sizeY;
-                    if (currentST.y >= maxLineSize / newSize.y)
+                    currentST.y += offSetY;
+                    if (currentST.y >= maxLineSize * 1.0f / newSize.y)
                     {
                         currentST.y = 0;
-                        currentST.x += maxW * 1.0f / newSize.x;
+                        currentST.x += offSetX;
                     }
                 }
             }
