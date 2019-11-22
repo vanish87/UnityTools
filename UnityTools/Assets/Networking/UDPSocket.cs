@@ -200,6 +200,9 @@ namespace UnityTools.Networking
 
         protected void SendByte(SocketData epTo, byte[] byteData)
         {
+            Assert.IsNotNull(epTo);
+            Assert.IsNotNull(byteData);
+            Assert.IsTrue(byteData.Length > 0);
             try
             {
                 this.socket.BeginSendTo(byteData, 0, byteData.Length, SocketFlags.None, epTo.endPoint, this.SendCallback, epTo);
