@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 
 namespace UnityTools.Networking
@@ -12,7 +13,8 @@ namespace UnityTools.Networking
         // Start is called before the first frame update
         void Start()
         {
-            this.socket.Bind(this.data);
+
+            this.socket.Bind(this.data, typeof(MessageDataSender).ToString() + "." + nameof(data));
         }
 
         // Update is called once per frame
