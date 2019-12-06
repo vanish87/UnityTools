@@ -50,6 +50,7 @@ namespace UnityTools.Networking
         }
         
         protected Dictionary<string, MessageData> data = new Dictionary<string, MessageData>();
+        protected List<InternalData> sendData = new List<InternalData>();
         [Serializable]
         public class InternalData
         {
@@ -78,13 +79,13 @@ namespace UnityTools.Networking
 
         public void SendData(SocketData server)
         {
-            var send = new List<InternalData>();
+            this.sendData.Clear();
             foreach (var m in this.data)
             {
-                send.Add(new InternalData() { hash = m.Key, data = m.Value.OnSerialize() });
+                this.sendData.Add(new InternalData() { hash = m.Key, data = m.Value.OnSerialize() });
             }
 
-            this.Send(server, send);
+            this.Send(server, this.sendData);
         }
 
         public override void OnMessage(SocketData socket, List<InternalData> data)
