@@ -16,7 +16,7 @@ namespace UnityTools.Common
 
         protected Queue<FrameData> frameQueue = new Queue<FrameData>();
 
-        public void QueueTexture(RenderTexture source)
+        public void QueueTexture(Texture source)
         {
             this.frameQueue.Enqueue(new FrameData() { readback = AsyncGPUReadback.Request(source) });
         }
@@ -30,7 +30,7 @@ namespace UnityTools.Common
             this.frameQueue.Enqueue(frame);
         }
 
-        public void NoneSequential(RenderTexture source)
+        public void NoneSequential(Texture source)
         {
             AsyncGPUReadback.Request(source, 0, this.OnSuccessedInternal);
         }
