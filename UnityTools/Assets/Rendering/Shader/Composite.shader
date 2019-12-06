@@ -40,7 +40,7 @@
 
 		if (i.uv.x < _ST.x || i.uv.x > _ST.x + _ST.z || i.uv.y < _ST.y || i.uv.y >_ST.y + _ST.w)
 		{
-			return fixed4(0, 0, 0, 1);
+			return fixed4(0, 0, 0, 0);
 		}
 		else
 		{
