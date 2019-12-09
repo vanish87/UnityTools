@@ -203,6 +203,7 @@ namespace UnityTools.Networking
             Assert.IsNotNull(epTo);
             Assert.IsNotNull(byteData);
             Assert.IsTrue(byteData.Length > 0);
+            Assert.IsTrue(byteData.Length < 64 * 1024);
             try
             {
                 this.socket.BeginSendTo(byteData, 0, byteData.Length, SocketFlags.None, epTo.endPoint, this.SendCallback, epTo);
@@ -216,15 +217,36 @@ namespace UnityTools.Networking
         {
             try
             {
-                var socketData = ar.AsyncState as SocketData;
-                int bytes = socket.EndSendTo(ar);
-
-                if (false && this.connections[Connection.Outcoming].Contains(socketData) == false && socketData.endPoint.Address != IPAddress.Broadcast)
+                if (ar.IsCompleted)
                 {
-                    this.connections[Connection.Outcoming].Add(socketData);
-                    if (DebugLog) Debug.LogWarningFormat("Add out connection: {0}", socketData.endPoint.ToString());
+                    var socketData = ar.AsyncState as SocketData;
+
+                    int bytes = socket.EndSendTo(ar);
+
+                    bool found = false;
+                    foreach (var c in this.connections[Connection.Outcoming])
+                    {
+                        if (c.endPoint.Address.Equals(socketData.endPoint.Address))
+                        {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (found == false && socketData.endPoint.Address != IPAddress.Broadcast)
+                    {
+                        this.connections[Connection.Outcoming].Add(socketData);
+                        if (DebugLog) Debug.LogWarningFormat("Add out connection: {0}", socketData.endPoint.ToString());
+                    }
+                    if (DebugLog) Debug.LogFormat("SEND: {0} bytes To {1}", bytes, socketData.endPoint.ToString());
+
+                    if (DebugLog)
+                    {
+                        foreach (var c in this.connections)
+                        {
+                            Debug.Log("connections count " + c.Key.ToString() +" " + c.Value.Count);
+                        }
+                    }
                 }
-                if (DebugLog) Debug.LogFormat("SEND: {0} bytes To {1}", bytes, socketData.endPoint.ToString());
             }
             catch (Exception e)
             {
