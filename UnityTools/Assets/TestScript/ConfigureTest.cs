@@ -23,7 +23,7 @@ public class ConfigureTest : MonoBehaviour
 
         //ConfigureTool.Write(path, data);
 
-        var loadData = FileTool.ReadXML<TestConfiure>(path);
+        var loadData = FileTool.Read<TestConfiure>(path);
 
         Debug.Log(loadData.vector);
         Debug.Log(loadData.str);
