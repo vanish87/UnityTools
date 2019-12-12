@@ -22,7 +22,7 @@ namespace UnityTools.Common
             yield return null;
 
             var filePath = Path.Combine(Application.streamingAssetsPath, this.fileNmae);
-            this.dataList = FileTool.ReadBinary<Queue<AsyncGPUDataSerializer.FileData>>(filePath).ToList();
+            this.dataList = FileTool.Read<Queue<AsyncGPUDataSerializer.FileData>>(filePath, FileTool.SerializerType.Binary).ToList();
         }
 
         protected IEnumerator Profile()

@@ -65,7 +65,7 @@ namespace UnityTools.Common
             yield return 0;
             var filePath = Path.Combine(Application.streamingAssetsPath, DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss_") + this.fileName);
             //var filePath = Path.Combine(Application.streamingAssetsPath, this.fileName);
-            FileTool.WriteBinary(filePath, this.data);
+            FileTool.Write(filePath, this.data, FileTool.SerializerType.Binary);
         }
     }
 }

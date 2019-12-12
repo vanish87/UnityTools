@@ -6,7 +6,7 @@ using UnityEngine;
 namespace UnityTools.Example
 {
     [System.Serializable]
-    public class NoneMonoConfigureClass : XmlConfigNoneMono<ConfigureData>
+    public class NoneMonoConfigureClass : ConfigNoneMono<ConfigureData>
     {
         [SerializeField] protected ConfigureData data;
         public override ConfigureData Data { get => this.data; set => this.data = value; }

@@ -13,12 +13,17 @@ namespace UnityTools
     public interface IConfigure<T> where T : class, new()
     {
         //not used
-        void OnConfigureChange(XmlConfig<T> sender, EventArgs args);
+        void OnConfigureChange(Config<T> sender, EventArgs args);
+    }
+
+    public interface IConfigureSerilize
+    {
+        FileTool.SerializerType SaveType { get; } 
     }
 
     //same as XmlConfig, but is not subclass of mono
     //Note it could be multiple instance but they will save/load to same file
-    public abstract class XmlConfigNoneMono<T> where T : class, new()
+    public abstract class ConfigNoneMono<T> : IConfigureSerilize where T : class, new()
     {
         public abstract T Data { get; set; }
         public bool Open { get { return this.open; } set { this.open = value; } }
@@ -30,6 +35,9 @@ namespace UnityTools
         protected bool open = false;
         protected virtual float MinWidth { get { return 500f; } }
 
+        public FileTool.SerializerType SaveType =>this.saveType;
+
+        [SerializeField] protected FileTool.SerializerType saveType = FileTool.SerializerType.XML;
         [SerializeField] protected KeyCode saveKey = KeyCode.None;
         [SerializeField] protected KeyCode openKey = KeyCode.None;
         [SerializeField] protected KeyCode loadKey = KeyCode.None;
@@ -51,7 +59,7 @@ namespace UnityTools
 
         }
 
-        protected XmlConfigNoneMono()
+        protected ConfigNoneMono()
         {
             this.Initialize();
         }
@@ -98,11 +106,11 @@ namespace UnityTools
         }
         public virtual void Save()
         {
-            FileTool.WriteXML(this.filePath, this.Data);
+            FileTool.Write(this.filePath, this.Data, this.saveType);
         }
         protected virtual void Load()
         {
-            this.Data = FileTool.ReadXML<T>(this.filePath);
+            this.Data = FileTool.Read<T>(this.filePath, this.saveType);
         }
         public virtual void LoadAndNotify()
         {
@@ -116,7 +124,7 @@ namespace UnityTools
         }
     }
 
-    public abstract class XmlConfigMonoSingleton<T> : SingletonMonoBehaviour<XmlConfigMonoSingleton<T>> where T : class, new()
+    public abstract class ConfigMonoSingleton<T> : SingletonMonoBehaviour<ConfigMonoSingleton<T>>, IConfigureSerilize where T : class, new()
     {
         public abstract T Data { get; set; }
         public bool Open { get { return this.open; } set { this.open = value; } }
@@ -127,6 +135,9 @@ namespace UnityTools
         protected Rect windowRect = new Rect();
         protected bool open = false;
         protected virtual float MinWidth { get { return 500f; } }
+        public FileTool.SerializerType SaveType => this.saveType;
+
+        [SerializeField] protected FileTool.SerializerType saveType = FileTool.SerializerType.XML;
         [SerializeField] protected KeyCode saveKey = KeyCode.None;
         [SerializeField] protected KeyCode openKey = KeyCode.None;
         [SerializeField] protected KeyCode loadKey = KeyCode.None;
@@ -207,11 +218,11 @@ namespace UnityTools
 
         public virtual void Save()
         {
-            FileTool.WriteXML(this.filePath, this.Data);
+            FileTool.Write(this.filePath, this.Data, this.saveType);
         }
         protected virtual void Load()
         {
-            this.Data = FileTool.ReadXML<T>(this.filePath);
+            this.Data = FileTool.Read<T>(this.filePath, this.saveType);
         }
 
         public virtual void LoadAndNotify()
@@ -226,7 +237,7 @@ namespace UnityTools
         }
     }
 
-    public abstract class XmlConfig<T> : MonoBehaviour where T : class, new()
+    public abstract class Config<T> : MonoBehaviour, IConfigureSerilize where T : class, new()
     {
         public abstract T Data { get; set; }
         public bool Open { get { return this.open; } set { this.open = value; } }
@@ -238,6 +249,9 @@ namespace UnityTools
         protected bool open = false;
         protected virtual float MinWidth { get { return 500f; } }
 
+        public FileTool.SerializerType SaveType => this.saveType;
+
+        [SerializeField] protected FileTool.SerializerType saveType = FileTool.SerializerType.XML;
         [SerializeField] protected KeyCode saveKey = KeyCode.None;
         [SerializeField] protected KeyCode openKey = KeyCode.None;
         [SerializeField] protected KeyCode loadKey = KeyCode.None;
@@ -317,11 +331,11 @@ namespace UnityTools
 
         public virtual void Save()
         {
-            FileTool.WriteXML(this.filePath, this.Data);
+            FileTool.Write(this.filePath, this.Data, this.saveType);
         }
         protected virtual void Load()
         {
-            this.Data = FileTool.ReadXML<T>(this.filePath);
+            this.Data = FileTool.Read<T>(this.filePath, this.saveType);
         }
 
         public virtual void LoadAndNotify()
