@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace UnityTools.Example
 {
-    public class SingletonMonoConfigure : XmlConfigMonoSingleton<ConfigureData>
+    public class SingletonMonoConfigure : ConfigMonoSingleton<ConfigureData>
     {
         [SerializeField] protected ConfigureData data;
         public override ConfigureData Data { get => this.data; set => this.data = value; }

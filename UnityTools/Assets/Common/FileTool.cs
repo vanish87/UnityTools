@@ -154,7 +154,7 @@ namespace UnityTools.Common
             {
                 Debug.LogWarning(filePath + " not found, create new one");
                 ret = new T();
-                Write(filePath, ret);
+                Write(filePath, ret, type);
             }
 
             return ret;

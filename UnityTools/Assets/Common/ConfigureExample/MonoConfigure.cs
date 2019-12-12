@@ -14,7 +14,7 @@ namespace UnityTools.Example
         public Vector2 posNew1 = new Vector2(2, 3);
         public float sliderFloat = 10;
     }
-    public class MonoConfigure : XmlConfig<ConfigureData>
+    public class MonoConfigure : Config<ConfigureData>
     {
         [SerializeField] protected ConfigureData data;
         public override ConfigureData Data { get => this.data; set => this.data = value; }

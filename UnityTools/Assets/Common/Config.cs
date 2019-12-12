@@ -13,7 +13,7 @@ namespace UnityTools
     public interface IConfigure<T> where T : class, new()
     {
         //not used
-        void OnConfigureChange(XmlConfig<T> sender, EventArgs args);
+        void OnConfigureChange(Config<T> sender, EventArgs args);
     }
 
     public interface IConfigureSerilize
@@ -23,7 +23,7 @@ namespace UnityTools
 
     //same as XmlConfig, but is not subclass of mono
     //Note it could be multiple instance but they will save/load to same file
-    public abstract class XmlConfigNoneMono<T> : IConfigureSerilize where T : class, new()
+    public abstract class ConfigNoneMono<T> : IConfigureSerilize where T : class, new()
     {
         public abstract T Data { get; set; }
         public bool Open { get { return this.open; } set { this.open = value; } }
@@ -59,7 +59,7 @@ namespace UnityTools
 
         }
 
-        protected XmlConfigNoneMono()
+        protected ConfigNoneMono()
         {
             this.Initialize();
         }
@@ -124,7 +124,7 @@ namespace UnityTools
         }
     }
 
-    public abstract class XmlConfigMonoSingleton<T> : SingletonMonoBehaviour<XmlConfigMonoSingleton<T>>, IConfigureSerilize where T : class, new()
+    public abstract class ConfigMonoSingleton<T> : SingletonMonoBehaviour<ConfigMonoSingleton<T>>, IConfigureSerilize where T : class, new()
     {
         public abstract T Data { get; set; }
         public bool Open { get { return this.open; } set { this.open = value; } }
@@ -237,7 +237,7 @@ namespace UnityTools
         }
     }
 
-    public abstract class XmlConfig<T> : MonoBehaviour, IConfigureSerilize where T : class, new()
+    public abstract class Config<T> : MonoBehaviour, IConfigureSerilize where T : class, new()
     {
         public abstract T Data { get; set; }
         public bool Open { get { return this.open; } set { this.open = value; } }
