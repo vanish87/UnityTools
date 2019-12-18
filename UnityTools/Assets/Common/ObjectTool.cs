@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
+using UnityEngine;
 using UnityEngine.Assertions;
 
 namespace UnityTools
@@ -42,6 +44,25 @@ namespace UnityTools
             T[] result = new T[length];
             System.Array.Copy(data, index, result, 0, length);
             return result;
+        }
+
+        public static T DeepCopy<T>(T other)
+        {
+            if (other == null) return default;
+            using (MemoryStream ms = new MemoryStream())
+            {
+                BinaryFormatter formatter = new BinaryFormatter();
+                formatter.Serialize(ms, other);
+                ms.Position = 0;
+                return (T)formatter.Deserialize(ms);
+            }
+        }
+
+        public static T DeepCopyJson<T>(T other)
+        {
+            if (other == null) return default;
+            var json = JsonUtility.ToJson(other);
+            return JsonUtility.FromJson<T>(json);
         }
     }
 }
