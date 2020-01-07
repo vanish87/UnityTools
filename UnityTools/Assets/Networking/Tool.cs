@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
+using System.Text;
 
 namespace UnityTools.Networking
 {
@@ -18,6 +20,25 @@ namespace UnityTools.Networking
                 }
             }
             return ret;
+        }
+
+        //WARNING: Do not call this on update
+        //It will result memory leak
+        public static bool IsReachable(IPEndPoint epRemote)
+        {
+            try
+            {
+                using (var pingSender = new Ping())
+                {
+                    PingReply reply = pingSender.Send(epRemote.Address, 1);
+                    return reply.Status == IPStatus.Success;
+                }
+            }
+            catch (SocketException e)
+            {
+
+                return false;
+            }
         }
     }
 }

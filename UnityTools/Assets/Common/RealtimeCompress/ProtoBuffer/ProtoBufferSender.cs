@@ -42,7 +42,7 @@ namespace UnityTools.Networking
             fileData.Parameter.Height = readback.height;
             fileData.Data = ByteString.CopyFrom(data);
 
-            var socketData = new SocketData("localhost", 12345);
+            var socketData = SocketData.Make("localhost", 12345);
 
             this.sender.Send(socketData, fileData);
         }

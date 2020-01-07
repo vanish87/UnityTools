@@ -9,7 +9,7 @@ namespace UnityTools.Networking
     {
         [SerializeField] protected MessageDataSocket socket = new MessageDataSocket();
         [SerializeField] protected Datatex data = new Datatex();
-        [SerializeField] protected SocketData server = new SocketData("127.0.0.1", 12346);
+        [SerializeField] protected SocketData server = SocketData.Make("127.0.0.1", 12346);
         // Start is called before the first frame update
         void Start()
         {

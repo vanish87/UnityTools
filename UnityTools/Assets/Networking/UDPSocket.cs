@@ -12,17 +12,37 @@ namespace UnityTools.Networking
     public class SocketData
     {
         public IPEndPoint endPoint;
+        public bool reachable = false;
+        public Socket socket;
 
-        public SocketData(IPEndPoint end)
+        public static SocketData Make(IPEndPoint end)
+        {
+            var ret = new SocketData(end);
+            ret.reachable = Tool.IsReachable(ret.endPoint);
+            return ret;
+        }
+        public static SocketData Make(int port = 0)
+        {
+            var ret = new SocketData(port);
+            ret.reachable = Tool.IsReachable(ret.endPoint);
+            return ret;
+        }
+        public static SocketData Make(string ip, int port)
+        {
+            var ret = new SocketData(ip, port);
+            ret.reachable = Tool.IsReachable(ret.endPoint);
+            return ret;
+        }
+
+        protected SocketData(IPEndPoint end)
         {
             this.endPoint = new IPEndPoint(end.Address, end.Port);
         }
-        public SocketData(int port = 0)
+        protected SocketData(int port = 0)
         {
             this.endPoint = new IPEndPoint(IPAddress.Any, port);
         }
-
-        public SocketData(string ip, int port)
+        protected SocketData(string ip, int port)
         {
             IPAddress local = IPAddress.Any;
             if (ip.ToLower() == "localhost" || ip == "127.0.0.1")
@@ -53,6 +73,11 @@ namespace UnityTools.Networking
             Assert.IsTrue(IPEndPoint.MinPort <= port && port <= IPEndPoint.MaxPort);
             this.endPoint = new IPEndPoint(local, port);
         }
+
+        ~SocketData()
+        {
+            this.endPoint = null;
+        }       
     }
 
     public class State
@@ -62,7 +87,7 @@ namespace UnityTools.Networking
     }
     public class RecieveState : State
     {
-        public SocketData remote = new SocketData();
+        public SocketData remote = SocketData.Make();
     }
 
     //code from https://gist.github.com/darkguy2008/413a6fea3a5b4e67e5e0d96f750088a9
@@ -81,6 +106,7 @@ namespace UnityTools.Networking
         public void Disconnect()
         {
             this.socket.Close();
+            this.socket.Dispose();
 
             foreach (var r in this.roleState.Keys)
             {
@@ -171,7 +197,7 @@ namespace UnityTools.Networking
         {
             this.Setup(SocketRole.Broadcast);
 
-            var epTo = new SocketData();
+            var epTo = SocketData.Make();
             epTo.endPoint.Address = IPAddress.Broadcast;
             epTo.endPoint.Port = port;
 
@@ -180,7 +206,8 @@ namespace UnityTools.Networking
         }
         public virtual void StartRecieve(int port = 0)
         {
-            this.recieveState.remote = new SocketData(port);
+            this.recieveState.remote = SocketData.Make(port);
+            this.recieveState.remote.socket = this.socket;
 
             this.Setup(SocketRole.Reciever, this.recieveState.remote);
 
@@ -192,6 +219,7 @@ namespace UnityTools.Networking
             }
             catch (Exception e)
             {
+                //check flag
                 Debug.Log(e.ToString());
             }
         }
@@ -200,17 +228,28 @@ namespace UnityTools.Networking
 
         protected void SendByte(SocketData epTo, byte[] byteData)
         {
+            epTo.socket = this.socket;
+
             Assert.IsNotNull(epTo);
             Assert.IsNotNull(byteData);
             Assert.IsTrue(byteData.Length > 0);
             Assert.IsTrue(byteData.Length < 64 * 1024);
-            try
+            Assert.IsNotNull(epTo.socket);
+
+            if (epTo.reachable)
             {
-                this.socket.BeginSendTo(byteData, 0, byteData.Length, SocketFlags.None, epTo.endPoint, this.SendCallback, epTo);
+                try
+                {
+                    this.socket.BeginSendTo(byteData, 0, byteData.Length, SocketFlags.None, epTo.endPoint, this.SendCallback, epTo);
+                }
+                catch (Exception e)
+                {
+                    Debug.Log(e.ToString());
+                }
             }
-            catch (Exception e)
+            else
             {
-                Debug.Log(e.ToString());
+                Debug.LogWarning(epTo.endPoint.ToString() + " is unreachable");
             }
         }
         protected void SendCallback(IAsyncResult ar)
@@ -221,7 +260,7 @@ namespace UnityTools.Networking
                 {
                     var socketData = ar.AsyncState as SocketData;
 
-                    int bytes = socket.EndSendTo(ar);
+                    int bytes = socketData.socket.EndSendTo(ar);
 
                     bool found = false;
                     foreach (var c in this.connections[Connection.Outcoming])
@@ -251,6 +290,8 @@ namespace UnityTools.Networking
             catch (Exception e)
             {
                 Debug.Log(e.ToString());
+                Debug.Log((e as SocketException).ErrorCode);
+                Debug.Log((e as SocketException).Message);
             }
         }
         protected void RecieveCallback(IAsyncResult ar)
@@ -261,7 +302,7 @@ namespace UnityTools.Networking
                 Assert.IsTrue(stateFrom == this.recieveState);
 
                 EndPoint epFrom = stateFrom.remote.endPoint;
-                int bytesReceived = socket.EndReceiveFrom(ar, ref epFrom);
+                int bytesReceived = stateFrom.remote.socket.EndReceiveFrom(ar, ref epFrom);
 
                 var ipFrom = epFrom as IPEndPoint;
                 stateFrom.remote.endPoint = ipFrom;
@@ -284,16 +325,18 @@ namespace UnityTools.Networking
                 }
                 if (found == false)
                 {
-                    this.connections[Connection.Incoming].Add(new SocketData(ipFrom));
+                    this.connections[Connection.Incoming].Add(SocketData.Make(ipFrom));
                     if (DebugLog) Debug.LogWarningFormat("Add in connection: {0}", ipFrom.ToString());
                 }
 
                 epFrom = this.recieveState.remote.endPoint;
-                this.socket.BeginReceiveFrom(this.recieveState.buffer, 0, this.recieveState.buffer.Length, SocketFlags.None, ref epFrom, this.RecieveCallback, this.recieveState);
+                stateFrom.remote.socket.BeginReceiveFrom(this.recieveState.buffer, 0, this.recieveState.buffer.Length, SocketFlags.None, ref epFrom, this.RecieveCallback, this.recieveState);
             }
             catch (Exception e)
             {
                 Debug.Log(e.ToString());
+                Debug.Log((e as SocketException).ErrorCode);
+                Debug.Log((e as SocketException).Message);
             }
         }
     }
