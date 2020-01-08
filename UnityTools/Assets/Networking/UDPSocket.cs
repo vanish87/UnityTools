@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -17,45 +18,36 @@ namespace UnityTools.Networking
 
         public static SocketData Make(IPEndPoint end)
         {
-            var ret = new SocketData(end);
-            ret.reachable = Tool.IsReachable(ret.endPoint);
-            return ret;
+            return new SocketData(end);
         }
         public static SocketData Make(int port = 0)
         {
-            var ret = new SocketData(port);
-            ret.reachable = Tool.IsReachable(ret.endPoint);
-            return ret;
+            return new SocketData(port);
         }
         public static SocketData Make(string ip, int port)
         {
-            var ret = new SocketData(ip, port);
-            ret.reachable = Tool.IsReachable(ret.endPoint);
-            return ret;
+            return new SocketData(ip, port);
         }
 
         protected SocketData(IPEndPoint end)
         {
             this.endPoint = new IPEndPoint(end.Address, end.Port);
+            //optional reachable check, it may cause memory leak
+            this.reachable = Tool.IsReachable(this.endPoint);
         }
         protected SocketData(int port = 0)
         {
             this.endPoint = new IPEndPoint(IPAddress.Any, port);
+            //optional reachable check, it may cause memory leak
+            this.reachable = Tool.IsReachable(this.endPoint);
         }
         protected SocketData(string ip, int port)
         {
             IPAddress local = IPAddress.Any;
             if (ip.ToLower() == "localhost" || ip == "127.0.0.1")
             {
-                IPAddress[] localIPs = Dns.GetHostAddresses(Dns.GetHostName());
-                foreach (var addr in localIPs)
-                {
-                    if (addr.AddressFamily == AddressFamily.InterNetwork)
-                    {
-                        local = addr;
-                        break;
-                    }
-                }
+                var localIPs = Dns.GetHostAddresses(Dns.GetHostName()).ToList();
+                local = localIPs.Find(ips =>ips.AddressFamily == AddressFamily.InterNetwork);
             }
             else
             {
@@ -72,6 +64,8 @@ namespace UnityTools.Networking
 
             Assert.IsTrue(IPEndPoint.MinPort <= port && port <= IPEndPoint.MaxPort);
             this.endPoint = new IPEndPoint(local, port);
+            //optional reachable check, it may cause memory leak
+            this.reachable = Tool.IsReachable(this.endPoint);
         }
 
         ~SocketData()
@@ -244,7 +238,12 @@ namespace UnityTools.Networking
                 }
                 catch (Exception e)
                 {
+                    Debug.Log(epTo.endPoint.ToString());
                     Debug.Log(e.ToString());
+                }
+                finally
+                {
+                    byteData = null;
                 }
             }
             else
