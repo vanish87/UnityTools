@@ -261,20 +261,13 @@ namespace UnityTools.Networking
 
                     int bytes = socketData.socket.EndSendTo(ar);
 
-                    bool found = false;
-                    foreach (var c in this.connections[Connection.Outcoming])
-                    {
-                        if (c.endPoint.Address.Equals(socketData.endPoint.Address))
-                        {
-                            found = true;
-                            break;
-                        }
-                    }
-                    if (found == false && socketData.endPoint.Address != IPAddress.Broadcast)
+                    if (this.connections[Connection.Outcoming].Exists(c => c.endPoint.Address.Equals(socketData.endPoint.Address)) == false
+                        && socketData.endPoint.Address != IPAddress.Broadcast)
                     {
                         this.connections[Connection.Outcoming].Add(socketData);
                         if (DebugLog) Debug.LogWarningFormat("Add out connection: {0}", socketData.endPoint.ToString());
                     }
+
                     if (DebugLog) Debug.LogFormat("SEND: {0} bytes To {1}", bytes, socketData.endPoint.ToString());
 
                     if (DebugLog)
@@ -313,16 +306,7 @@ namespace UnityTools.Networking
                     this.OnMessage(stateFrom.remote, data);
                 }
 
-                bool found = false;
-                foreach (var c in this.connections[Connection.Incoming])
-                {
-                    if (c.endPoint.Address.Equals(ipFrom.Address))
-                    {
-                        found = true;
-                        break;
-                    }
-                }
-                if (found == false)
+                if(this.connections[Connection.Incoming].Exists(c => c.endPoint.Address.Equals(ipFrom.Address)) == false)
                 {
                     this.connections[Connection.Incoming].Add(SocketData.Make(ipFrom));
                     if (DebugLog) Debug.LogWarningFormat("Add in connection: {0}", ipFrom.ToString());
