@@ -52,6 +52,11 @@
 	{
 		return tex2D(_TargetTex, i.uv) + tex2D(_MainTex, i.uv);
 	}
+
+	fixed4 fragSeperate(v2f i) : SV_Target
+	{
+		return tex2D(_MainTex, _ST.xy + i.uv * _ST.zw);
+	}
 	ENDCG
 
     SubShader
@@ -72,6 +77,13 @@
 			CGPROGRAM
 			#pragma vertex vert
 			#pragma fragment fragAddTarget			
+			ENDCG
+		}
+		Pass
+		{
+			CGPROGRAM
+			#pragma vertex vert
+			#pragma fragment fragSeperate			
 			ENDCG
 		}
     }
