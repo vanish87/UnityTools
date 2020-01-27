@@ -2,6 +2,7 @@
 #define USE_OSC
 using System.Collections;
 using System.Collections.Generic;
+using System.Net.Sockets;
 using UnityEngine;
 
 namespace UnityTools.Networking
@@ -20,8 +21,15 @@ namespace UnityTools.Networking
         }
         protected void OnInit()
         {
-            this.CleanUp();
-            this.client = new OscJack.OscClient(this.ip, this.port);
+            try
+            {
+                this.CleanUp();
+                this.client = new OscJack.OscClient(this.ip, this.port);
+            }
+            catch (SocketException e)
+            {
+                Debug.Log(e.ToString());
+            }
         }
 
         protected void CleanUp()
