@@ -36,7 +36,7 @@ namespace UnityTools.Networking
             }
             catch (SocketException e)
             {
-
+                UnityEngine.Debug.Log(e.ToString());
                 return false;
             }
         }
