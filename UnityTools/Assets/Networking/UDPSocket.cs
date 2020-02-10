@@ -33,13 +33,13 @@ namespace UnityTools.Networking
         {
             this.endPoint = new IPEndPoint(end.Address, end.Port);
             //optional reachable check, it may cause memory leak
-            this.reachable = Tool.IsReachable(this.endPoint);
+            this.reachable = true; // Tool.IsReachable(this.endPoint);
         }
         protected SocketData(int port = 0)
         {
             this.endPoint = new IPEndPoint(IPAddress.Any, port);
             //optional reachable check, it may cause memory leak
-            this.reachable = Tool.IsReachable(this.endPoint);
+            this.reachable = true; // Tool.IsReachable(this.endPoint);
         }
         protected SocketData(string ip, int port)
         {
@@ -65,7 +65,7 @@ namespace UnityTools.Networking
             Assert.IsTrue(IPEndPoint.MinPort <= port && port <= IPEndPoint.MaxPort);
             this.endPoint = new IPEndPoint(local, port);
             //optional reachable check, it may cause memory leak
-            this.reachable = Tool.IsReachable(this.endPoint);
+            this.reachable = true;// Tool.IsReachable(this.endPoint);
         }
 
         ~SocketData()
@@ -227,7 +227,7 @@ namespace UnityTools.Networking
             Assert.IsNotNull(epTo);
             Assert.IsNotNull(byteData);
             Assert.IsTrue(byteData.Length > 0);
-            Assert.IsTrue(byteData.Length < 64 * 1024);
+            Assert.IsTrue(byteData.Length < 64 * 1024, "Data length "+ byteData.Length+ " exceeds max 64k");
             Assert.IsNotNull(epTo.socket);
 
             if (epTo.reachable)
