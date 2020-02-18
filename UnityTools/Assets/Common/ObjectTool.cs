@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -38,7 +39,19 @@ namespace UnityTools
         {
             return System.Array.FindAll(GameObject.FindObjectsOfType<GameObject>(), (item) => item.transform.parent == null);
         }
-               
+
+        public static List<T> FindAllObject<T>()
+        {
+            var users = new List<T>();
+            foreach (var g in FindRootObject())
+            {
+                users.AddRange(g.GetComponents<T>());
+                users.AddRange(g.GetComponentsInChildren<T>());
+            }
+
+            return users;
+        }
+
         public static T[] SubArray<T>(this T[] data, int index, int length)
         {
             T[] result = new T[length];

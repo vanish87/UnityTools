@@ -318,7 +318,7 @@ namespace UnityTools.Networking
                 epFrom = this.recieveState.remote.endPoint;
                 stateFrom.remote.socket.BeginReceiveFrom(this.recieveState.buffer, 0, this.recieveState.buffer.Length, SocketFlags.None, ref epFrom, this.RecieveCallback, this.recieveState);
             }
-            catch (Exception e)
+            catch (SocketException e)
             {
                 Debug.Log(e.ToString());
                 Debug.Log((e as SocketException).ErrorCode);
