@@ -72,7 +72,7 @@ namespace UnityTools.Networking
         }
         private void OnDestroy()
         {
-            this.socket.Disconnect();
+            this.socket.Dispose();
         }
 
         /*IEnumerator Broadcast()

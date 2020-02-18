@@ -86,27 +86,10 @@ namespace UnityTools.Networking
 
     //code from https://gist.github.com/darkguy2008/413a6fea3a5b4e67e5e0d96f750088a9
     //for testing latency of UDP
-    public class UDPSocket<T>
+    public class UDPSocket<T> : Disposable
     {
-
         public RecieveState recieveState = new RecieveState();
         public bool DebugLog = false;
-
-        ~UDPSocket()
-        {
-            this.Disconnect();
-        }
-
-        public void Disconnect()
-        {
-            this.socket.Close();
-            this.socket.Dispose();
-
-            foreach (var r in this.roleState.Keys)
-            {
-                this.roleState[r] = false;
-            }
-        }
 
         public enum Connection
         {
@@ -132,35 +115,55 @@ namespace UnityTools.Networking
             { Connection.Outcoming  , new List<SocketData>() },
         };
 
+        protected override void DisposeManaged()
+        {
+            if (this.socket != null)
+            {
+                try
+                {
+                    this.socket.Shutdown(SocketShutdown.Both);
+                }
+                catch (Exception e){ if (DebugLog) Debug.LogWarning(e.ToString()); }
+                finally
+                {
+                    this.socket.Close();
+                }
+                this.socket = null;
+            }
+        }
+
         public void Setup(SocketRole role, SocketData data = null)
         {
             if (this.roleState[role]) return;
-
-            switch (role)
+            try
             {
-                case SocketRole.Sender:
-                    {
-                        //connect is optional
-                        //socket.Connect(IPAddress.Parse(address), port);
-                    }
-                    break;
-                case SocketRole.Reciever:
-                    {
-                        this.socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.ReuseAddress, true);
-                        //this.socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.PacketInformation, true);
-                        Assert.IsNotNull(data);
-                        this.socket.Bind(data.endPoint);
+                switch (role)
+                {
+                    case SocketRole.Sender:
+                        {
+                            //connect is optional
+                            //socket.Connect(IPAddress.Parse(address), port);
+                        }
+                        break;
+                    case SocketRole.Reciever:
+                        {
+                            this.socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.ReuseAddress, true);
+                            //this.socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.PacketInformation, true);
+                            Assert.IsNotNull(data);
+                            this.socket.Bind(data.endPoint);
 
-                        if (DebugLog) Debug.Log("Start Reciever on " + data.endPoint);
-                    }
-                    break;
-                case SocketRole.Broadcast:
-                    {
-                        this.socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Broadcast, true);
-                        //this.socket.Bind(this.socketConfigure.endPoint);
-                    }
-                    break;
+                            if (DebugLog) Debug.Log("Start Reciever on " + data.endPoint);
+                        }
+                        break;
+                    case SocketRole.Broadcast:
+                        {
+                            this.socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Broadcast, true);
+                            //this.socket.Bind(this.socketConfigure.endPoint);
+                        }
+                        break;
+                }
             }
+            catch(SocketException e) { Debug.Log(data.endPoint.ToString() + " "  + e.ToString()); }
             this.roleState[role] = true;
         }
 
