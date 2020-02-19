@@ -5,15 +5,15 @@ using System.Linq;
 using UnityEngine;
 namespace UnityTools.Common
 {
+    [Serializable]
+    public class PCInfo
+    {
+        public string name = "OutputPC";
+        public string ipAddress = "127.0.0.1";
+        public bool isServer = false;
+    }
     public class Launcher<T> : MonoBehaviour where T : class, new()
     {
-        [Serializable]
-        public class PCInfo
-        {
-            public string name = "OutputPC";
-            public string ipAddress = "127.0.0.1";
-            public bool isServer = false;
-        }
         public interface ILauncherUser
         {
             void OnInit(T data);
