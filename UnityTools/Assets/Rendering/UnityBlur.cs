@@ -7,6 +7,10 @@ namespace UnityTools.Rendering
 {
     public class UnityBlur : PostEffectBase
     {
+        public int DownSample { get => this.downsample; set => this.downsample = value; }
+        public float BlurSize { get => this.blurSize; set => this.blurSize = value; }
+        public int BlurIterations { get => this.blurIterations; set => this.blurIterations = value; }
+
         [Range(0, 2)]
         [SerializeField] protected int downsample = 1;
 

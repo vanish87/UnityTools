@@ -19,6 +19,9 @@ namespace UnityTools.Common
             void OnInit(T data);
             void OnDeinit(T data);
             void OnReload(T data);
+
+            //higher order of user executes after than lower order user
+            int Order { get; }
         }
 
         [SerializeField] protected bool global = false;
@@ -42,7 +45,8 @@ namespace UnityTools.Common
                 this.userList.AddRange(this.GetComponentsInChildren<ILauncherUser>());
             }
 
-            foreach(var u in this.userList)
+            this.userList.OrderBy(ul => ul.Order);
+            foreach (var u in this.userList)
             {
                 u.OnInit(this.data);
             }
