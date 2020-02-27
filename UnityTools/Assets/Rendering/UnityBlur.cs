@@ -23,7 +23,7 @@ namespace UnityTools.Rendering
             StandardGauss = 0,
             SgxGauss = 1,
         }
-        protected void BlurTexture(RenderTexture source, RenderTexture output)
+        public void BlurTexture(RenderTexture source, RenderTexture output)
         {
             Assert.IsNotNull(source);
             Assert.IsNotNull(output);
