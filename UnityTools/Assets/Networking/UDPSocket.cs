@@ -282,7 +282,7 @@ namespace UnityTools.Networking
                     }
                 }
             }
-            catch (Exception e)
+            catch (SocketException e)
             {
                 Debug.Log(e.ToString());
                 Debug.Log((e as SocketException).ErrorCode);
