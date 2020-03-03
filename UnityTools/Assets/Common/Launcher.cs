@@ -45,7 +45,7 @@ namespace UnityTools.Common
                 this.userList.AddRange(this.GetComponentsInChildren<ILauncherUser>());
             }
 
-            this.userList.OrderBy(ul => ul.Order);
+            this.userList = this.userList.OrderBy(ul => ul.Order).ToList();
             foreach (var u in this.userList)
             {
                 u.OnInit(this.data);

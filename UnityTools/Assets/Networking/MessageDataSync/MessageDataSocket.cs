@@ -63,7 +63,10 @@ namespace UnityTools.Networking
             byte[] OnSerialize();
             void OnDeseialize(byte[] data);
         }
-
+        public void CleanUp()
+        {
+            this.data.Clear();
+        }
         public void Bind(MessageData message, string hashID = null)
         {
             var hash = GetHash(hashID != null ? hashID : message.HashString);
