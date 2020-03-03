@@ -18,8 +18,8 @@ namespace UnityTools.Common
         public enum Runtime
         {
             Debug,//local editor debug
-            DebugLog,//local editor debug
-            DebugBuild,//production pc debug
+            DebugLog,//local editor debug log
+            DebugBuild,//production pc debug, disable data sim functions, but allow to configuring localy
             Production,// production
         }
 
