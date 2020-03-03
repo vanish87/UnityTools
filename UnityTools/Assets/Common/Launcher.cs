@@ -12,6 +12,19 @@ namespace UnityTools.Common
         public string ipAddress = "127.0.0.1";
         public bool isServer = false;
     }
+    [Serializable]
+    public class Environment
+    {
+        public enum Runtime
+        {
+            Debug,//local editor debug
+            DebugLog,//local editor debug
+            DebugBuild,//production pc debug
+            Production,// production
+        }
+
+        public Runtime runtime = Runtime.Debug;
+    }
     public class Launcher<T> : MonoBehaviour where T : class, new()
     {
         public interface ILauncherUser
@@ -20,14 +33,21 @@ namespace UnityTools.Common
             void OnDeinit(T data);
             void OnReload(T data);
 
+            Environment RuntimEnvironment { get; set; }
+
             //higher order of user executes after than lower order user
             int Order { get; }
         }
 
         [SerializeField] protected bool global = false;
-        [SerializeField] protected bool debug = false;
         [SerializeField] protected T data = new T();
+        protected Environment environment;
         protected List<ILauncherUser> userList = new List<ILauncherUser>();
+
+        protected virtual void ConfigureEnvironment()
+        {
+            this.environment = new Environment();
+        }
 
         protected virtual void OnEnable()
         {
@@ -46,10 +66,14 @@ namespace UnityTools.Common
                 this.userList.AddRange(this.GetComponentsInChildren<ILauncherUser>());
             }
 
+            this.ConfigureEnvironment();
+
+            foreach (var u in this.userList) u.RuntimEnvironment = this.environment;
+
             this.userList = this.userList.OrderBy(ul => ul.Order).ToList();
             foreach (var u in this.userList)
             {
-                if (this.debug) Debug.Log("Init order " + u.Order + " " + u.ToString());
+                if (this.environment.runtime == Environment.Runtime.DebugLog) Debug.Log("Init order " + u.Order + " " + u.ToString());
                 u.OnInit(this.data);
             }
         }
