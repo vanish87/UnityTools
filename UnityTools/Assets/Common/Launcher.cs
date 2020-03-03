@@ -25,6 +25,7 @@ namespace UnityTools.Common
         }
 
         [SerializeField] protected bool global = false;
+        [SerializeField] protected bool debug = false;
         [SerializeField] protected T data = new T();
         protected List<ILauncherUser> userList = new List<ILauncherUser>();
 
@@ -48,6 +49,7 @@ namespace UnityTools.Common
             this.userList = this.userList.OrderBy(ul => ul.Order).ToList();
             foreach (var u in this.userList)
             {
+                if (this.debug) Debug.Log("Init order " + u.Order + " " + u.ToString());
                 u.OnInit(this.data);
             }
         }
