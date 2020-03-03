@@ -318,11 +318,15 @@ namespace UnityTools.Networking
                 epFrom = this.recieveState.remote.endPoint;
                 stateFrom.remote.socket.BeginReceiveFrom(this.recieveState.buffer, 0, this.recieveState.buffer.Length, SocketFlags.None, ref epFrom, this.RecieveCallback, this.recieveState);
             }
-            catch (SocketException e)
+            catch (Exception e)
             {
                 Debug.Log(e.ToString());
-                Debug.Log((e as SocketException).ErrorCode);
-                Debug.Log((e as SocketException).Message);
+                var se = e as SocketException;
+                if (se != null)
+                {
+                    Debug.Log(se.ErrorCode);
+                    Debug.Log(se.Message);
+                }
             }
         }
     }

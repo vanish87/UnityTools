@@ -19,6 +19,10 @@ namespace UnityTools.Networking
         {
             this.OnInit();
         }
+        protected virtual void OnDisable()
+        {
+            this.CleanUp();
+        }
         protected void OnInit()
         {
             try
