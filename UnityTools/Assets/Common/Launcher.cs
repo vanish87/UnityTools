@@ -23,22 +23,21 @@ namespace UnityTools.Common
         }
 
         public Runtime runtime = Runtime.Debug;
-        public LogLevel logLevel = LogLevel.Debug;
     }
 
     public enum LogLevel
     {
         None = 0,
-        Debug,
-        Verbose,
         Network,
+        Verbose,
+        Debug,
     }
-    public class Logger
+    public class LogTool
     {
-        public static int logFlag = (int)LogLevel.Debug;
+        public static LogLevel logFlag = LogLevel.Debug;
         public static void Log(LogLevel level, string message)
         {
-            if ((1 << (int)level & logFlag) != 0)
+            if (level <= logFlag)
             {
                 Debug.Log(message);
             }
@@ -92,7 +91,7 @@ namespace UnityTools.Common
             this.userList = this.userList.OrderBy(ul => ul.Order).ToList();
             foreach (var u in this.userList)
             {
-                if (this.environment.logLevel != LogLevel.None) Debug.Log("Init order " + u.Order + " " + u.ToString());
+                LogTool.Log(LogLevel.Debug, "Init order " + u.Order + " " + u.ToString());
                 u.OnInit(this.data);
             }
         }
