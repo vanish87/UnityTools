@@ -18,12 +18,31 @@ namespace UnityTools.Common
         public enum Runtime
         {
             Debug,//local editor debug
-            DebugLog,//local editor debug log
-            DebugBuild,//production pc debug, disable data sim functions, but allow to configuring localy
+            DebugBuild,//production pc debug, disable data sim functions, but allow configuring locally
             Production,// production
         }
 
         public Runtime runtime = Runtime.Debug;
+        public LogLevel logLevel = LogLevel.Debug;
+    }
+
+    public enum LogLevel
+    {
+        None = 0,
+        Debug,
+        Verbose,
+        Network,
+    }
+    public class Logger
+    {
+        public static int logFlag = (int)LogLevel.Debug;
+        public static void Log(LogLevel level, string message)
+        {
+            if ((1 << (int)level & logFlag) != 0)
+            {
+                Debug.Log(message);
+            }
+        }
     }
     public class Launcher<T> : MonoBehaviour where T : class, new()
     {
@@ -73,7 +92,7 @@ namespace UnityTools.Common
             this.userList = this.userList.OrderBy(ul => ul.Order).ToList();
             foreach (var u in this.userList)
             {
-                if (this.environment.runtime == Environment.Runtime.DebugLog) Debug.Log("Init order " + u.Order + " " + u.ToString());
+                if (this.environment.logLevel != LogLevel.None) Debug.Log("Init order " + u.Order + " " + u.ToString());
                 u.OnInit(this.data);
             }
         }
