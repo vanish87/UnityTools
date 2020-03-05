@@ -161,16 +161,11 @@ namespace UnityTools
 
         }
 
-        //awake will load configure form file
-        protected override void Awake()
-        {
-            this.Initialize();
-        }
-
         //handler will be registered on enabled
         //so at here call notify to call all handlers
         protected virtual void Start()
         {
+            this.Initialize();
             this.NotifyChange();
         }
 
@@ -190,7 +185,7 @@ namespace UnityTools
             }
         }
 
-        protected virtual void Initialize()
+        public virtual void Initialize()
         {
             if (this.inited == false)
             {
@@ -274,16 +269,11 @@ namespace UnityTools
 
         }
 
-        //awake will load configure form file
-        protected virtual void Awake()
-        {
-            this.Initialize();
-        }
-
         //handler will be registered on enabled
         //so at here call notify to call all handlers
         protected virtual void Start()
         {
+            this.Initialize();
             this.NotifyChange();
         }
 
@@ -303,7 +293,7 @@ namespace UnityTools
             }
         }
 
-        protected virtual void Initialize()
+        public virtual void Initialize()
         {
             if (this.inited == false)
             {
@@ -335,6 +325,7 @@ namespace UnityTools
         }
         protected virtual void Load()
         {
+            Debug.Log(this.filePath);
             this.Data = FileTool.Read<T>(this.filePath, this.saveType);
         }
 
