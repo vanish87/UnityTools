@@ -42,6 +42,13 @@ namespace UnityTools.Common
                 Debug.Log(message);
             }
         }
+        public static void LogFormat(LogLevel level, string format, params object[] args)
+        {
+            if (level <= logFlag)
+            {
+                Debug.LogFormat(format, args);
+            }
+        }
     }
     public class Launcher<T> : MonoBehaviour where T : class, new()
     {
