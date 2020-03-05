@@ -30,6 +30,7 @@ namespace UnityTools.Common
         None = 0,
         Network,
         Verbose,
+        Info,
         Debug,
     }
     public class LogTool
@@ -39,14 +40,14 @@ namespace UnityTools.Common
         {
             if (level <= logFlag)
             {
-                Debug.Log(message);
+                Debug.Log("[" + level.ToString() + "]" + ":" + message);
             }
         }
         public static void LogFormat(LogLevel level, string format, params object[] args)
         {
             if (level <= logFlag)
             {
-                Debug.LogFormat(format, args);
+                Debug.LogFormat("[" + level.ToString() + "]" + ":" + format, args);
             }
         }
     }

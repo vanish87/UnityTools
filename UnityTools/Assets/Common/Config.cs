@@ -325,7 +325,6 @@ namespace UnityTools
         }
         protected virtual void Load()
         {
-            Debug.Log(this.filePath);
             this.Data = FileTool.Read<T>(this.filePath, this.saveType);
         }
 
