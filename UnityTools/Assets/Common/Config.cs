@@ -64,7 +64,7 @@ namespace UnityTools
             this.Initialize();
         }
 
-        protected virtual void Update()
+        public virtual void Update()
         {
             if (Input.GetKeyDown(this.openKey))
             {
