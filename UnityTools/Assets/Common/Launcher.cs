@@ -28,9 +28,11 @@ namespace UnityTools.Common
     public enum LogLevel
     {
         None = 0,
+        Error,
+        Warning,
         Network,
-        Verbose,
         Info,
+        Verbose,
         Debug,
     }
     public class LogTool

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityTools.Common;
 
 namespace UnityTools.Rendering
 {
@@ -42,6 +43,12 @@ namespace UnityTools.Rendering
 
             int rtW = source.width >> downsample;
             int rtH = source.height >> downsample;
+
+            if(rtW == 0 || rtH == 0)
+            {
+                LogTool.Log(LogLevel.Error, "downsample to large");
+                return;
+            }
 
             // downsample
             RenderTexture rt = RenderTexture.GetTemporary(rtW, rtH, 0, source.format);
