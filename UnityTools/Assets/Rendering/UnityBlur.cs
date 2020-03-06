@@ -31,7 +31,7 @@ namespace UnityTools.Rendering
         {
             Assert.IsNotNull(source);
             Assert.IsNotNull(output);
-            if (output == null) return;
+            if (output == null || this.mat == null) return;
 
             var mat = this.mat.Data;
 
