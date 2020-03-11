@@ -60,7 +60,24 @@ namespace UnityTools.Common
             var enabled = !hasKey || (hasKey && enableList[level]);
             if (level <= logFlag && enabled)
             {
-                Debug.Log("[" + level.ToString() + "]" + ":" + message);
+                switch(level)
+                {
+                    case LogLevel.Warning:
+                        {
+                            Debug.LogWarning("[" + level.ToString() + "]" + ":" + message);
+                        }
+                        break;
+                    case LogLevel.Error:
+                        {
+                            Debug.LogError("[" + level.ToString() + "]" + ":" + message);
+                        }
+                        break;
+                    default:
+                        {
+                            Debug.Log("[" + level.ToString() + "]" + ":" + message);
+                        }
+                        break;
+                }
             }
         }
         public static void LogFormat(LogLevel level, string format, params object[] args)
@@ -69,7 +86,24 @@ namespace UnityTools.Common
             var enabled = !hasKey || (hasKey && enableList[level]);
             if (level <= logFlag && enabled)
             {
-                Debug.LogFormat("[" + level.ToString() + "]" + ":" + format, args);
+                switch (level)
+                {
+                    case LogLevel.Warning:
+                        {
+                            Debug.LogWarningFormat("[" + level.ToString() + "]" + ":" + format, args);
+                        }
+                        break;
+                    case LogLevel.Error:
+                        {
+                            Debug.LogErrorFormat("[" + level.ToString() + "]" + ":" + format, args);
+                        }
+                        break;
+                    default:
+                        {
+                            Debug.LogFormat("[" + level.ToString() + "]" + ":" + format, args);
+                        }
+                        break;
+                }
             }
         }
     }
