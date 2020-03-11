@@ -57,7 +57,7 @@ namespace UnityTools.Common
                         {
                             using (var fs = new StreamWriter(temp, false, System.Text.Encoding.UTF8))
                             {
-                                var json = JsonUtility.ToJson(data);
+                                var json = JsonUtility.ToJson(data, true);
                                 fs.Write(json);
                                 fs.Flush();
                                 fs.Close();
