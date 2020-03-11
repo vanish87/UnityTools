@@ -27,27 +27,47 @@ namespace UnityTools.Common
 
     public enum LogLevel
     {
-        None = 0,
+        None = 0, 
         Error,
         Warning,
         Network,
-        Info,
         Verbose,
+        Info,
         Debug,
     }
     public class LogTool
     {
-        public static LogLevel logFlag = LogLevel.Debug;
+        public static LogLevel Current { set => logFlag = value; }
+
+        protected static Dictionary<LogLevel, bool> enableList = new Dictionary<LogLevel, bool>();
+        protected static LogLevel logFlag = LogLevel.Debug;
+
+        public static void EnableAll(bool enabled)
+        {
+            foreach (LogLevel e in Enum.GetValues(typeof(LogLevel)))
+            {
+                Enable(e, enabled);
+            }
+        }
+        public static void Enable(LogLevel level, bool enabled)
+        {
+            if (enableList.ContainsKey(level)) enableList[level] = enabled;
+            else enableList.Add(level, enabled);
+        }
         public static void Log(LogLevel level, string message)
         {
-            if (level <= logFlag)
+            var hasKey = enableList.ContainsKey(level);
+            var enabled = !hasKey || (hasKey && enableList[level]);
+            if (level <= logFlag && enabled)
             {
                 Debug.Log("[" + level.ToString() + "]" + ":" + message);
             }
         }
         public static void LogFormat(LogLevel level, string format, params object[] args)
         {
-            if (level <= logFlag)
+            var hasKey = enableList.ContainsKey(level);
+            var enabled = !hasKey || (hasKey && enableList[level]);
+            if (level <= logFlag && enabled)
             {
                 Debug.LogFormat("[" + level.ToString() + "]" + ":" + format, args);
             }
@@ -107,7 +127,7 @@ namespace UnityTools.Common
         }
         protected virtual void OnDisable()
         {
-            foreach(var u in this.userList)
+            foreach (var u in this.userList)
             {
                 u.OnDeinit(this.data);
             }
