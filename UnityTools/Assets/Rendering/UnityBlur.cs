@@ -85,7 +85,7 @@ namespace UnityTools.Rendering
         public void BlurTexture(RenderTexture output)
         {
             Assert.IsNotNull(output);
-            if (output == null) return;
+            if (output == null || this.mat == null) return;
 
             var mat = this.mat.Data;
             var source = output.CloneTemp();

@@ -19,6 +19,7 @@ namespace UnityTools.Common
         {
             Debug,//local editor debug
             DebugBuild,//production pc debug, disable data sim functions, but allow configuring locally
+            GUIConfigure,//GUI Configure mode that only display gui
             Production,// production
         }
 
@@ -128,7 +129,11 @@ namespace UnityTools.Common
 
         protected virtual void ConfigureEnvironment()
         {
-            this.environment = new Environment();
+        }
+
+        protected virtual Environment OnCreateEnv()
+        {
+            return new Environment();
         }
 
         protected virtual void OnEnable()
@@ -148,6 +153,7 @@ namespace UnityTools.Common
                 this.userList.AddRange(this.GetComponentsInChildren<ILauncherUser>());
             }
 
+            this.environment = this.OnCreateEnv();
             this.ConfigureEnvironment();
 
             foreach (var u in this.userList) u.RuntimEnvironment = this.environment;
