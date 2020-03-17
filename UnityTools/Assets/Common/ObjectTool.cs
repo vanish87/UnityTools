@@ -20,12 +20,8 @@ namespace UnityTools
         }
         public static T FindOrAddTypeInComponentsAndChilden<T>(this GameObject obj) where T : Component
         {
-            var ret = obj.GetComponent<T>();
+            var ret = obj.GetComponentInChildren<T>();
 
-            if (ret == null)
-            {
-                ret = obj.GetComponentInChildren<T>();
-            }
             if (ret == null)
             {
                 ret = obj.AddComponent<T>();
@@ -45,7 +41,6 @@ namespace UnityTools
             var users = new List<T>();
             foreach (var g in FindRootObject())
             {
-                users.AddRange(g.GetComponents<T>());
                 users.AddRange(g.GetComponentsInChildren<T>());
             }
 
