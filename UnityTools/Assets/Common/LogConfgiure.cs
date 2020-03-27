@@ -30,6 +30,14 @@ namespace UnityTools.Debuging
         {
             this.Initialize();
 
+            if (this.Data.chanels.Count == 0)
+            {
+                LogTool.Log(LogLevel.Warning, "Add all log Channels");
+                foreach (LogLevel log in Enum.GetValues(typeof(LogLevel)))
+                {
+                    this.Data.chanels.Add(new LogChannel() { level = log, enabled = true });
+                }
+            }
             foreach (LogLevel log in Enum.GetValues(typeof(LogLevel)))
             {
                 if (this.Data.chanels.FindAll(c => c.level == log).Count != 1)
