@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityTools.Common;
+using UnityTools.Debuging;
 
 namespace UnityTools.Rendering
 {

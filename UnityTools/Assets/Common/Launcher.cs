@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityTools.Debuging;
+
 namespace UnityTools.Common
 {
     [Serializable]
@@ -26,88 +28,7 @@ namespace UnityTools.Common
         public Runtime runtime = Runtime.Debug;
     }
 
-    public enum LogLevel
-    {
-        None = 0, 
-        Error,
-        Warning,
-        Network,
-        Verbose,
-        Info,
-        Debug,
-    }
-    public class LogTool
-    {
-        public static LogLevel Current { set => logFlag = value; }
-
-        protected static Dictionary<LogLevel, bool> enableList = new Dictionary<LogLevel, bool>();
-        protected static LogLevel logFlag = LogLevel.Debug;
-
-        public static void EnableAll(bool enabled)
-        {
-            foreach (LogLevel e in Enum.GetValues(typeof(LogLevel)))
-            {
-                Enable(e, enabled);
-            }
-        }
-        public static void Enable(LogLevel level, bool enabled)
-        {
-            if (enableList.ContainsKey(level)) enableList[level] = enabled;
-            else enableList.Add(level, enabled);
-        }
-        public static void Log(LogLevel level, string message)
-        {
-            var hasKey = enableList.ContainsKey(level);
-            var enabled = !hasKey || (hasKey && enableList[level]);
-            if (level <= logFlag && enabled)
-            {
-                switch(level)
-                {
-                    case LogLevel.Warning:
-                        {
-                            Debug.LogWarning("[" + level.ToString() + "]" + ":" + message);
-                        }
-                        break;
-                    case LogLevel.Error:
-                        {
-                            Debug.LogError("[" + level.ToString() + "]" + ":" + message);
-                        }
-                        break;
-                    default:
-                        {
-                            Debug.Log("[" + level.ToString() + "]" + ":" + message);
-                        }
-                        break;
-                }
-            }
-        }
-        public static void LogFormat(LogLevel level, string format, params object[] args)
-        {
-            var hasKey = enableList.ContainsKey(level);
-            var enabled = !hasKey || (hasKey && enableList[level]);
-            if (level <= logFlag && enabled)
-            {
-                switch (level)
-                {
-                    case LogLevel.Warning:
-                        {
-                            Debug.LogWarningFormat("[" + level.ToString() + "]" + ":" + format, args);
-                        }
-                        break;
-                    case LogLevel.Error:
-                        {
-                            Debug.LogErrorFormat("[" + level.ToString() + "]" + ":" + format, args);
-                        }
-                        break;
-                    default:
-                        {
-                            Debug.LogFormat("[" + level.ToString() + "]" + ":" + format, args);
-                        }
-                        break;
-                }
-            }
-        }
-    }
+    
     public class Launcher<T> : MonoBehaviour where T : class, new()
     {
         public interface ILauncherUser
@@ -124,11 +45,16 @@ namespace UnityTools.Common
 
         [SerializeField] protected bool global = false;
         [SerializeField] protected T data = new T();
-        protected Environment environment;
+        [SerializeField] protected Environment environment;
         protected List<ILauncherUser> userList = new List<ILauncherUser>();
 
         protected virtual void ConfigureEnvironment()
         {
+            var logConfigure = FindObjectOfType<LogConfgiure>();
+            if(logConfigure != null)
+            {
+                logConfigure.SetupChannel();
+            }
         }
 
         protected virtual Environment OnCreateEnv()
@@ -141,15 +67,10 @@ namespace UnityTools.Common
             this.CleanUp();
             if (this.global)
             {
-                foreach (var g in ObjectTool.FindRootObject())
-                {
-                    this.userList.AddRange(g.GetComponents<ILauncherUser>());
-                    this.userList.AddRange(g.GetComponentsInChildren<ILauncherUser>());
-                }
+                this.userList.AddRange(ObjectTool.FindAllObject<ILauncherUser>());
             }
             else
             {
-                this.userList.AddRange(this.GetComponents<ILauncherUser>());
                 this.userList.AddRange(this.GetComponentsInChildren<ILauncherUser>());
             }
 

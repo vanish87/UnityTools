@@ -7,6 +7,7 @@ using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
 using UnityTools.Common;
+using UnityTools.Debuging;
 
 namespace UnityTools
 {
@@ -82,7 +83,7 @@ namespace UnityTools
 
         public virtual void Initialize()
         {
-            if (this.inited == false)
+            if (this.inited == false && Application.isEditor == false)
             {
                 this.inited = true;
                 this.LoadAndNotify();
@@ -168,6 +169,15 @@ namespace UnityTools
             this.Initialize();
             this.NotifyChange();
         }
+        protected virtual void OnDisable()
+        {
+            if (Application.isEditor)
+            {
+                this.Save();
+                this.LoadAndNotify();
+                LogTool.Log(LogLevel.Dev, "Configure " + this.name + "Saved");
+            }
+        }
 
         protected virtual void Update()
         {
@@ -187,7 +197,7 @@ namespace UnityTools
 
         public virtual void Initialize()
         {
-            if (this.inited == false)
+            if (this.inited == false && Application.isEditor == false)
             {
                 this.inited = true;
                 this.Load();
@@ -276,6 +286,16 @@ namespace UnityTools
             this.Initialize();
             this.NotifyChange();
         }
+        protected virtual void OnDisable()
+        {
+            if (Application.isEditor)
+            {
+                this.Save();
+                this.LoadAndNotify();
+                LogTool.Log(LogLevel.Dev, "Configure " + this.name + "Saved");
+            }
+
+        }
 
         protected virtual void Update()
         {
@@ -295,7 +315,7 @@ namespace UnityTools
 
         public virtual void Initialize()
         {
-            if (this.inited == false)
+            if (this.inited == false || Application.isEditor == false)
             {
                 this.inited = true;
                 this.Load();
