@@ -18,12 +18,19 @@ namespace UnityTools.Debuging
         [Serializable]
         public class LogConfigureData
         {
-            public List<LogChannel> chanels = new List<LogChannel>();
+            public List<LevelData> levels = new List<LevelData>();
+            public List<ChannelData> chanels = new List<ChannelData>();
         }
         [Serializable]
-        public class LogChannel
+        public class LevelData
         {
             public LogLevel level;
+            public bool enabled = true;
+        }
+        [Serializable]
+        public class ChannelData
+        {
+            public LogChannel channel;
             public bool enabled = true;
         }
         public void SetupChannel()
@@ -32,19 +39,35 @@ namespace UnityTools.Debuging
 
             if (this.Data.chanels.Count == 0)
             {
-                LogTool.Log(LogLevel.Warning, "Add all log Channels");
+                LogTool.Log("Add all log Channels", LogLevel.Warning);
                 foreach (LogLevel log in Enum.GetValues(typeof(LogLevel)))
                 {
-                    this.Data.chanels.Add(new LogChannel() { level = log, enabled = true });
+                    this.Data.levels.Add(new LevelData() { level = log, enabled = true });
+                }
+
+                foreach (LogChannel log in Enum.GetValues(typeof(LogChannel)))
+                {
+                    this.Data.chanels.Add(new ChannelData() { channel = log, enabled = true });
                 }
             }
+
+
             foreach (LogLevel log in Enum.GetValues(typeof(LogLevel)))
             {
-                if (this.Data.chanels.FindAll(c => c.level == log).Count != 1)
+                if (this.Data.levels.FindAll(c => c.level == log).Count != 1)
                 {
-                    LogTool.Log(LogLevel.Warning, "Missing/Duplicate log level configure " + log.ToString());
+                    LogTool.Log("Missing/Duplicate log level configure " + log.ToString(), LogLevel.Warning);
                 }
             }
+
+            foreach (LogChannel log in Enum.GetValues(typeof(LogChannel)))
+            {
+                if (this.Data.chanels.FindAll(c => c.channel == log).Count != 1)
+                {
+                    LogTool.Log("Missing/Duplicate log chanels configure " + log.ToString(), LogLevel.Warning);
+                }
+            }
+
             this.UpdateLog();
         }
         protected override void Start()
@@ -55,12 +78,16 @@ namespace UnityTools.Debuging
 
         protected void UpdateLog()
         {
-            foreach (var log in this.Data.chanels)
+            foreach (var log in this.Data.levels)
             {
                 LogTool.Enable(log.level, log.enabled);
             }
-
+            foreach (var log in this.Data.chanels)
+            {
+                LogTool.Enable(log.channel, log.enabled);
+            }
         }
+
         protected override void Update()
         {
             base.Update();

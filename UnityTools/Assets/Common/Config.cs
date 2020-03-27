@@ -174,8 +174,8 @@ namespace UnityTools
             if (Application.isEditor)
             {
                 this.Save();
-                this.LoadAndNotify();
-                LogTool.Log(LogLevel.Dev, "Configure " + this.name + "Saved");
+                this.LoadAndNotify(); 
+                //LogTool.Log("Configure " + this.name + " Saved", LogLevel.Verbose, LogChannel.IO);
             }
         }
 
@@ -295,7 +295,7 @@ namespace UnityTools
             {
                 this.Save();
                 this.LoadAndNotify();
-                LogTool.Log(LogLevel.Dev, "Configure " + this.name + "Saved");
+                //LogTool.Log("Configure " + this.name + "Saved ", LogLevel.Verbose, LogChannel.IO);
             }
 
         }

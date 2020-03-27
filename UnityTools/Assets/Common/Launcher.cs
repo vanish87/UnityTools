@@ -10,9 +10,15 @@ namespace UnityTools.Common
     [Serializable]
     public class PCInfo
     {
+        public enum Role
+        {
+            Server,
+            Client,
+        }
         public string name = "OutputPC";
         public string ipAddress = "127.0.0.1";
-        public bool isServer = false;
+        public Role role = Role.Client;
+
     }
     [Serializable]
     public class Environment
@@ -82,7 +88,7 @@ namespace UnityTools.Common
             this.userList = this.userList.OrderBy(ul => ul.Order).ToList();
             foreach (var u in this.userList)
             {
-                LogTool.Log(LogLevel.Debug, "Init order " + u.Order + " " + u.ToString());
+                LogTool.Log("Init order " + u.Order + " " + u.ToString());
                 u.OnInit(this.data);
             }
         }

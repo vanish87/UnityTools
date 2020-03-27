@@ -3,6 +3,7 @@ using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Xml.Serialization;
 using UnityEngine;
+using UnityTools.Debuging;
 
 namespace UnityTools.Common
 {
@@ -147,12 +148,12 @@ namespace UnityTools.Common
                 }
                 catch (Exception e)
                 {
-                    Debug.LogWarning(e.Message + " " + filePath);
+                    LogTool.Log(e.Message + " " + filePath, LogLevel.Warning);
                 }
             }
             else
             {
-                Debug.LogWarning(filePath + " not found, create new one");
+                LogTool.Log(filePath + " not found, create new one", LogLevel.Warning);
                 ret = new T();
                 Write(filePath, ret, type);
             }

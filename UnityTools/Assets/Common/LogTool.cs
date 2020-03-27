@@ -7,85 +7,84 @@ namespace UnityTools.Debuging
 {
     public enum LogLevel
     {
-        None = 0,
         Error,
         Warning,
-        Network,
-        Verbose,
         Info,
-        Debug,
+        Verbose,
         Dev,
+    }
+    public enum LogChannel
+    {
+        Debug,
+        Network,
+        IO,
     }
     public class LogTool
     {
-        public static LogLevel Current { set => logFlag = value; }
+        protected static Dictionary<LogLevel, bool> levelList = new Dictionary<LogLevel, bool>();
+        protected static Dictionary<LogChannel, bool> chanelList = new Dictionary<LogChannel, bool>();
 
-        protected static Dictionary<LogLevel, bool> enableList = new Dictionary<LogLevel, bool>();
-        protected static LogLevel logFlag = LogLevel.Debug;
-
-        public static void EnableAll(bool enabled)
-        {
-            foreach (LogLevel e in Enum.GetValues(typeof(LogLevel)))
-            {
-                Enable(e, enabled);
-            }
-        }
         public static void Enable(LogLevel level, bool enabled)
         {
-            if (enableList.ContainsKey(level)) enableList[level] = enabled;
-            else enableList.Add(level, enabled);
+            if (levelList.ContainsKey(level)) levelList[level] = enabled;
+            else levelList.Add(level, enabled);
         }
-        public static void Log(LogLevel level, string message)
+        public static void Enable(LogChannel channel, bool enabled)
         {
-            var hasKey = enableList.ContainsKey(level);
-            var enabled = !hasKey || (hasKey && enableList[level]);
-            if (level <= logFlag && enabled)
+            if (chanelList.ContainsKey(channel)) chanelList[channel] = enabled;
+            else chanelList.Add(channel, enabled);
+        }
+        public static void Log(string message, LogLevel level = LogLevel.Verbose, LogChannel channel = LogChannel.Debug)
+        {
+            if (levelList.ContainsKey(level) && !levelList[level]) return;
+            if (chanelList.ContainsKey(channel) && !chanelList[channel]) return;
+
+            var msg = FormatMessage(message, level, channel);
+            switch(level)
             {
-                switch (level)
-                {
-                    case LogLevel.Warning:
-                        {
-                            Debug.LogWarning("[" + level.ToString() + "]" + ":" + message);
-                        }
-                        break;
-                    case LogLevel.Error:
-                        {
-                            Debug.LogError("[" + level.ToString() + "]" + ":" + message);
-                        }
-                        break;
-                    default:
-                        {
-                            Debug.Log("[" + level.ToString() + "]" + ":" + message);
-                        }
-                        break;
-                }
+                case LogLevel.Error: Debug.LogError(msg);break;
+                case LogLevel.Warning: Debug.LogWarning(msg);break;
+                case LogLevel.Verbose:
+                case LogLevel.Info:
+                case LogLevel.Dev:
+                default: Debug.Log(msg); break;
             }
         }
-        public static void LogFormat(LogLevel level, string format, params object[] args)
+        public static void LogFormat(string format, LogLevel level = LogLevel.Verbose, LogChannel channel = LogChannel.Debug, params object[] args)
         {
-            var hasKey = enableList.ContainsKey(level);
-            var enabled = !hasKey || (hasKey && enableList[level]);
-            if (level <= logFlag && enabled)
+            if (levelList.ContainsKey(level) && !levelList[level]) return;
+            if (chanelList.ContainsKey(channel) && !chanelList[channel]) return;
+
+            var msg = FormatMessage(format, level, channel, args);
+            switch (level)
             {
-                switch (level)
-                {
-                    case LogLevel.Warning:
-                        {
-                            Debug.LogWarningFormat("[" + level.ToString() + "]" + ":" + format, args);
-                        }
-                        break;
-                    case LogLevel.Error:
-                        {
-                            Debug.LogErrorFormat("[" + level.ToString() + "]" + ":" + format, args);
-                        }
-                        break;
-                    default:
-                        {
-                            Debug.LogFormat("[" + level.ToString() + "]" + ":" + format, args);
-                        }
-                        break;
-                }
+                case LogLevel.Error: Debug.LogError(msg); break;
+                case LogLevel.Warning: Debug.LogWarning(msg); break;
+                case LogLevel.Verbose:
+                case LogLevel.Info:
+                case LogLevel.Dev:
+                default: Debug.Log(msg); break;
             }
+        }
+
+        protected static string FormatMessage(string message, LogLevel level, LogChannel channel)
+        {
+            var color = "white";
+            switch (level)
+            {
+                case LogLevel.Warning: color = "yellow"; break;
+                case LogLevel.Error: color = "red"; break;
+                case LogLevel.Info: color = "cyan"; break;
+                case LogLevel.Verbose: break;
+                case LogLevel.Dev: color = "orange";break;
+                default: break;
+            }
+            return string.Format("<color={0}>[{1}]{2}</color>", color, channel.ToString(), message);
+        }
+        protected static string FormatMessage(string format, LogLevel level, LogChannel channel, params object[] args)
+        {
+            var message = string.Format(format, args);
+            return FormatMessage(message, level, channel);
         }
     }
 }

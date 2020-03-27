@@ -47,7 +47,7 @@ namespace UnityTools.Rendering
 
             if(rtW == 0 || rtH == 0)
             {
-                LogTool.Log(LogLevel.Error, "downsample to large");
+                LogTool.Log("downsample to large", LogLevel.Error);
                 return;
             }
 
