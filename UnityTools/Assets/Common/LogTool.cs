@@ -79,7 +79,15 @@ namespace UnityTools.Debuging
                 case LogLevel.Dev: color = "orange";break;
                 default: break;
             }
-            return string.Format("<color={0}>[{1}]{2}</color>", color, channel.ToString(), message);
+            var ccolor = color;
+            switch(channel)
+            {
+                case LogChannel.Debug:  break;
+                case LogChannel.IO:  break;
+                case LogChannel.Network: ccolor = "green"; break;
+                default: break;
+            }
+            return string.Format("<color={1}>[{2}]</color><color={0}>{3}</color>", color, ccolor, channel.ToString(), message);
         }
         protected static string FormatMessage(string format, LogLevel level, LogChannel channel, params object[] args)
         {
