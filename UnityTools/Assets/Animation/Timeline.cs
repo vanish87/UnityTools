@@ -13,26 +13,26 @@ namespace UnityTools.Animation
         [Serializable]
         public abstract class TimelineSate<T> : StateBase<T> where T : new()
         {
-            [SerializeField, DisableEdit] protected float timer;
-            [SerializeField, DisableEdit] protected float scale;
-            [SerializeField] protected float scaleTime = 1;
+            [SerializeField, DisableEdit] internal protected float timer;
+            [SerializeField, DisableEdit] internal protected float scale;
+            [SerializeField] internal protected float scaleTime = 1;
 
-            protected Action<T> enterActions;
+            protected Action<T, TimelineSate<T>> enterActions;
             //StateMachine, localTimer
-            protected Action<T, float> excuteActions;
-            protected Action<T> leaveActions;
+            protected Action<T, TimelineSate<T>,  float> excuteActions;
+            protected Action<T, TimelineSate<T>> leaveActions;
 
-            public void Enter(Action<T> enterAction)
+            public void Enter(Action<T, TimelineSate<T>> enterAction)
             {
                 this.enterActions -= enterAction;
                 this.enterActions += enterAction;
             }
-            public void Excute(Action<T, float> excuteAction)
+            public void Excute(Action<T, TimelineSate<T>, float> excuteAction)
             {
                 this.excuteActions -= excuteAction;
                 this.excuteActions += excuteAction;
             }
-            public void Leave(Action<T> leaveAction)
+            public void Leave(Action<T, TimelineSate<T>> leaveAction)
             {
                 this.leaveActions -= leaveAction;
                 this.leaveActions += leaveAction;
@@ -43,7 +43,7 @@ namespace UnityTools.Animation
                 this.timer = 0;
                 this.scale = 0;
 
-                this.enterActions?.Invoke(obj);
+                this.enterActions?.Invoke(obj, this);
             }
             internal override void Excute(T obj)
             {
@@ -54,12 +54,12 @@ namespace UnityTools.Animation
 
                 this.scale = Mathf.Clamp(this.scale, 0, 1);
 
-                this.excuteActions?.Invoke(obj, this.timer);
+                this.excuteActions?.Invoke(obj, this, this.timer);
             }
 
             internal override void Leave(T obj)
             {
-                this.leaveActions?.Invoke(obj);
+                this.leaveActions?.Invoke(obj, this);
             }
 
         }
@@ -69,6 +69,7 @@ namespace UnityTools.Animation
             public static TimelineEmptyState Instance { get => instance; }
             protected static TimelineEmptyState instance = new TimelineEmptyState();
         }
+
 
         [Serializable]
         public class TimelineGlobalState : TimelineSate<Timeline>
@@ -80,7 +81,8 @@ namespace UnityTools.Animation
         [Serializable]
         public class TimelineSequence : TimelineSate<Timeline>
         {
-            public float duration;
+            [SerializeField] internal protected string name;
+            [SerializeField] internal protected float duration;
             internal override void Enter(Timeline obj)
             {
                 base.Enter(obj);
@@ -98,11 +100,22 @@ namespace UnityTools.Animation
                 base.Leave(obj);
             }
         }
+        [Serializable]
+        public class TimelineRestartSequence : TimelineSequence
+        {
+            internal override void Enter(Timeline obj)
+            {
+                base.Enter(obj);
+
+                obj.InitTimelineQueue();
+                obj.MoveToNext();
+            }
+        }
 
         [SerializeField] protected List<TimelineSequence> sequence = new List<TimelineSequence>();
         protected Queue<TimelineSequence> timelineQueue = new Queue<TimelineSequence>();
 
-        protected virtual void Start()
+        protected void Play()
         {
             this.InitTimelineQueue();
             this.MoveToNext();
@@ -121,15 +134,19 @@ namespace UnityTools.Animation
         {
             if (this.timelineQueue.Count > 0)
             {
-                LogTool.Log("Move to next");
+                //LogTool.Log("Move to next");
                 var next = this.timelineQueue.Dequeue();
                 this.ChangeState(next);
             }
             else
             {
-                LogTool.Log("to the end");
+                LogTool.Log("no state left move to the empty", LogLevel.Warning);
                 this.ChangeState(TimelineEmptyState.Instance);
             }
+        }
+        protected void Stop()
+        {
+            this.ChangeState(TimelineEmptyState.Instance);
         }
     }
 }

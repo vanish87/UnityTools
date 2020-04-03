@@ -98,7 +98,8 @@ namespace UnityTools.Common
             }
             catch(Exception e)
             {
-                Debug.Log(e.Message);
+                File.Delete(temp);
+                LogTool.Log(e.Message, LogLevel.Warning, LogChannel.IO);
             }
         }       
 
@@ -148,12 +149,12 @@ namespace UnityTools.Common
                 }
                 catch (Exception e)
                 {
-                    LogTool.Log(e.Message + " " + filePath, LogLevel.Warning);
+                    LogTool.Log(e.Message + " " + filePath, LogLevel.Warning, LogChannel.IO);
                 }
             }
             else
             {
-                LogTool.Log(filePath + " not found, create new one", LogLevel.Warning);
+                LogTool.Log(filePath + " not found, create new one", LogLevel.Warning, LogChannel.IO);
                 ret = new T();
                 Write(filePath, ret, type);
             }

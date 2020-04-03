@@ -14,10 +14,12 @@ namespace UnityTools.Common
         {
             Server,
             Client,
+            Devlopment,
         }
         public string name = "OutputPC";
         public string ipAddress = "127.0.0.1";
         public Role role = Role.Client;
+        public short logPort = 13210;
 
     }
     [Serializable]
@@ -31,7 +33,15 @@ namespace UnityTools.Common
             Production,// production
         }
 
+        [Serializable]
+        public class ApplicationSetting
+        {
+            public int vsync = 0;
+            public int targetFPS = 30;
+        }
+
         public Runtime runtime = Runtime.Debug;
+        public ApplicationSetting appSetting = new ApplicationSetting();
     }
 
     
@@ -51,21 +61,24 @@ namespace UnityTools.Common
 
         [SerializeField] protected bool global = false;
         [SerializeField] protected T data = new T();
-        [SerializeField] protected Environment environment;
+        [SerializeField] protected Environment environment = new Environment();
         protected List<ILauncherUser> userList = new List<ILauncherUser>();
 
         protected virtual void ConfigureEnvironment()
         {
-            var logConfigure = FindObjectOfType<LogConfgiure>();
+            var logConfigure = FindObjectOfType<LogConfigure>();
             if(logConfigure != null)
             {
                 logConfigure.SetupChannel();
             }
+
+            Application.targetFrameRate = this.environment.appSetting.targetFPS;
+            QualitySettings.vSyncCount = this.environment.appSetting.vsync;
         }
 
         protected virtual Environment OnCreateEnv()
         {
-            return new Environment();
+            return this.environment;
         }
 
         protected virtual void OnEnable()

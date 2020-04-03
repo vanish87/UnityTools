@@ -11,6 +11,7 @@ namespace UnityTools.Networking
         {
             public PCInfo current = new PCInfo();
             public PCInfo server = new PCInfo();
+            public PCInfo devPC = new PCInfo();
             public List<PCInfo> client = new List<PCInfo>();
         }
         public interface INetworkUser

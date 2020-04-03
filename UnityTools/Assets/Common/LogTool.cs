@@ -1,10 +1,14 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
+using UnityTools.Common;
+using UnityTools.Networking;
 
 namespace UnityTools.Debuging
 {
+
     public enum LogLevel
     {
         Error,
@@ -13,16 +17,112 @@ namespace UnityTools.Debuging
         Verbose,
         Dev,
     }
+    [Flags]
     public enum LogChannel
     {
-        Debug,
-        Network,
-        IO,
+        None    = 0,
+        Debug   = 1,
+        Network = 2,
+        IO      = 4,
+        Everything = ~None,
     }
+
+    [Flags]
+    public enum LogMode
+    {
+        None    = 0,
+        Console = 1,
+        File    = 2,
+        Network = 4,
+        Everything = ~None,
+    }
+    public class LogToolNetwork
+    {
+        public class LogToolNetworkSocket : UDPSocket<LogToolNetworkSocket.Data>, NetworkController.INetworkUser
+        {
+            [Serializable]
+            public class Data
+            {
+                internal protected Queue<string> queue = new Queue<string>();
+            }
+            protected static Data data = new Data();
+            protected static SocketData server = SocketData.Make("127.0.0.1", 13210);
+            protected static LogToolNetworkSocket logSocket = new LogToolNetworkSocket();
+
+            protected static Dictionary<SocketData, Data> serverData = new Dictionary<SocketData, Data>();
+
+            internal protected static void Add(string message)
+            {
+                data.queue.Enqueue(message);
+                if (data.queue.Count > 10000) data.queue.Dequeue();
+            }
+            internal protected static Dictionary<SocketData, List<string>> Get(LogChannel channel = LogChannel.Everything)
+            {
+                var ret = new Dictionary<SocketData, List<string>>();
+                foreach(var client in serverData)
+                {
+                    var logs = client.Value.queue.ToList();
+                    if (channel != LogChannel.Everything)
+                    {
+                        logs = client.Value.queue.Where(s =>
+                        {
+                            var start = s.IndexOf('[');
+                            var end = s.IndexOf(']');
+                            var str = s.Substring(start, end - start);
+                            return str.Contains(channel.ToString());
+                        }).ToList();
+                    }
+
+                    ret.Add(client.Key, logs);
+                }
+
+                return ret;
+            }
+
+            internal protected static void Send()
+            {
+                logSocket.Send(server, data);
+            }
+
+            public override void OnMessage(SocketData socket, Data remoteData)
+            {
+                if (serverData.Keys.Any(s => s.endPoint.Address.Equals(socket.endPoint.Address)))
+                {
+                    serverData[socket].queue.Clear();
+                    foreach (var r in remoteData.queue)
+                    {
+                        serverData[socket].queue.Enqueue(r);
+                    } 
+                }
+                else
+                {
+                    serverData.Add(socket, remoteData);
+                }
+            }
+
+            public void OnInit(NetworkController.NetworkData networkData)
+            {
+                server = SocketData.Make(networkData.devPC.ipAddress, networkData.devPC.logPort);
+            }
+        }
+
+
+        public static void Log(string message)
+        {
+            LogToolNetworkSocket.Add(message);
+            LogToolNetworkSocket.Send();
+        }
+        public static void Update()
+        {
+            LogToolNetworkSocket.Send();
+        }
+    }
+
     public class LogTool
     {
         protected static Dictionary<LogLevel, bool> levelList = new Dictionary<LogLevel, bool>();
-        protected static Dictionary<LogChannel, bool> chanelList = new Dictionary<LogChannel, bool>();
+        protected static LogChannel channels = ~LogChannel.None;
+        protected static LogMode modes = LogMode.Console;
 
         public static void Enable(LogLevel level, bool enabled)
         {
@@ -31,13 +131,24 @@ namespace UnityTools.Debuging
         }
         public static void Enable(LogChannel channel, bool enabled)
         {
-            if (chanelList.ContainsKey(channel)) chanelList[channel] = enabled;
-            else chanelList.Add(channel, enabled);
+            channels = enabled ? (channels | channel) : (~channel & channel);
+        }
+        public static void Enable(LogChannel channel)
+        {
+            channels = channel;
+        }
+        public static void LogAssertIsTrue(bool predict, string message, LogLevel level = LogLevel.Error, LogChannel channel = LogChannel.Debug)
+        {
+            if (!predict) Log(message, level, channel);
+        }
+        public static void LogAssertIsFalse(bool predict, string message, LogLevel level = LogLevel.Error, LogChannel channel = LogChannel.Debug)
+        {
+            if (predict) Log(message, level, channel);
         }
         public static void Log(string message, LogLevel level = LogLevel.Verbose, LogChannel channel = LogChannel.Debug)
         {
             if (levelList.ContainsKey(level) && !levelList[level]) return;
-            if (chanelList.ContainsKey(channel) && !chanelList[channel]) return;
+            if ((channels & channel) == LogChannel.None) return;
 
             var msg = FormatMessage(message, level, channel);
             switch(level)
@@ -49,11 +160,12 @@ namespace UnityTools.Debuging
                 case LogLevel.Dev:
                 default: Debug.Log(msg); break;
             }
+            LogToolNetwork.Log(msg);
         }
         public static void LogFormat(string format, LogLevel level = LogLevel.Verbose, LogChannel channel = LogChannel.Debug, params object[] args)
         {
             if (levelList.ContainsKey(level) && !levelList[level]) return;
-            if (chanelList.ContainsKey(channel) && !chanelList[channel]) return;
+            if ((channels & channel) == LogChannel.None ) return;
 
             var msg = FormatMessage(format, level, channel, args);
             switch (level)
@@ -65,6 +177,8 @@ namespace UnityTools.Debuging
                 case LogLevel.Dev:
                 default: Debug.Log(msg); break;
             }
+
+            LogToolNetwork.Log(msg);
         }
 
         protected static string FormatMessage(string message, LogLevel level, LogChannel channel)
@@ -72,21 +186,17 @@ namespace UnityTools.Debuging
             var color = "white";
             switch (level)
             {
-                case LogLevel.Warning: color = "yellow"; break;
-                case LogLevel.Error: color = "red"; break;
-                case LogLevel.Info: color = "cyan"; break;
+                case LogLevel.Warning:  color = "yellow";   break;
+                case LogLevel.Error:    color = "red";      break;
+                case LogLevel.Info:     color = "cyan";     break;
                 case LogLevel.Verbose: break;
-                case LogLevel.Dev: color = "orange";break;
+                case LogLevel.Dev:      color = "orange";   break;
                 default: break;
             }
             var ccolor = color;
-            switch(channel)
-            {
-                case LogChannel.Debug:  break;
-                case LogChannel.IO:  break;
-                case LogChannel.Network: ccolor = "green"; break;
-                default: break;
-            }
+
+            if((channel & LogChannel.Network) != LogChannel.None) ccolor = "green";
+
             return string.Format("<color={1}>[{2}]</color><color={0}>{3}</color>", color, ccolor, channel.ToString(), message);
         }
         protected static string FormatMessage(string format, LogLevel level, LogChannel channel, params object[] args)

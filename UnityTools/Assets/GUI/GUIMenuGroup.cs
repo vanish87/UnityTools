@@ -66,9 +66,7 @@ namespace UnityTools.GUITool
         {
             Debug,
             ConfigureAdjust,
-            EmitterMap,
-            EmitterRate,
-            PlanAndSensor,
+            Log,
         }
 
         [SerializeField] protected List<WindowData> windowData = new List<WindowData>();
@@ -77,7 +75,12 @@ namespace UnityTools.GUITool
         {
             if (this.windowData.Count == 0)
             {
-                windowData.Add(new WindowData() { title = WindowType.Debug.ToString(), key = KeyCode.D });
+                this.windowData.Add(new WindowData() { title = WindowType.Debug.ToString(), key = KeyCode.D });
+            }
+
+            foreach(var w in this.windowData)
+            {
+                w.InitHandlers();
             }
         }
 
