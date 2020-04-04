@@ -47,10 +47,12 @@
 			return tex2D(_MainTex, (i.uv - _ST.xy) / _ST.zw);
 		}
 	}
-	
+
 	fixed4 fragAddTarget(v2f i) : SV_Target
 	{
-		return tex2D(_TargetTex, i.uv) + tex2D(_MainTex, i.uv);
+		fixed4 s1 = tex2D(_MainTex, i.uv);
+		fixed4 s2 = tex2D(_TargetTex, i.uv);
+		return saturate(s1 + s2);
 	}
 
 	fixed4 fragSeperate(v2f i) : SV_Target
@@ -64,8 +66,9 @@
         // No culling or depth
         Cull Off ZWrite Off ZTest Always
 		Blend One One
-
-        Pass
+		//Blend One OneMinusSrcAlpha
+    
+		Pass
 		{
 			CGPROGRAM
 			#pragma vertex vert

@@ -39,7 +39,10 @@ namespace UnityTools.GUITool
                     var guiStr = "";
                     for (var i = 0; i < Mathf.Min(client.Value.Count, this.maxLength); ++i)
                     {
-                        guiStr += client.Value[i] + "\n";
+                        var str = client.Value[i];
+                        if (str == null) continue;
+
+                        guiStr += str + "\n";
                     }
 
                     gui.scrollPosition = GUILayout.BeginScrollView(gui.scrollPosition);
