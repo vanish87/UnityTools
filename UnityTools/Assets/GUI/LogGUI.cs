@@ -10,11 +10,16 @@ namespace UnityTools.GUITool
     {
         [SerializeField] protected int maxLength = 20;
         [SerializeField] protected LogChannel channel = LogChannel.Everything;
-        protected LogToolNetwork.LogToolNetworkSocket logSocket = new LogToolNetwork.LogToolNetworkSocket();
 
         public string Title => GUIMenuGroup.WindowType.Log.ToString();
 
-
+        public class GUIData
+        {
+            public bool open = false;
+            public Vector2 scrollPosition;
+        }
+        protected LogToolNetwork.LogToolNetworkSocket logSocket = new LogToolNetwork.LogToolNetworkSocket();
+        protected Dictionary<string, GUIData> guis = new Dictionary<string, GUIData>();
         public void OnDrawGUI()
         {
             ConfigureGUI.OnGUISlider(ref this.maxLength, 1, 100);
@@ -22,10 +27,24 @@ namespace UnityTools.GUITool
             var logs = LogToolNetwork.LogToolNetworkSocket.Get(this.channel);
             foreach(var client in logs)
             {
-                client.Value.Reverse();
-                for (var i = 0; i < Mathf.Min(client.Value.Count, this.maxLength); ++i)
+                var ipString = client.Key;
+                if (this.guis.ContainsKey(ipString) == false) this.guis.Add(ipString, new GUIData());
+
+                var gui = this.guis[ipString];
+                ConfigureGUI.OnFolder(ref gui.open, ipString);
+
+                if (gui.open)
                 {
-                    GUILayout.Label(client.Key.endPoint.ToString() + client.Value[i]);
+                    client.Value.Reverse();
+                    var guiStr = "";
+                    for (var i = 0; i < Mathf.Min(client.Value.Count, this.maxLength); ++i)
+                    {
+                        guiStr += client.Value[i] + "\n";
+                    }
+
+                    gui.scrollPosition = GUILayout.BeginScrollView(gui.scrollPosition);
+                    GUILayout.Label(guiStr);
+                    GUILayout.EndScrollView();
                 }
             }
         }

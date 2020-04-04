@@ -38,7 +38,7 @@ namespace UnityTools.Debuging
     }
     public class LogToolNetwork
     {
-        public class LogToolNetworkSocket : UDPSocket<LogToolNetworkSocket.Data>, NetworkController.INetworkUser
+        public class LogToolNetworkSocket : UDPSocket<LogToolNetworkSocket.Data>
         {
             [Serializable]
             public class Data
@@ -49,16 +49,16 @@ namespace UnityTools.Debuging
             protected static SocketData server = SocketData.Make("127.0.0.1", 13210);
             protected static LogToolNetworkSocket logSocket = new LogToolNetworkSocket();
 
-            protected static Dictionary<SocketData, Data> serverData = new Dictionary<SocketData, Data>();
+            protected static Dictionary<string, Data> serverData = new Dictionary<string, Data>();
 
             internal protected static void Add(string message)
             {
                 data.queue.Enqueue(message);
                 if (data.queue.Count > 10000) data.queue.Dequeue();
             }
-            internal protected static Dictionary<SocketData, List<string>> Get(LogChannel channel = LogChannel.Everything)
+            internal protected static Dictionary<string, List<string>> Get(LogChannel channel = LogChannel.Everything)
             {
-                var ret = new Dictionary<SocketData, List<string>>();
+                var ret = new Dictionary<string, List<string>>();
                 foreach(var client in serverData)
                 {
                     var logs = client.Value.queue.ToList();
@@ -86,23 +86,25 @@ namespace UnityTools.Debuging
 
             public override void OnMessage(SocketData socket, Data remoteData)
             {
-                if (serverData.Keys.Any(s => s.endPoint.Address.Equals(socket.endPoint.Address)))
+                var remoteIP = socket.endPoint.Address.ToString();
+                if (serverData.ContainsKey(remoteIP))
                 {
-                    serverData[socket].queue.Clear();
+                    serverData[remoteIP].queue.Clear();
                     foreach (var r in remoteData.queue)
                     {
-                        serverData[socket].queue.Enqueue(r);
+                        serverData[remoteIP].queue.Enqueue(r);
+                        if (serverData[remoteIP].queue.Count > 1000) serverData[remoteIP].queue.Dequeue();
                     } 
                 }
                 else
                 {
-                    serverData.Add(socket, remoteData);
+                    serverData.Add(remoteIP, remoteData);
                 }
             }
-
-            public void OnInit(NetworkController.NetworkData networkData)
+            public static void SetupNetwork(LogConfigure.LogPC logPC)
             {
-                server = SocketData.Make(networkData.devPC.ipAddress, networkData.devPC.logPort);
+                server = SocketData.Make(logPC.ipAddress, logPC.logPort);
+                LogTool.Log("Send log to " + server.endPoint.ToString(), LogLevel.Verbose, LogChannel.Network | LogChannel.Debug);
             }
         }
 
@@ -197,7 +199,8 @@ namespace UnityTools.Debuging
 
             if((channel & LogChannel.Network) != LogChannel.None) ccolor = "green";
 
-            return string.Format("<color={1}>[{2}]</color><color={0}>{3}</color>", color, ccolor, channel.ToString(), message);
+            var time = DateTime.Now.ToString("yy/MM/dd|HH:mm:ss");
+            return string.Format("<color={1}>[{4}|{2}]</color><color={0}>{3}</color>", color, ccolor, channel.ToString(), message, time);
         }
         protected static string FormatMessage(string format, LogLevel level, LogChannel channel, params object[] args)
         {

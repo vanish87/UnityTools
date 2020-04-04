@@ -83,7 +83,7 @@ namespace UnityTools
 
         public virtual void Initialize()
         {
-            if (this.inited == false && Application.isEditor == false)
+            if (this.inited == false)
             {
                 this.inited = true;
                 this.LoadAndNotify();
@@ -200,7 +200,7 @@ namespace UnityTools
             //do not load for prefab object
             if (this.gameObject.scene.rootCount == 0) return;
             
-            if (this.inited == false && Application.isEditor == false)
+            if (this.inited == false)
             {
                 this.inited = true;
                 this.Load();
@@ -321,7 +321,7 @@ namespace UnityTools
             //do not load for prefab object
             if (this.gameObject.scene.rootCount == 0) return;
 
-            if (this.inited == false || Application.isEditor == false)
+            if (this.inited == false)
             {
                 this.inited = true;
                 this.Load();

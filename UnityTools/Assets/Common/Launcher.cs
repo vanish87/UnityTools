@@ -19,7 +19,6 @@ namespace UnityTools.Common
         public string name = "OutputPC";
         public string ipAddress = "127.0.0.1";
         public Role role = Role.Client;
-        public short logPort = 13210;
 
     }
     [Serializable]
@@ -56,7 +55,16 @@ namespace UnityTools.Common
             Environment RuntimEnvironment { get; set; }
 
             //higher order of user executes after than lower order user
+            //see LauncherOrder for default setting
             int Order { get; }
+        }
+
+        public enum LauncherOrder
+        {
+            LowLevel    = 0,
+            Network     = 100,
+            Default     = 1000,
+            Application = 2000,
         }
 
         [SerializeField] protected bool global = false;
@@ -70,6 +78,7 @@ namespace UnityTools.Common
             if(logConfigure != null)
             {
                 logConfigure.SetupChannel();
+                logConfigure.SetupLog();
             }
 
             Application.targetFrameRate = this.environment.appSetting.targetFPS;
