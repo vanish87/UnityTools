@@ -45,7 +45,7 @@ namespace UnityTools.Debuging
             {
                 internal protected Queue<string> queue = new Queue<string>();
             }
-            protected static Data data = new Data();
+            protected static Data localData = new Data();
             protected static SocketData server = SocketData.Make("127.0.0.1", 13210);
             protected static LogToolNetworkSocket logSocket = new LogToolNetworkSocket();
 
@@ -53,8 +53,8 @@ namespace UnityTools.Debuging
 
             internal protected static void Add(string message)
             {
-                data.queue.Enqueue(message);
-                if (data.queue.Count > 10000) data.queue.Dequeue();
+                localData.queue.Enqueue(message);
+                if (localData.queue.Count > 10000) localData.queue.Dequeue();
             }
             internal protected static Dictionary<string, List<string>> Get(LogChannel channel = LogChannel.Everything)
             {
@@ -81,7 +81,7 @@ namespace UnityTools.Debuging
 
             internal protected static void Send()
             {
-                logSocket.Send(server, data);
+                logSocket.Send(server, localData);
             }
 
             public override void OnMessage(SocketData socket, Data remoteData)
