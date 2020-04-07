@@ -40,7 +40,7 @@ namespace UnityTools.GUITool
                     for (var i = 0; i < Mathf.Min(client.Value.Count, this.maxLength); ++i)
                     {
                         var str = client.Value[i];
-                        if (str == null) continue;
+                        if (string.IsNullOrEmpty(str)) continue;
 
                         guiStr += str + "\n";
                     }

@@ -19,7 +19,7 @@ namespace UnityTools.Example
 
         protected void Start()
         {
-            configure =  new NoneMonoConfigureClass();
+            //configure =  new NoneMonoConfigureClass();
             //configure.LoadAndNotify();
             //configure.Save();
         }
