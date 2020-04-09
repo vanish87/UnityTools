@@ -26,7 +26,7 @@ namespace UnityTools.Common
         protected long count = 0;
 
         public TextureSocket socket = new TextureSocket();
-        public SocketData socketData = new SocketData("localhost", 12345);
+        public SocketData socketData = SocketData.Make("localhost", 12345);
 
         protected override void OnSuccessed(FrameData frame)
         {

@@ -63,12 +63,15 @@ namespace UnityTools.Networking
             byte[] OnSerialize();
             void OnDeseialize(byte[] data);
         }
-
-        public void Bind(MessageData message, string hashID = null)
+        public void CleanUp()
+        {
+            this.data.Clear();
+        }
+        public void Bind(MessageData message, string hashID = null, bool overwrite = false)
         {
             var hash = GetHash(hashID != null ? hashID : message.HashString);
 
-            if(this.data.ContainsKey(hash))
+            if(!overwrite && this.data.ContainsKey(hash))
             {
                 Debug.LogError("Same hash in the data set, set a unique name in hashID");
                 return;

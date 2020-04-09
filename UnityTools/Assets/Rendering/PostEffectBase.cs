@@ -18,7 +18,7 @@ namespace UnityTools.Rendering
         }
         protected virtual void OnDisable()
         {
-            this.mat.Dispose();
+            this.mat?.Dispose();
         }
 
         protected virtual void OnRenderImage(RenderTexture source, RenderTexture destination)

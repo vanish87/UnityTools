@@ -15,12 +15,13 @@ namespace UnityTools.Example
 
     public class NoneMonoConfigure : MonoBehaviour
     {
-        [SerializeField] protected NoneMonoConfigureClass configure = new NoneMonoConfigureClass();
+        [SerializeField] protected NoneMonoConfigureClass configure;
 
         protected void Start()
         {
-            configure.LoadAndNotify();
-            configure.Save();
+            //configure =  new NoneMonoConfigureClass();
+            //configure.LoadAndNotify();
+            //configure.Save();
         }
 
     }

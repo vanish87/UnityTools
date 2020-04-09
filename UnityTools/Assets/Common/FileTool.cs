@@ -3,6 +3,7 @@ using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Xml.Serialization;
 using UnityEngine;
+using UnityTools.Debuging;
 
 namespace UnityTools.Common
 {
@@ -57,7 +58,7 @@ namespace UnityTools.Common
                         {
                             using (var fs = new StreamWriter(temp, false, System.Text.Encoding.UTF8))
                             {
-                                var json = JsonUtility.ToJson(data);
+                                var json = JsonUtility.ToJson(data, true);
                                 fs.Write(json);
                                 fs.Flush();
                                 fs.Close();
@@ -97,7 +98,8 @@ namespace UnityTools.Common
             }
             catch(Exception e)
             {
-                Debug.Log(e.Message);
+                File.Delete(temp);
+                LogTool.Log(e.Message, LogLevel.Warning, LogChannel.IO);
             }
         }       
 
@@ -147,12 +149,12 @@ namespace UnityTools.Common
                 }
                 catch (Exception e)
                 {
-                    Debug.LogWarning(e.Message + " " + filePath);
+                    LogTool.Log(e.Message + " " + filePath, LogLevel.Warning, LogChannel.IO);
                 }
             }
             else
             {
-                Debug.LogWarning(filePath + " not found, create new one");
+                LogTool.Log(filePath + " not found, create new one", LogLevel.Warning, LogChannel.IO);
                 ret = new T();
                 Write(filePath, ret, type);
             }

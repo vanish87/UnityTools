@@ -6,7 +6,7 @@ using UnityEngine.Assertions;
 
 namespace UnityTools.Common
 {
-    public class ObjectStateMachine<T> : MonoBehaviour where T : class
+    public class ObjectStateMachine<T> : MonoBehaviour where T : class, new()
     {
         [SerializeField] protected StateBase<T> currentState_;
         [SerializeField] protected StateBase<T> globalState_;

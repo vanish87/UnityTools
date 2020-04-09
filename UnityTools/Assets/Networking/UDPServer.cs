@@ -51,8 +51,8 @@ namespace UnityTools.Networking
 
         IEnumerator Broadcast()
         {
-            var socket = new SocketData("localhost", 12345);
-            var socket1 = new SocketData("localhost", 12346);
+            var socket = SocketData.Make("localhost", 12345);
+            var socket1 = SocketData.Make("localhost", 12346);
             //socket.endPoint.Address = IPAddress.Broadcast;
             //this.socket.Setup(UDPSocket<GPUData>.SocketRole.Broadcast);
             var data = new GPUData();

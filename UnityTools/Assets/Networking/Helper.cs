@@ -10,6 +10,11 @@ public class Helper
     // Convert an object to a byte array
     public static byte[] ObjectToByteArray<T>(T obj)
     {
+        if (obj == null)
+        {
+            Debug.LogWarning("obj is null");
+            return default;
+        }
         BinaryFormatter bf = new BinaryFormatter();
         using (var ms = new MemoryStream())
         {
@@ -20,6 +25,11 @@ public class Helper
     // Convert a byte array to an Object
     public static T ByteArrayToObject<T>(byte[] arrBytes)
     {
+        if (arrBytes.Length == 0)
+        {
+            Debug.LogWarning("Byte array length is " + arrBytes.Length);
+            return default;
+        }
         using (var memStream = new MemoryStream())
         {
             var binForm = new BinaryFormatter();

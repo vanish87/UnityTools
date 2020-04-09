@@ -7,6 +7,7 @@ using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
 using UnityTools.Common;
+using UnityTools.Debuging;
 
 namespace UnityTools
 {
@@ -64,7 +65,7 @@ namespace UnityTools
             this.Initialize();
         }
 
-        protected virtual void Update()
+        public virtual void Update()
         {
             if (Input.GetKeyDown(this.openKey))
             {
@@ -161,17 +162,21 @@ namespace UnityTools
 
         }
 
-        //awake will load configure form file
-        protected override void Awake()
-        {
-            this.Initialize();
-        }
-
         //handler will be registered on enabled
         //so at here call notify to call all handlers
         protected virtual void Start()
         {
+            this.Initialize();
             this.NotifyChange();
+        }
+        protected virtual void OnDisable()
+        {
+            if (Application.isEditor)
+            {
+                this.Save();
+                this.LoadAndNotify(); 
+                //LogTool.Log("Configure " + this.name + " Saved", LogLevel.Verbose, LogChannel.IO);
+            }
         }
 
         protected virtual void Update()
@@ -190,8 +195,11 @@ namespace UnityTools
             }
         }
 
-        protected virtual void Initialize()
+        public virtual void Initialize()
         {
+            //do not load for prefab object
+            if (this.gameObject.scene.rootCount == 0) return;
+            
             if (this.inited == false)
             {
                 this.inited = true;
@@ -274,17 +282,22 @@ namespace UnityTools
 
         }
 
-        //awake will load configure form file
-        protected virtual void Awake()
-        {
-            this.Initialize();
-        }
-
         //handler will be registered on enabled
         //so at here call notify to call all handlers
         protected virtual void Start()
         {
+            this.Initialize();
             this.NotifyChange();
+        }
+        protected virtual void OnDisable()
+        {
+            if (Application.isEditor)
+            {
+                this.Save();
+                this.LoadAndNotify();
+                //LogTool.Log("Configure " + this.name + "Saved ", LogLevel.Verbose, LogChannel.IO);
+            }
+
         }
 
         protected virtual void Update()
@@ -303,8 +316,11 @@ namespace UnityTools
             }
         }
 
-        protected virtual void Initialize()
+        public virtual void Initialize()
         {
+            //do not load for prefab object
+            if (this.gameObject.scene.rootCount == 0) return;
+
             if (this.inited == false)
             {
                 this.inited = true;

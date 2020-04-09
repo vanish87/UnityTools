@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -12,30 +13,41 @@ namespace UnityTools.Networking
     public class SocketData
     {
         public IPEndPoint endPoint;
+        public bool reachable = false;
+        public Socket socket;
 
-        public SocketData(IPEndPoint end)
+        public static SocketData Make(IPEndPoint end)
+        {
+            return new SocketData(end);
+        }
+        public static SocketData Make(int port = 0)
+        {
+            return new SocketData(port);
+        }
+        public static SocketData Make(string ip, int port)
+        {
+            return new SocketData(ip, port);
+        }
+
+        protected SocketData(IPEndPoint end)
         {
             this.endPoint = new IPEndPoint(end.Address, end.Port);
+            //optional reachable check, it may cause memory leak
+            this.reachable = true; // Tool.IsReachable(this.endPoint);
         }
-        public SocketData(int port = 0)
+        protected SocketData(int port = 0)
         {
             this.endPoint = new IPEndPoint(IPAddress.Any, port);
+            //optional reachable check, it may cause memory leak
+            this.reachable = true; // Tool.IsReachable(this.endPoint);
         }
-
-        public SocketData(string ip, int port)
+        protected SocketData(string ip, int port)
         {
             IPAddress local = IPAddress.Any;
             if (ip.ToLower() == "localhost" || ip == "127.0.0.1")
             {
-                IPAddress[] localIPs = Dns.GetHostAddresses(Dns.GetHostName());
-                foreach (var addr in localIPs)
-                {
-                    if (addr.AddressFamily == AddressFamily.InterNetwork)
-                    {
-                        local = addr;
-                        break;
-                    }
-                }
+                var localIPs = Dns.GetHostAddresses(Dns.GetHostName()).ToList();
+                local = localIPs.Find(ips =>ips.AddressFamily == AddressFamily.InterNetwork);
             }
             else
             {
@@ -52,7 +64,14 @@ namespace UnityTools.Networking
 
             Assert.IsTrue(IPEndPoint.MinPort <= port && port <= IPEndPoint.MaxPort);
             this.endPoint = new IPEndPoint(local, port);
+            //optional reachable check, it may cause memory leak
+            this.reachable = true;// Tool.IsReachable(this.endPoint);
         }
+
+        ~SocketData()
+        {
+            this.endPoint = null;
+        }       
     }
 
     public class State
@@ -62,31 +81,15 @@ namespace UnityTools.Networking
     }
     public class RecieveState : State
     {
-        public SocketData remote = new SocketData();
+        public SocketData remote = SocketData.Make();
     }
 
     //code from https://gist.github.com/darkguy2008/413a6fea3a5b4e67e5e0d96f750088a9
     //for testing latency of UDP
-    public class UDPSocket<T>
+    public class UDPSocket<T> : Disposable
     {
-
         public RecieveState recieveState = new RecieveState();
         public bool DebugLog = false;
-
-        ~UDPSocket()
-        {
-            this.Disconnect();
-        }
-
-        public void Disconnect()
-        {
-            this.socket.Close();
-
-            foreach (var r in this.roleState.Keys)
-            {
-                this.roleState[r] = false;
-            }
-        }
 
         public enum Connection
         {
@@ -112,35 +115,55 @@ namespace UnityTools.Networking
             { Connection.Outcoming  , new List<SocketData>() },
         };
 
+        protected override void DisposeManaged()
+        {
+            if (this.socket != null)
+            {
+                try
+                {
+                    this.socket.Shutdown(SocketShutdown.Both);
+                }
+                catch (Exception e){ if (DebugLog) Debug.LogWarning(e.ToString()); }
+                finally
+                {
+                    this.socket.Close();
+                }
+                this.socket = null;
+            }
+        }
+
         public void Setup(SocketRole role, SocketData data = null)
         {
             if (this.roleState[role]) return;
-
-            switch (role)
+            try
             {
-                case SocketRole.Sender:
-                    {
-                        //connect is optional
-                        //socket.Connect(IPAddress.Parse(address), port);
-                    }
-                    break;
-                case SocketRole.Reciever:
-                    {
-                        this.socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.ReuseAddress, true);
-                        //this.socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.PacketInformation, true);
-                        Assert.IsNotNull(data);
-                        this.socket.Bind(data.endPoint);
+                switch (role)
+                {
+                    case SocketRole.Sender:
+                        {
+                            //connect is optional
+                            //socket.Connect(IPAddress.Parse(address), port);
+                        }
+                        break;
+                    case SocketRole.Reciever:
+                        {
+                            this.socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.ReuseAddress, true);
+                            //this.socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.PacketInformation, true);
+                            Assert.IsNotNull(data);
+                            this.socket.Bind(data.endPoint);
 
-                        if (DebugLog) Debug.Log("Start Reciever on " + data.endPoint);
-                    }
-                    break;
-                case SocketRole.Broadcast:
-                    {
-                        this.socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Broadcast, true);
-                        //this.socket.Bind(this.socketConfigure.endPoint);
-                    }
-                    break;
+                            if (DebugLog) Debug.Log("Start Reciever on " + data.endPoint);
+                        }
+                        break;
+                    case SocketRole.Broadcast:
+                        {
+                            this.socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Broadcast, true);
+                            //this.socket.Bind(this.socketConfigure.endPoint);
+                        }
+                        break;
+                }
             }
+            catch(SocketException e) { Debug.Log(data.endPoint.ToString() + " "  + e.ToString()); }
             this.roleState[role] = true;
         }
 
@@ -171,7 +194,7 @@ namespace UnityTools.Networking
         {
             this.Setup(SocketRole.Broadcast);
 
-            var epTo = new SocketData();
+            var epTo = SocketData.Make();
             epTo.endPoint.Address = IPAddress.Broadcast;
             epTo.endPoint.Port = port;
 
@@ -180,7 +203,8 @@ namespace UnityTools.Networking
         }
         public virtual void StartRecieve(int port = 0)
         {
-            this.recieveState.remote = new SocketData(port);
+            this.recieveState.remote = SocketData.Make(port);
+            this.recieveState.remote.socket = this.socket;
 
             this.Setup(SocketRole.Reciever, this.recieveState.remote);
 
@@ -192,6 +216,7 @@ namespace UnityTools.Networking
             }
             catch (Exception e)
             {
+                //check flag
                 Debug.Log(e.ToString());
             }
         }
@@ -200,17 +225,33 @@ namespace UnityTools.Networking
 
         protected void SendByte(SocketData epTo, byte[] byteData)
         {
+            epTo.socket = this.socket;
+
             Assert.IsNotNull(epTo);
             Assert.IsNotNull(byteData);
             Assert.IsTrue(byteData.Length > 0);
-            Assert.IsTrue(byteData.Length < 64 * 1024, "Size is "+ byteData.Length);
-            try
+            Assert.IsTrue(byteData.Length < 64 * 1024, "Data length "+ byteData.Length+ " exceeds max 64k");
+            Assert.IsNotNull(epTo.socket);
+
+            if (epTo.reachable)
             {
-                this.socket.BeginSendTo(byteData, 0, byteData.Length, SocketFlags.None, epTo.endPoint, this.SendCallback, epTo);
+                try
+                {
+                    this.socket.BeginSendTo(byteData, 0, byteData.Length, SocketFlags.None, epTo.endPoint, this.SendCallback, epTo);
+                }
+                catch (Exception e)
+                {
+                    Debug.Log(epTo.endPoint.ToString());
+                    Debug.Log(e.ToString());
+                }
+                finally
+                {
+                    byteData = null;
+                }
             }
-            catch (Exception e)
+            else
             {
-                Debug.Log(e.ToString());
+                Debug.LogWarning(epTo.endPoint.ToString() + " is unreachable");
             }
         }
         protected void SendCallback(IAsyncResult ar)
@@ -221,22 +262,15 @@ namespace UnityTools.Networking
                 {
                     var socketData = ar.AsyncState as SocketData;
 
-                    int bytes = socket.EndSendTo(ar);
+                    int bytes = socketData.socket.EndSendTo(ar);
 
-                    bool found = false;
-                    foreach (var c in this.connections[Connection.Outcoming])
-                    {
-                        if (c.endPoint.Address.Equals(socketData.endPoint.Address))
-                        {
-                            found = true;
-                            break;
-                        }
-                    }
-                    if (found == false && socketData.endPoint.Address != IPAddress.Broadcast)
+                    if (this.connections[Connection.Outcoming].Exists(c => c.endPoint.Address.Equals(socketData.endPoint.Address)) == false
+                        && socketData.endPoint.Address != IPAddress.Broadcast)
                     {
                         this.connections[Connection.Outcoming].Add(socketData);
                         if (DebugLog) Debug.LogWarningFormat("Add out connection: {0}", socketData.endPoint.ToString());
                     }
+
                     if (DebugLog) Debug.LogFormat("SEND: {0} bytes To {1}", bytes, socketData.endPoint.ToString());
 
                     if (DebugLog)
@@ -248,9 +282,11 @@ namespace UnityTools.Networking
                     }
                 }
             }
-            catch (Exception e)
+            catch (SocketException e)
             {
                 Debug.Log(e.ToString());
+                Debug.Log((e as SocketException).ErrorCode);
+                Debug.Log((e as SocketException).Message);
             }
         }
         protected void RecieveCallback(IAsyncResult ar)
@@ -261,7 +297,7 @@ namespace UnityTools.Networking
                 Assert.IsTrue(stateFrom == this.recieveState);
 
                 EndPoint epFrom = stateFrom.remote.endPoint;
-                int bytesReceived = socket.EndReceiveFrom(ar, ref epFrom);
+                int bytesReceived = stateFrom.remote.socket.EndReceiveFrom(ar, ref epFrom);
 
                 var ipFrom = epFrom as IPEndPoint;
                 stateFrom.remote.endPoint = ipFrom;
@@ -273,27 +309,24 @@ namespace UnityTools.Networking
                     this.OnMessage(stateFrom.remote, data);
                 }
 
-                bool found = false;
-                foreach (var c in this.connections[Connection.Incoming])
+                if(this.connections[Connection.Incoming].Exists(c => c.endPoint.Address.Equals(ipFrom.Address)) == false)
                 {
-                    if (c.endPoint.Address.Equals(ipFrom.Address))
-                    {
-                        found = true;
-                        break;
-                    }
-                }
-                if (found == false)
-                {
-                    this.connections[Connection.Incoming].Add(new SocketData(ipFrom));
+                    this.connections[Connection.Incoming].Add(SocketData.Make(ipFrom));
                     if (DebugLog) Debug.LogWarningFormat("Add in connection: {0}", ipFrom.ToString());
                 }
 
                 epFrom = this.recieveState.remote.endPoint;
-                this.socket.BeginReceiveFrom(this.recieveState.buffer, 0, this.recieveState.buffer.Length, SocketFlags.None, ref epFrom, this.RecieveCallback, this.recieveState);
+                stateFrom.remote.socket.BeginReceiveFrom(this.recieveState.buffer, 0, this.recieveState.buffer.Length, SocketFlags.None, ref epFrom, this.RecieveCallback, this.recieveState);
             }
             catch (Exception e)
             {
                 Debug.Log(e.ToString());
+                var se = e as SocketException;
+                if (se != null)
+                {
+                    Debug.Log(se.ErrorCode);
+                    Debug.Log(se.Message);
+                }
             }
         }
     }

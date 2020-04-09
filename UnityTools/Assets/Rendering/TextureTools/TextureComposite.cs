@@ -60,9 +60,27 @@ namespace UnityTools.Rendering
                 Graphics.Blit(c.texture, this.finalOutput, this.combineMat, 0);
             }
         }
+        protected void SeperateTextures()
+        {
+            Material mat = this.combineMat;
+            foreach (var c in this.textureList)
+            {
+                mat.SetVector("_ST", c.st);
+                var rt = c.texture as RenderTexture;
+                if (rt == null) continue;
+                rt.Clear();
+                Graphics.Blit(this.finalOutput, rt, this.combineMat, 2);
+            }
+        }
 
         protected virtual void RecalculateTextureParameter(TextureLayout layout = TextureLayout.Auto)
         {
+            if(this.textureList.Count == 0)
+            {
+                //create a dummy texture
+                this.CreateFinalTexture(new Vector2Int(4, 4));
+                return;
+            }
             Assert.IsNotNull(this.textureList);
             Assert.IsTrue(this.textureList.Count > 0);
 
@@ -169,9 +187,21 @@ namespace UnityTools.Rendering
                 }
             }
 
+            this.CreateFinalTexture(newSize, this.textureList[0].texture as RenderTexture);
+        }
+
+        protected void CreateFinalTexture(Vector2Int size, RenderTexture source = null)
+        {
             this.finalOutput.DestoryObj();
 
-            var desc = new RenderTextureDescriptor(newSize.x, newSize.y);
+            var desc = new RenderTextureDescriptor(size.x, size.y);
+            desc.enableRandomWrite = true;
+            if (source != null)
+            {
+                desc.colorFormat = source.format;
+                desc.enableRandomWrite = source.enableRandomWrite;
+                desc.sRGB = source.sRGB;
+            }
             this.finalOutput = TextureManager.Create(desc);
             this.finalOutput.name = "FinalOutput";
         }
