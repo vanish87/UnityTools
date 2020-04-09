@@ -203,7 +203,7 @@ namespace UnityTools.Networking
             Assert.IsNotNull(epTo);
             Assert.IsNotNull(byteData);
             Assert.IsTrue(byteData.Length > 0);
-            Assert.IsTrue(byteData.Length < 64 * 1024);
+            Assert.IsTrue(byteData.Length < 64 * 1024, "Size is "+ byteData.Length);
             try
             {
                 this.socket.BeginSendTo(byteData, 0, byteData.Length, SocketFlags.None, epTo.endPoint, this.SendCallback, epTo);
