@@ -46,11 +46,15 @@ namespace UnityTools.Common
     
     public class Launcher<T> : MonoBehaviour where T : class, new()
     {
+        public enum LaunchEvent
+        {
+            Init = 0,
+            DeInit,
+            Reload,
+        }
         public interface ILauncherUser
         {
-            void OnInit(T data);
-            void OnDeinit(T data);
-            void OnReload(T data);
+            void OnLaunchEvent(T data, LaunchEvent levent);
 
             Environment RuntimEnvironment { get; set; }
 
@@ -111,14 +115,14 @@ namespace UnityTools.Common
             foreach (var u in this.userList)
             {
                 LogTool.Log("Init order " + u.Order + " " + u.ToString());
-                u.OnInit(this.data);
+                u.OnLaunchEvent(this.data, LaunchEvent.Init);
             }
         }
         protected virtual void OnDisable()
         {
             foreach (var u in this.userList)
             {
-                u.OnDeinit(this.data);
+                u.OnLaunchEvent(this.data, LaunchEvent.DeInit);
             }
             this.CleanUp();
         }
@@ -127,7 +131,7 @@ namespace UnityTools.Common
         {
             foreach (var u in this.userList)
             {
-                u.OnReload(this.data);
+                u.OnLaunchEvent(this.data, LaunchEvent.Reload);
             }
         }
 
