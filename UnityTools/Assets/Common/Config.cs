@@ -22,6 +22,12 @@ namespace UnityTools
         FileTool.SerializerType SaveType { get; } 
     }
 
+    public enum ConfigureSaveMode
+    {
+        None = 0,
+        UseEditorValue,
+        UseFileValue,
+    }
     //same as XmlConfig, but is not subclass of mono
     //Note it could be multiple instance but they will save/load to same file
     public abstract class ConfigNoneMono<T> : IConfigureSerilize where T : class, new()
@@ -127,6 +133,7 @@ namespace UnityTools
 
     public abstract class ConfigMonoSingleton<T> : SingletonMonoBehaviour<ConfigMonoSingleton<T>>, IConfigureSerilize where T : class, new()
     {
+        [SerializeField] protected ConfigureSaveMode saveMode = ConfigureSaveMode.UseEditorValue;
         public abstract T Data { get; set; }
         public bool Open { get { return this.open; } set { this.open = value; } }
         protected virtual string filePath { get { return Path.Combine(Application.persistentDataPath, "config_" + SceneManager.GetActiveScene().name + ".xml"); } }
@@ -171,7 +178,7 @@ namespace UnityTools
         }
         protected virtual void OnDisable()
         {
-            if (Application.isEditor)
+            if (Application.isEditor && this.saveMode == ConfigureSaveMode.UseEditorValue)
             {
                 this.Save();
                 this.LoadAndNotify(); 
@@ -250,6 +257,7 @@ namespace UnityTools
         public abstract T Data { get; set; }
         public bool Open { get { return this.open; } set { this.open = value; } }
         protected virtual string filePath { get { return Path.Combine(Application.persistentDataPath, "config_" + SceneManager.GetActiveScene().name + ".xml"); } }
+        [SerializeField] protected ConfigureSaveMode saveMode = ConfigureSaveMode.UseEditorValue;
 
         protected bool inited = false;
 
@@ -291,7 +299,7 @@ namespace UnityTools
         }
         protected virtual void OnDisable()
         {
-            if (Application.isEditor)
+            if (Application.isEditor && this.saveMode == ConfigureSaveMode.UseEditorValue)
             {
                 this.Save();
                 this.LoadAndNotify();
