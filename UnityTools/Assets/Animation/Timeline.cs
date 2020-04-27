@@ -99,6 +99,20 @@ namespace UnityTools.Animation
             {
                 base.Leave(obj);
             }
+
+
+
+            public TimelineSequence DeepCopy(bool copyActions = true)
+            {
+                var ret = this.DeepCopyJson();
+                if (copyActions)
+                {
+                    ret.enterActions = this.enterActions;
+                    ret.excuteActions = this.excuteActions;
+                    ret.leaveActions = this.leaveActions;
+                }
+                return ret;
+            }
         }
         [Serializable]
         public class TimelineRestartSequence : TimelineSequence
