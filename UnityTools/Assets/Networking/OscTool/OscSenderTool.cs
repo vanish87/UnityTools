@@ -36,7 +36,7 @@ namespace UnityTools.Networking
             }
         }
 
-        protected void CleanUp()
+        protected virtual void CleanUp()
         {
             if (this.client != null) this.client.Dispose();
         }

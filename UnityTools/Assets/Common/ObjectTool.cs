@@ -54,7 +54,7 @@ namespace UnityTools
             return result;
         }
 
-        public static T DeepCopy<T>(T other)
+        public static T DeepCopy<T>(this T other)
         {
             if (other == null) return default;
             using (MemoryStream ms = new MemoryStream())
@@ -66,7 +66,7 @@ namespace UnityTools
             }
         }
 
-        public static T DeepCopyJson<T>(T other)
+        public static T DeepCopyJson<T>(this T other)
         {
             if (other == null) return default;
             var json = JsonUtility.ToJson(other);

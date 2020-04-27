@@ -106,6 +106,18 @@ namespace UnityTools.Debuging
                 server = SocketData.Make(logPC.ipAddress, logPC.logPort);
                 LogTool.Log("Send log to " + server.endPoint.ToString(), LogLevel.Verbose, LogChannel.Network | LogChannel.Debug);
             }
+
+            public override byte[] OnSerialize(Data data)
+            {
+                var raw = Helper.ObjectToByteArray(data);
+                return CompressTool.Compress(raw); 
+            }
+
+            public override Data OnDeserialize(byte[] data, int length)
+            {
+                var remote = CompressTool.Decompress(data);
+                return Helper.ByteArrayToObject<Data>(remote);
+            }
         }
 
 

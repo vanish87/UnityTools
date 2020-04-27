@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace UnityTools.GUITool
 {
-    public class GUIMenuGroup : MonoBehaviour
+    public class GUIMenuGroup : MonoBehaviour, GUIMenuGroup.IGUIHandler
     {
         public interface IGUIHandler
         {
@@ -64,6 +64,7 @@ namespace UnityTools.GUITool
 
         public enum WindowType
         {
+            Info,
             Debug,
             ConfigureAdjust,
             Log,
@@ -71,12 +72,15 @@ namespace UnityTools.GUITool
 
         [SerializeField] protected List<WindowData> windowData = new List<WindowData>();
 
+
         protected void Start()
         {
             if (this.windowData.Count == 0)
             {
                 this.windowData.Add(new WindowData() { title = WindowType.Debug.ToString(), key = KeyCode.D });
             }
+
+            this.windowData.Add(new WindowData() { title = WindowType.Info.ToString(), key = KeyCode.I });
 
             foreach(var w in this.windowData)
             {
@@ -97,6 +101,15 @@ namespace UnityTools.GUITool
             foreach (var w in this.windowData)
             {
                 w.OnGUI();
+            }
+        }
+
+        public string Title => WindowType.Info.ToString();
+        public void OnDrawGUI()
+        {
+            foreach(var w in this.windowData)
+            {
+                GUILayout.Label(w.title + " window uses " + w.key.ToString() + " Key");
             }
         }
     }

@@ -143,7 +143,7 @@ namespace UnityTools.Rendering
                         this.CheckTexture(source, this.outputMode.ToString(), this.OutputModeToRenderTextureFormat[outputMode], ref this.depthTexture);
                         this.normalTexture = this.depthTexture;
 
-                        Graphics.Blit(null, this.depthTexture, this.mat, this.OutputModeToPass[this.outputMode]);
+                        Graphics.Blit(source, this.depthTexture, this.mat, this.OutputModeToPass[this.outputMode]);
                     }
                     break;
                 case OutputMode.DepthNomalSeparated:
@@ -151,8 +151,8 @@ namespace UnityTools.Rendering
                         this.CheckTexture(source, nameof(this.depthTexture), this.OutputModeToRenderTextureFormat[OutputMode.DepthOnly], ref this.depthTexture);
                         this.CheckTexture(source, nameof(this.normalTexture), this.OutputModeToRenderTextureFormat[OutputMode.NormalOnly], ref this.normalTexture);
 
-                        Graphics.Blit(null, this.depthTexture, this.mat, this.OutputModeToPass[OutputMode.DepthOnly]);
-                        Graphics.Blit(null, this.normalTexture, this.mat, this.OutputModeToPass[OutputMode.NormalOnly]);
+                        Graphics.Blit(source, this.depthTexture, this.mat, this.OutputModeToPass[OutputMode.DepthOnly]);
+                        Graphics.Blit(source, this.normalTexture, this.mat, this.OutputModeToPass[OutputMode.NormalOnly]);
                     }
                     break;
             }
