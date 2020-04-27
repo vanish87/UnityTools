@@ -42,13 +42,13 @@ namespace UnityTools.Networking
 
             if (currentPC == null)
             {
-                LogTool.Log("Current pc not found", LogLevel.Warning);
+                LogTool.Log("Current pc not found, use default", LogLevel.Warning);
                 currentPC = new PCInfo();
             }
             if (serverData == null)
             {
-                LogTool.Log("serverData not found", LogLevel.Warning);
-                serverData = new PCInfo();
+                LogTool.Log("serverData not found, use default", LogLevel.Warning);
+                serverData = new PCInfo() { role = PCInfo.Role.Server };
             }
             LogTool.LogFormat("setup current pc ip {1} as {0}", LogLevel.Info, LogChannel.Debug | LogChannel.Network, currentPC.role.ToString(), currentPC.ipAddress);
 
