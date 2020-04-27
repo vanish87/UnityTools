@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<PCConfigureData xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <pcList>
+    <PCInfo>
+      <name>DevPC</name>
+      <ipAddress>127.0.0.1</ipAddress>
+      <role>Development</role>
+      <ports>
+        <Port>
+          <name>Sound</name>
+          <port>12345</port>
+        </Port>
+      </ports>
+    </PCInfo>
+    <PCInfo>
+      <name>ServerPC</name>
+      <ipAddress>127.0.0.1</ipAddress>
+      <role>Server</role>
+      <ports />
+    </PCInfo>
+    <PCInfo>
+      <name>ClientPC</name>
+      <ipAddress>127.0.0.1</ipAddress>
+      <role>Client</role>
+      <ports />
+    </PCInfo>
+  </pcList>
+</PCConfigureData>

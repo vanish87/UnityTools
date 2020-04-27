@@ -14,11 +14,18 @@ namespace UnityTools.Common
         {
             Server,
             Client,
-            Devlopment,
+            Development,
+        }
+        [Serializable]
+        public class Port
+        {
+            public string name;
+            public short port;
         }
         public string name = "OutputPC";
         public string ipAddress = "127.0.0.1";
         public Role role = Role.Client;
+        public List<Port> ports = new List<Port>();
 
     }
     [Serializable]
@@ -56,7 +63,7 @@ namespace UnityTools.Common
         {
             void OnLaunchEvent(T data, LaunchEvent levent);
 
-            Environment RuntimEnvironment { get; set; }
+            Environment Runtime { get; set; }
 
             //higher order of user executes after than lower order user
             //see LauncherOrder for default setting
@@ -109,7 +116,7 @@ namespace UnityTools.Common
             this.environment = this.OnCreateEnv();
             this.ConfigureEnvironment();
 
-            foreach (var u in this.userList) u.RuntimEnvironment = this.environment;
+            foreach (var u in this.userList) u.Runtime = this.environment;
 
             this.userList = this.userList.OrderBy(ul => ul.Order).ToList();
             foreach (var u in this.userList)

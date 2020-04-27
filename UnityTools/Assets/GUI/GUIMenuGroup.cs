@@ -48,8 +48,8 @@ namespace UnityTools.GUITool
                 if (this.open)
                 {
                     this.windowRect =
-                    //GUILayout.Window(
-                    GUIUtil.ResizableWindow(
+                    GUILayout.Window(
+                    //GUIUtil.ResizableWindow(
                         GetHashCode(), this.windowRect, (id) =>
                         {
                             foreach (var g in this.guiHandlers) g.OnDrawGUI();

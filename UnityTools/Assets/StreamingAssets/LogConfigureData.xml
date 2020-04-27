@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<LogConfigureData xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <logPC>
+    <name>LogPC</name>
+    <ipAddress>127.0.0.1</ipAddress>
+    <role>Development</role>
+    <ports />
+    <logPort>13210</logPort>
+  </logPC>
+  <channel>Everything</channel>
+  <levels>
+    <LevelData>
+      <level>Error</level>
+      <enabled>true</enabled>
+    </LevelData>
+    <LevelData>
+      <level>Warning</level>
+      <enabled>true</enabled>
+    </LevelData>
+    <LevelData>
+      <level>Info</level>
+      <enabled>true</enabled>
+    </LevelData>
+    <LevelData>
+      <level>Verbose</level>
+      <enabled>true</enabled>
+    </LevelData>
+    <LevelData>
+      <level>Dev</level>
+      <enabled>true</enabled>
+    </LevelData>
+  </levels>
+</LogConfigureData>

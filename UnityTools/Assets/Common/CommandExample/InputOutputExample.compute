@@ -1,0 +1,16 @@
+﻿// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel Emit
+
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+RWTexture2D<half> _Input;
+RWTexture2D<half> _Output;
+
+RWBuffer<int> _Debug;
+
+[numthreads(1,1,1)]
+void Emit(uint3 id : SV_DispatchThreadID)
+{
+	_Output[id.xy] = id.x;
+	_Debug[id.x] = _Output[id.xy];
+}

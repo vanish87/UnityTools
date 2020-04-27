@@ -1,5 +1,8 @@
 ﻿
-#define USE_OSC
+
+//Note Uncomment this to use OSC
+//GitHub:https://github.com/vanish87/OscJack
+//#define USE_OSC
 using System.Collections;
 using System.Collections.Generic;
 using System.Net.Sockets;
