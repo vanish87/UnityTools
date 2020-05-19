@@ -16,7 +16,8 @@ namespace UnityTools.Networking
         {
             var rawData = data.ToByteArray();
             var newData = CompressTool.Compress(rawData, CompressTool.CompreeAlgorithm.Zstd);
-            UnityEngine.Debug.LogFormat("Raw data size {0}, Compressed data size{1}", rawData.Length, newData.Length);
+            UnityEngine.Debug.LogFormat("Raw data size {0} KB, Compressed data size {1}", 
+                rawData.Length/1024, newData.Length > 1024?newData.Length/1024+"KB": newData.Length + "B");
             return newData;
         }
 
