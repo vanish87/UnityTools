@@ -1,0 +1,91 @@
+﻿
+
+#include "GPUData.cginc"
+
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel Force
+#pragma kernel Integration
+#pragma kernel Init
+#pragma kernel Emit
+
+#pragma kernel MapParticleToTrail
+
+
+cbuffer cb
+{
+	int _NumberOfParticles;
+	int _ActiveNumberOfParticles;
+	float4 mousePos;
+	float4x4 WorldToLocalMat;
+	float4 TrailTextureSize;
+}
+
+StructuredBuffer<ParticleData> _ParticlesDataBufferRead;
+RWStructuredBuffer<ParticleData> _ParticlesDataBufferWrite;
+RWStructuredBuffer<ParticleData> _ParticlesDataBufferEmitWrite;
+
+AppendStructuredBuffer<uint> _ParticlesIndexBufferActive;
+ConsumeStructuredBuffer<uint> _ParticlesIndexBufferDead;
+
+AppendStructuredBuffer<uint> _ParticlesIndexBufferInit;
+
+RWTexture2D<float4> Trail;
+
+[numthreads(8, 1, 1)]
+void Init(uint3 DTid : SV_DispatchThreadID)
+{
+	uint idx = DTid.x;
+
+	_ParticlesDataBufferWrite[idx].position = float3(0, 0, 0);
+	_ParticlesDataBufferWrite[idx].active = false;
+
+	_ParticlesIndexBufferInit.Append(idx);
+}
+
+[numthreads(8, 1, 1)]
+void Emit(uint3 DTid : SV_DispatchThreadID)
+{
+	uint idx = _ParticlesIndexBufferDead.Consume();
+
+	ParticleData p = _ParticlesDataBufferEmitWrite[idx];
+	p.active = true;
+	p.position = float3(mousePos.xy, 0);
+
+	_ParticlesDataBufferEmitWrite[idx] = p;
+}
+
+[numthreads(8, 1, 1)]
+void Force(uint3 DTid : SV_DispatchThreadID)
+{
+	// TODO: insert actual code here!
+
+}
+
+[numthreads(8, 1, 1)]
+void Integration(uint3 DTid : SV_DispatchThreadID)
+{
+
+}
+
+[numthreads(8, 1, 1)]
+void MapParticleToTrail(uint3 id : SV_DispatchThreadID)
+{
+	uint idx = id.x;
+
+	if (_ParticlesDataBufferRead[idx].active)
+	{
+		float4 pos = float4(_ParticlesDataBufferRead[idx].position, 1);
+		float4 local = mul(WorldToLocalMat, pos);
+		local /= local.w;
+		local += 0.5;
+
+		int2 center = local.xy * TrailTextureSize.xy;
+		for (int i = -10; i < 10; ++i)
+		{
+			for (int j = -10; j < 10; ++j)
+			{
+				Trail[center + int2(i,j)] = float4(1, 1, 1, 1);
+			}
+		}
+	}
+}
