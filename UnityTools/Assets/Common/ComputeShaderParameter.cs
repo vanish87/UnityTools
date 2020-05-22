@@ -134,11 +134,7 @@ namespace UnityTools.ComputeShaderTool
 
         public virtual void ReleaseBuffer()
         {
-            var bufferList = this.VarList.Where(b =>
-            {
-                var buffer = b as ComputeShaderParameterBuffer;
-                return buffer != null && buffer.Value != null;
-            });
+            var bufferList = this.VarList.Where(b => b is ComputeShaderParameterBuffer && (b as ComputeShaderParameterBuffer).Value != null);
 
             bufferList?.ToList().ForEach(b =>
             {
