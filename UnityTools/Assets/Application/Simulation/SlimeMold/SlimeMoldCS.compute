@@ -32,7 +32,9 @@ cbuffer cb
 	float _MoveSpeed;
 
 	float _DecaySpeed;
+	float _DepositSpeed;
 
+	float4 _Bound;
 }
 
 StructuredBuffer<ParticleData> _ParticlesDataBufferRead;
@@ -154,6 +156,11 @@ void Integration(uint3 DTid : SV_DispatchThreadID)
 
 		pos += dir * _DT * _MoveSpeed;
 
+		if (pos.x < _Bound.x || pos.x > _Bound.y ) dir.x = -dir.x;
+		if (pos.y < _Bound.z || pos.y > _Bound.w ) dir.y = -dir.y;
+
+		pos.xy = clamp(pos.xy, _Bound.xz, _Bound.yw);
+
 		pData.position = pos;
 		pData.direction = dir;
 	}
@@ -170,12 +177,14 @@ void MapParticleToTrail(uint3 id : SV_DispatchThreadID)
 	if (pData.active)
 	{
 		int2 center = WorldPosToUVInt(pData.position);
+		_Trail[center] += _DepositSpeed;
 
-		for (int i = -10; i < 10; ++i)
+		int size = 0;
+		for (int i = -size; i < size; ++i)
 		{
-			for (int j = -10; j < 10; ++j)
+			for (int j = -size; j < size; ++j)
 			{
-				_Trail[center + int2(i,j)] = float4(1, 1, 1, 1);
+				_Trail[center + int2(i,j)] += _DepositSpeed;
 			}
 		}
 	}
@@ -185,5 +194,6 @@ void MapParticleToTrail(uint3 id : SV_DispatchThreadID)
 [numthreads(32, 32, 1)]
 void DecayTrail(uint3 id : SV_DispatchThreadID)
 {
-	_DecayTrailTex[id.xy] = _DiffuseTrail[id.xy] - _DecaySpeed;
+	_DecayTrailTex[id.xy] += _DiffuseTrail[id.xy] - _DecaySpeed;
 }
+

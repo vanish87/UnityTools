@@ -34,12 +34,14 @@ namespace UnityTools.Applications.Simulation
             public ComputeShaderParameterTexture decayTrail = new ComputeShaderParameterTexture("_DecayTrailTex");
 
             public ComputeShaderParameterFloat dt = new ComputeShaderParameterFloat("_DT");
+            public ComputeShaderParameterVector bound = new ComputeShaderParameterVector("_Bound");
 
             public ComputeShaderParameterFloat sensorAngle = new ComputeShaderParameterFloat("_SensorAngle", 30);
             public ComputeShaderParameterFloat sensorDistance = new ComputeShaderParameterFloat("_SensorDistance", 1);
             public ComputeShaderParameterFloat trunAngle = new ComputeShaderParameterFloat("_TrunAngle", 15);
             public ComputeShaderParameterFloat moveSpeed = new ComputeShaderParameterFloat("_MoveSpeed", 1);
             public ComputeShaderParameterFloat decaySpeed = new ComputeShaderParameterFloat("_DecaySpeed", 0.3f);
+            public ComputeShaderParameterFloat depositSpeed = new ComputeShaderParameterFloat("_DepositSpeed", 0.01f);
 
         }
         [SerializeField] protected Area particleArea;
@@ -84,6 +86,7 @@ namespace UnityTools.Applications.Simulation
 
             this.PtoTparameter.particleBuffer.Value = this.bufferParameter.particlesDataBufferRead.Value;
             this.PtoTparameter.worldToLocalMat.Value = this.particleArea.WorldToLocalMatrix;
+            this.PtoTparameter.bound.Value = new Vector4(bound.min.x, bound.max.x, bound.min.y, bound.max.y);
 
         }
 
@@ -95,7 +98,7 @@ namespace UnityTools.Applications.Simulation
                 var posWorld = this.particleArea.LocalToWordPosition(new Vector3(pos.x, pos.y, 0));
                 this.PtoTparameter.mousePos.Value = new Vector4(posWorld.x, posWorld.y, 0, 0);
 
-                this.Emit(1);
+                this.Emit(8);
             }
 
             this.PtoTparameter.dt.Value = Time.deltaTime;
@@ -105,6 +108,8 @@ namespace UnityTools.Applications.Simulation
             this.PtoTparameter.particleBuffer.Value = this.bufferParameter.particlesDataBufferRead.Value;
             this.bufferParameter.particlesDataBufferEmitWrite.Value = this.bufferParameter.particlesDataBufferRead.Value;
 
+            (this.PtoTparameter.trailTexture.Value as RenderTexture).Clear();
+            (this.PtoTparameter.diffuseTrail.Value as RenderTexture).Clear();
 
             //Deposit
             this.MapParticleToTrail();
@@ -121,11 +126,11 @@ namespace UnityTools.Applications.Simulation
         protected void OnGUI()
         {
             var offset = 0;
-            GUI.DrawTexture(new Rect(offset, 0, 256, 256), this.PtoTparameter.trailTexture.Value, ScaleMode.ScaleToFit);
+            GUI.DrawTexture(new Rect(offset, 0, 256, 256), this.PtoTparameter.trailTexture.Value, ScaleMode.ScaleToFit, false);
             offset += 256;
-            GUI.DrawTexture(new Rect(offset, 0, 256, 256), this.PtoTparameter.diffuseTrail.Value, ScaleMode.ScaleToFit);
+            GUI.DrawTexture(new Rect(offset, 0, 256, 256), this.PtoTparameter.diffuseTrail.Value, ScaleMode.ScaleToFit, false);
             offset += 256;
-            GUI.DrawTexture(new Rect(offset, 0, 256, 256), this.PtoTparameter.decayTrail.Value, ScaleMode.ScaleToFit);
+            GUI.DrawTexture(new Rect(offset, 0, 256, 256), this.PtoTparameter.decayTrail.Value, ScaleMode.ScaleToFit, false);
         }
 
         protected void MapParticleToTrail()

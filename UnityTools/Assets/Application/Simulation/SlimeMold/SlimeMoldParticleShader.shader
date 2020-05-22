@@ -46,7 +46,7 @@
 			v2g o = (v2g)0;
 			o.position = _ParticleBuffer[id].position;
 			o.color = 1;
-			o.size = 1;
+			o.size = 0.1;
 			o.active = _ParticleBuffer[id].active ? 1:0;
 			return o;
 		}
@@ -63,7 +63,7 @@
 			[unroll]
 			for (int i = 0; i < 4; i++)
 			{
-				float3 position = g_positions[i] * _ParticleSize;
+				float3 position = g_positions[i] * 0.1;
 				position = mul(_InvViewMatrix, position) + In[0].position;
 				o.position = UnityObjectToClipPos(float4(position, 1.0));
 

@@ -246,7 +246,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   parameter:
     numberOfParticles:
-      data: 1024
+      data: 102400
     activeNumberOfParticles:
       data: 0
   cs: {fileID: 7200000, guid: 6e25e3e69ed53be49b1f886052116ee8, type: 3}
@@ -290,15 +290,19 @@ MonoBehaviour:
       data: {fileID: 0}
     dt:
       data: 0
+    bound:
+      data: {x: 0, y: 0, z: 0, w: 0}
     sensorAngle:
-      data: 30
+      data: 60
     sensorDistance:
-      data: 1
+      data: 5
     trunAngle:
-      data: 15
+      data: 5
     moveSpeed:
-      data: 1
+      data: 10
     decaySpeed:
+      data: 0.01
+    depositSpeed:
       data: 0.1
   blur: {fileID: 1132136428}
 --- !u!114 &1132136428
