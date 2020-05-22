@@ -1,6 +1,10 @@
 ﻿
 
+
+#define HALF_DEG2RAD 8.72664625e-3
+
 #include "GPUData.cginc"
+#include "\Assets\ComputeShader\Shader\CSCommon.hlsl"
 
 // Each #kernel tells which function to compile; you can have many kernels
 #pragma kernel Force
@@ -9,15 +13,26 @@
 #pragma kernel Emit
 
 #pragma kernel MapParticleToTrail
+#pragma kernel DecayTrail
 
 
 cbuffer cb
 {
 	int _NumberOfParticles;
 	int _ActiveNumberOfParticles;
-	float4 mousePos;
-	float4x4 WorldToLocalMat;
-	float4 TrailTextureSize;
+	float4 _MousePos;
+	float4x4 _WorldToLocalMat;
+	float4 _TrailTextureSize;
+	float _DT;
+
+	//slim mold parameter
+	float _SensorAngle;
+	float _SensorDistance;
+	float _TrunAngle;//heading
+	float _MoveSpeed;
+
+	float _DecaySpeed;
+
 }
 
 StructuredBuffer<ParticleData> _ParticlesDataBufferRead;
@@ -29,7 +44,42 @@ ConsumeStructuredBuffer<uint> _ParticlesIndexBufferDead;
 
 AppendStructuredBuffer<uint> _ParticlesIndexBufferInit;
 
-RWTexture2D<float4> Trail;
+RWTexture2D<float4> _Trail;
+RWTexture2D<float4> _DiffuseTrail;
+RWTexture2D<float4> _DecayTrailTex;
+
+int2 WorldPosToUVInt(float3 wPos)
+{
+	float4 pos = float4(wPos, 1);
+	float4 local = mul(_WorldToLocalMat, pos);
+	local /= local.w;
+	local += 0.5;
+	int2 uv = local.xy * _TrailTextureSize.xy;
+
+	return uv;
+}
+
+float4 quaternion(float3 normalizedAxis, float degree) {
+	float rad = degree * HALF_DEG2RAD;
+	return float4(normalizedAxis * sin(rad), cos(rad));
+}
+float4 qmul(float4 a, float4 b) {
+	return float4(a.w * b.xyz + b.w * a.xyz + cross(a.xyz, b.xyz), a.w * b.w - dot(a.xyz, b.xyz));
+}
+float3 qrotate(float4 q, float3 v) {
+	return qmul(qmul(q, float4(v, 0)), float4(-q.xyz, q.w)).xyz;
+}
+float3 qrotateinv(float4 q, float3 v) {
+	return qmul(qmul(float4(-q.xyz, q.w), float4(v, 0)), q).xyz;
+}
+
+// Rotate a vector with a rotation quaternion.
+// http://mathworld.wolfram.com/Quaternion.html
+float3 rotateWithQuaternion(float3 v, float4 r)
+{
+	float4 r_c = r * float4(-1, -1, -1, 1);
+	return qmul(r, qmul(float4(v, 0), r_c)).xyz;
+}
 
 [numthreads(8, 1, 1)]
 void Init(uint3 DTid : SV_DispatchThreadID)
@@ -37,19 +87,24 @@ void Init(uint3 DTid : SV_DispatchThreadID)
 	uint idx = DTid.x;
 
 	_ParticlesDataBufferWrite[idx].position = float3(0, 0, 0);
+	_ParticlesDataBufferWrite[idx].direction = float3(0, 0, 0);
 	_ParticlesDataBufferWrite[idx].active = false;
 
 	_ParticlesIndexBufferInit.Append(idx);
 }
 
-[numthreads(8, 1, 1)]
+[numthreads(1, 1, 1)]
 void Emit(uint3 DTid : SV_DispatchThreadID)
 {
 	uint idx = _ParticlesIndexBufferDead.Consume();
 
 	ParticleData p = _ParticlesDataBufferEmitWrite[idx];
 	p.active = true;
-	p.position = float3(mousePos.xy, 0);
+	p.position = float3(_MousePos.xy, 0);
+
+	float2 randomDir = float2(wang_hash01(idx * _MousePos.x), wang_hash01(idx * _MousePos.y));
+	randomDir -= 0.5;
+	p.direction = float3(randomDir, 0);
 
 	_ParticlesDataBufferEmitWrite[idx] = p;
 }
@@ -57,35 +112,78 @@ void Emit(uint3 DTid : SV_DispatchThreadID)
 [numthreads(8, 1, 1)]
 void Force(uint3 DTid : SV_DispatchThreadID)
 {
-	// TODO: insert actual code here!
-
 }
 
 [numthreads(8, 1, 1)]
 void Integration(uint3 DTid : SV_DispatchThreadID)
 {
+	uint idx = DTid.x;
+	ParticleData pData = _ParticlesDataBufferRead[idx];
 
+	if (pData.active)
+	{
+		float3 dir = pData.direction;
+		float3 pos = pData.position;
+
+		float4 leftq = quaternion(float3(0, 0, 1), -_SensorAngle);
+		float4 rightq = quaternion(float3(0, 0, 1), _SensorAngle);
+
+		float3 ldir = rotateWithQuaternion(dir, leftq);
+		float3 rdir = rotateWithQuaternion(dir, rightq);
+
+		float3 lpos = pos + ldir * _SensorDistance;
+		float3 rpos = pos + rdir * _SensorDistance;
+		float3 mpos = pos + dir  * _SensorDistance;
+
+		int2 luv = WorldPosToUVInt(lpos);
+		int2 ruv = WorldPosToUVInt(rpos);
+		int2 muv = WorldPosToUVInt(mpos);
+
+		float lvalue = _DecayTrailTex[luv].x;
+		float rvalue = _DecayTrailTex[ruv].x;
+		float mvalue = _DecayTrailTex[muv].x;
+
+		float maxLR = rvalue > lvalue ? rvalue : lvalue;
+		
+		if (mvalue < maxLR)
+		{
+			bool left = lvalue > rvalue;
+			float4 q = quaternion(float3(0, 0, 1), (left ? -1:1)* _TrunAngle);
+			dir = rotateWithQuaternion(dir, q);
+		}
+
+		pos += dir * _DT * _MoveSpeed;
+
+		pData.position = pos;
+		pData.direction = dir;
+	}
+
+	_ParticlesDataBufferWrite[idx] = pData;
 }
 
 [numthreads(8, 1, 1)]
 void MapParticleToTrail(uint3 id : SV_DispatchThreadID)
 {
 	uint idx = id.x;
+	ParticleData pData = _ParticlesDataBufferRead[idx];
 
-	if (_ParticlesDataBufferRead[idx].active)
+	if (pData.active)
 	{
-		float4 pos = float4(_ParticlesDataBufferRead[idx].position, 1);
-		float4 local = mul(WorldToLocalMat, pos);
-		local /= local.w;
-		local += 0.5;
+		int2 center = WorldPosToUVInt(pData.position);
 
-		int2 center = local.xy * TrailTextureSize.xy;
 		for (int i = -10; i < 10; ++i)
 		{
 			for (int j = -10; j < 10; ++j)
 			{
-				Trail[center + int2(i,j)] = float4(1, 1, 1, 1);
+				_Trail[center + int2(i,j)] = float4(1, 1, 1, 1);
 			}
 		}
 	}
+}
+
+
+[numthreads(32, 32, 1)]
+void DecayTrail(uint3 id : SV_DispatchThreadID)
+{
+	_DecayTrailTex[id.xy] = _DiffuseTrail[id.xy] - _DecaySpeed;
 }
