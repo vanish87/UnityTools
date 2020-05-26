@@ -293,17 +293,17 @@ MonoBehaviour:
     bound:
       data: {x: 0, y: 0, z: 0, w: 0}
     sensorAngle:
-      data: 60
+      data: 30
     sensorDistance:
-      data: 5
+      data: 3
     trunAngle:
-      data: 5
+      data: 20
     moveSpeed:
-      data: 10
+      data: 5
     decaySpeed:
-      data: 0.01
-    depositSpeed:
       data: 0.1
+    depositSpeed:
+      data: 5
   blur: {fileID: 1132136428}
 --- !u!114 &1132136428
 MonoBehaviour:
@@ -319,7 +319,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   shader: {fileID: 4800000, guid: dcb0a93d253be994e86ae601d6c27666, type: 3}
   downsample: 1
-  blurSize: 3
+  blurSize: 10
   blurIterations: 2
   blurType: 0
 --- !u!1 &2129517580

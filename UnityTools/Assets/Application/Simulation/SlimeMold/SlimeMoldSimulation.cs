@@ -73,7 +73,7 @@ namespace UnityTools.Applications.Simulation
 
             this.PtoTparameter.trailTextureSize.Value = new Vector4(size.x, size.y);
 
-            var desc = new RenderTextureDescriptor(size.x, size.y, RenderTextureFormat.ARGB32);
+            var desc = new RenderTextureDescriptor(size.x, size.y, RenderTextureFormat.RFloat);
             desc.enableRandomWrite = true;
             this.PtoTparameter.trailTexture.Value = TextureManager.Create(desc);
             this.PtoTparameter.diffuseTrail.Value = TextureManager.Create(desc);
