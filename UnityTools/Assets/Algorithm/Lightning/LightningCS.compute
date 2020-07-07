@@ -1,0 +1,130 @@
+﻿// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel Init
+//#pragma kernel Lap
+#pragma kernel JacobiStep
+#pragma kernel WeightSum
+#pragma kernel SetBoundary
+
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+RWTexture2D<float> _Potential;
+RWTexture2D<float> _PotentialBoundary;
+RWTexture2D<float> _PotentialOutput;
+
+RWBuffer<float> _AdjacentWeight;
+
+cbuffer Constant
+{
+    float4 _TextureSize;
+    float4 _TargetPixel;
+};
+
+[numthreads(8,8,1)]
+void Init(uint3 id : SV_DispatchThreadID)
+{
+    float d = length(id.xy - float2(128, 128));
+    int width = 2;
+    int raduis = 100;
+    if (id.x == 128 && id.y == 128)
+    {
+        _PotentialBoundary[id.xy] = _Potential[id.xy] = 0;// id.x / 256.0f;
+    }
+    else if (raduis - width < d && d < raduis + width)
+    {
+        _PotentialBoundary[id.xy] = _Potential[id.xy] = 1;
+    }
+    else
+    {
+        _Potential[id.xy] = 0;
+        _PotentialBoundary[id.xy] = -1;
+    }
+}
+
+
+/*[numthreads(8, 8, 1)]
+void Lap(uint3 id : SV_DispatchThreadID)
+{
+    uint4 _SizeOffset = uint4(1, 0, 0, 1);
+
+    float result = -_Potential[id.xy] * 4
+        + _Potential[id.xy + _SizeOffset.xy]
+        + _Potential[id.xy - _SizeOffset.xy]
+        + _Potential[id.xy + _SizeOffset.zw]
+        + _Potential[id.xy - _SizeOffset.zw];
+
+    _PotentialLap[id.xy] = _Potential[id.xy] >= 0 ? result : 0;
+}*/
+
+float GetValue(int2 id)
+{
+    if (id.x < 0 || id.y < 0 || id.x >= _TextureSize.x || id.y >= _TextureSize.y)
+    {
+        return 0;
+    }
+
+    if (_PotentialBoundary[id.xy] >= 0) return 0;
+
+    return _Potential[id];
+}
+
+float GetBoundary(int2 id)
+{
+    if (id.x < 0 || id.y < 0 || id.x >= _TextureSize.x || id.y >= _TextureSize.y)
+    {
+        return 0;
+    }
+
+    return saturate(_PotentialBoundary[id.xy]);
+}
+
+bool IsBoundaryAdj(int2 id)
+{
+    if (id.x < 0 || id.y < 0 || id.x >= _TextureSize.x || id.y >= _TextureSize.y)
+    {
+        return false;
+    }
+
+    return _PotentialBoundary[id.xy] == 0;
+}
+
+[numthreads(8, 8, 1)]
+void JacobiStep(uint3 id : SV_DispatchThreadID)
+{
+    uint4 _SizeOffset = uint4(1, 0, 0, 1);
+
+    float bx = -(GetBoundary(id.xy + _SizeOffset.xy)
+                +GetBoundary(id.xy - _SizeOffset.xy)
+                +GetBoundary(id.xy + _SizeOffset.zw)
+                +GetBoundary(id.xy - _SizeOffset.zw));
+    float D_1 = -1 / 4.0;//D-1
+
+    //Rx(k)
+    float Rx = GetValue(id.xy + _SizeOffset.xy)
+             + GetValue(id.xy - _SizeOffset.xy)
+             + GetValue(id.xy + _SizeOffset.zw)
+             + GetValue(id.xy - _SizeOffset.zw);
+
+    _PotentialOutput[id.xy] = D_1 * (bx - Rx);
+}
+
+
+[numthreads(8, 8, 1)]
+void WeightSum(uint3 id : SV_DispatchThreadID)
+{
+    uint4 _SizeOffset = uint4(1, 0, 0, 1);
+    int idx = id.x + id.y * _TextureSize.x;
+    bool isAdj = IsBoundaryAdj(id.xy + _SizeOffset.xy)
+              || IsBoundaryAdj(id.xy - _SizeOffset.xy)
+              || IsBoundaryAdj(id.xy + _SizeOffset.zw)
+              || IsBoundaryAdj(id.xy - _SizeOffset.zw);
+    _AdjacentWeight[idx] = isAdj?_PotentialOutput[id.xy]:0;
+}
+
+[numthreads(8, 8, 1)]
+void SetBoundary(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x == _TargetPixel.x && id.y == _TargetPixel.y)
+    {
+        _PotentialBoundary[id.xy] = 0;
+    }
+}
