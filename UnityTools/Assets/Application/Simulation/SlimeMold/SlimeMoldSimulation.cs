@@ -86,8 +86,6 @@ namespace UnityTools.Applications.Simulation
 
             this.PtoTparameter.particleBuffer.Value = this.bufferParameter.particlesDataBufferRead.Value;
             this.PtoTparameter.worldToLocalMat.Value = this.particleArea.WorldToLocalMatrix;
-            this.PtoTparameter.bound.Value = new Vector4(bound.min.x, bound.max.x, bound.min.y, bound.max.y);
-
         }
 
         protected override void Update()
@@ -98,7 +96,7 @@ namespace UnityTools.Applications.Simulation
                 var posWorld = this.particleArea.LocalToWordPosition(new Vector3(pos.x, pos.y, 0));
                 this.PtoTparameter.mousePos.Value = new Vector4(posWorld.x, posWorld.y, 0, 0);
 
-                this.Emit(8);
+                this.Emit(512);
             }
 
             this.PtoTparameter.dt.Value = Time.deltaTime;

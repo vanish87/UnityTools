@@ -102,7 +102,7 @@ void Emit(uint3 DTid : SV_DispatchThreadID)
 
 	ParticleData p = _ParticlesDataBufferEmitWrite[idx];
 	p.active = true;
-	p.position = float3(_MousePos.xy, 0);
+	p.position = float3(wang_hash01(idx * _MousePos.x), wang_hash01(idx * _MousePos.y), 0) * 50;
 
 	float2 randomDir = float2(wang_hash01(idx * _MousePos.x), wang_hash01(idx * _MousePos.y));
 	randomDir -= 0.5;

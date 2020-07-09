@@ -4,12 +4,21 @@
 #pragma kernel JacobiStep
 #pragma kernel WeightSum
 #pragma kernel SetBoundary
+#pragma kernel UpdateDartLeader
+#pragma kernel InitDartLeaderChargeDensity
+#pragma kernel InitDart
 
-// Create a RenderTexture with enableRandomWrite flag and set it
-// with cs.SetTexture
+#define PI 3.141592653f
+
+
+Texture2D<float2> _PotentialBoundaryInput;//R is high potential; G is low potential
+Texture2D<float4> _DisplayTex;
+
 RWTexture2D<float> _Potential;
 RWTexture2D<float> _PotentialBoundary;
 RWTexture2D<float> _PotentialOutput;
+RWTexture2D<float> _DartLeaderTex;
+Texture2D<float> _ObstacleTex;
 
 RWBuffer<float> _AdjacentWeight;
 
@@ -17,27 +26,24 @@ cbuffer Constant
 {
     float4 _TextureSize;
     float4 _TargetPixel;
+    float _ChargeDensity;
 };
 
 [numthreads(8,8,1)]
 void Init(uint3 id : SV_DispatchThreadID)
 {
-    float d = length(id.xy - float2(128, 128));
-    int width = 2;
-    int raduis = 100;
-    if (id.x == 128 && id.y == 128)
-    {
-        _PotentialBoundary[id.xy] = _Potential[id.xy] = 0;// id.x / 256.0f;
-    }
-    else if (raduis - width < d && d < raduis + width)
-    {
-        _PotentialBoundary[id.xy] = _Potential[id.xy] = 1;
-    }
-    else
-    {
-        _Potential[id.xy] = 0;
-        _PotentialBoundary[id.xy] = -1;
-    }
+    bool isHigh = _PotentialBoundaryInput[id.xy].r > 0;
+    bool isLow  = _PotentialBoundaryInput[id.xy].g > 0;
+    float val = isHigh ? 1 : isLow ? 0 : -1;
+    _Potential[id.xy] = val;
+    _PotentialBoundary[id.xy] = val;
+}
+
+[numthreads(8, 8, 1)]
+void InitDart(uint3 id : SV_DispatchThreadID)
+{
+
+    _DartLeaderTex[id.xy] = 0;
 }
 
 
@@ -62,7 +68,8 @@ float GetValue(int2 id)
         return 0;
     }
 
-    if (_PotentialBoundary[id.xy] >= 0) return 0;
+    if (_PotentialBoundary[id.xy].r >= 0) return 0;
+    if (_ObstacleTex[id] > 0) return 0;
 
     return _Potential[id];
 }
@@ -74,8 +81,11 @@ float GetBoundary(int2 id)
         return 0;
     }
 
-    return saturate(_PotentialBoundary[id.xy]);
+    if (_ObstacleTex[id] > 0) return 0;
+
+    return saturate(_PotentialBoundary[id]);
 }
+
 
 bool IsBoundaryAdj(int2 id)
 {
@@ -83,6 +93,8 @@ bool IsBoundaryAdj(int2 id)
     {
         return false;
     }
+
+    if (_ObstacleTex[id] > 0) return false;
 
     return _PotentialBoundary[id.xy] == 0;
 }
@@ -114,9 +126,16 @@ void WeightSum(uint3 id : SV_DispatchThreadID)
     uint4 _SizeOffset = uint4(1, 0, 0, 1);
     int idx = id.x + id.y * _TextureSize.x;
     bool isAdj = IsBoundaryAdj(id.xy + _SizeOffset.xy)
-              || IsBoundaryAdj(id.xy - _SizeOffset.xy)
-              || IsBoundaryAdj(id.xy + _SizeOffset.zw)
-              || IsBoundaryAdj(id.xy - _SizeOffset.zw);
+                || IsBoundaryAdj(id.xy - _SizeOffset.xy)
+                || IsBoundaryAdj(id.xy + _SizeOffset.zw)
+                || IsBoundaryAdj(id.xy - _SizeOffset.zw)
+
+                //|| IsBoundaryAdj(id.xy + _SizeOffset.xx)
+                //|| IsBoundaryAdj(id.xy - _SizeOffset.xx)
+                //|| IsBoundaryAdj(id.xy + uint2(-1, 1))
+                //|| IsBoundaryAdj(id.xy + uint2(1, -1))
+                ;
+
     _AdjacentWeight[idx] = isAdj?_PotentialOutput[id.xy]:0;
 }
 
@@ -127,4 +146,37 @@ void SetBoundary(uint3 id : SV_DispatchThreadID)
     {
         _PotentialBoundary[id.xy] = 0;
     }
+}
+[numthreads(8, 8, 1)]
+void InitDartLeaderChargeDensity(uint3 id : SV_DispatchThreadID)
+{
+    if (_DisplayTex[id.xy].r > 0)
+    {
+        _DartLeaderTex[id.xy] = _ChargeDensity;
+    }
+    else
+    {
+        _DartLeaderTex[id.xy] = 0;
+    }
+}
+
+
+[numthreads(8, 8, 1)]
+void UpdateDartLeader(uint3 id : SV_DispatchThreadID)
+{
+    uint4 _SizeOffset = uint4(1, 0, 0, 1);
+
+    float bx = -4 * PI * _DartLeaderTex[id.xy] -(GetBoundary(id.xy + _SizeOffset.xy)
+        + GetBoundary(id.xy - _SizeOffset.xy)
+        + GetBoundary(id.xy + _SizeOffset.zw)
+        + GetBoundary(id.xy - _SizeOffset.zw));
+    float D_1 = -1 / 4.0;//D-1
+
+    //Rx(k)
+    float Rx = GetValue(id.xy + _SizeOffset.xy)
+        + GetValue(id.xy - _SizeOffset.xy)
+        + GetValue(id.xy + _SizeOffset.zw)
+        + GetValue(id.xy - _SizeOffset.zw);
+
+    _PotentialOutput[id.xy] = D_1 * (bx - Rx);
 }

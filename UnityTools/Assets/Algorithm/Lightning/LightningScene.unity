@@ -247,7 +247,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0ad1393b8c617b948a57d4e8c4320320, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  stage: 0
   ita: 2
+  iteration: 200
   textureSize:
     x: 256
     y: 256
@@ -257,8 +259,25 @@ MonoBehaviour:
       size: 0
       current: 0
   cs: {fileID: 7200000, guid: ecf6903ae0325c143bee733f3ca2377f, type: 3}
-  pointList: []
-  displayTex: {fileID: 0}
+  parameter:
+    potentialTex:
+      data: {fileID: 0}
+    potentialOutputTex:
+      data: {fileID: 0}
+    textureSize:
+      data: {x: 0, y: 0, z: 0, w: 0}
+    potentialBoundaryTex:
+      data: {fileID: 0}
+    potentialBoundaryInputTex:
+      data: {fileID: 0}
+    targetPixel:
+      data: {x: 0, y: 0, z: 0, w: 0}
+    displayTex:
+      data: {fileID: 0}
+    dartLeaderTex:
+      data: {fileID: 0}
+    chargeDensity:
+      data: 1
 --- !u!1 &2103718661
 GameObject:
   m_ObjectHideFlags: 0
