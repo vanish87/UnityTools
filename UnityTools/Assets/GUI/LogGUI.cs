@@ -56,5 +56,15 @@ namespace UnityTools.GUITool
         {
             this.logSocket.StartRecieve(13210);
         }
+
+        public byte[] OnSerialize()
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public void OnDeseialize(byte[] data)
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }

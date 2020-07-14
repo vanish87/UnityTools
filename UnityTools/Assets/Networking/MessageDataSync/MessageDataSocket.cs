@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
 using UnityEngine;
+using UnityTools.Common;
 
 namespace UnityTools.Networking
 {
@@ -18,14 +19,14 @@ namespace UnityTools.Networking
 
         public void OnDeseialize(byte[] data)
         {
-            var d = Helper.ByteArrayToObject<Datatex>(data);
+            var d = Serilization.ByteArrayToObject<Datatex>(data);
             this.test = d.test;
             this.testString = d.testString;
         }
 
         public byte[] OnSerialize()
         {
-            return Helper.ObjectToByteArray(this);
+            return Serilization.ObjectToByteArray(this);
         }
     }
     public class MessageDataSocket : UDPSocket<List<MessageDataSocket.InternalData>>

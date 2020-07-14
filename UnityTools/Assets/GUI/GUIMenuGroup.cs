@@ -12,6 +12,9 @@ namespace UnityTools.GUITool
         {
             void OnDrawGUI();
             string Title { get; }
+
+            byte[] OnSerialize();
+            void OnDeseialize(byte[] data);
         }
 
         [Serializable]
@@ -111,6 +114,16 @@ namespace UnityTools.GUITool
             {
                 GUILayout.Label(w.title + " window uses " + w.key.ToString() + " Key");
             }
+        }
+
+        public byte[] OnSerialize()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void OnDeseialize(byte[] data)
+        {
+            throw new NotImplementedException();
         }
     }
 }

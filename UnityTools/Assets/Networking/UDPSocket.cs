@@ -7,6 +7,7 @@ using System.Net.Sockets;
 using System.Text;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityTools.Common;
 
 namespace UnityTools.Networking
 {
@@ -174,13 +175,13 @@ namespace UnityTools.Networking
 
         public virtual byte[] OnSerialize(T data)
         {
-            return Helper.ObjectToByteArray(data);
+            return Serilization.ObjectToByteArray(data);
         }
         
         public virtual T OnDeserialize(byte[] data, int length)
         {
             //Note data may has different size than length
-            return Helper.ByteArrayToObject<T>(data);
+            return Serilization.ByteArrayToObject<T>(data);
         }
 
         public virtual void Send(SocketData socket, T data)

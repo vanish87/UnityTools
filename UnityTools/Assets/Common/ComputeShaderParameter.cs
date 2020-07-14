@@ -13,6 +13,7 @@ using System.Xml.Schema;
 using System.Xml.Serialization;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityTools.Debuging;
 
 #if USE_PREFS
 using PrefsGUI;
@@ -141,6 +142,17 @@ namespace UnityTools.ComputeShaderTool
                 var buffer = (b as ComputeShaderParameterBuffer);
                 //TODO Release called multiple time, is it safe?
                 buffer.Release();
+            });
+        }
+
+        public virtual void ReleaseTexture()
+        {
+            var bufferList = this.VarList.Where(b => b is ComputeShaderParameterTexture && (b as ComputeShaderParameterTexture).Value != null);
+
+            bufferList?.ToList().ForEach(b =>
+            {
+                var buffer = (b as ComputeShaderParameterTexture);
+                buffer.Value?.DestoryObj();
             });
         }
 
@@ -322,6 +334,11 @@ namespace UnityTools.ComputeShaderTool
             this.Bind(shader);
         }
 
+        public static implicit operator T(ComputeShaderParameter<T> value)
+        {
+            return value.Value;
+        }
+
         public virtual T Value
         {
             get { return this.data; }
@@ -346,11 +363,11 @@ namespace UnityTools.ComputeShaderTool
             {
                 if (this.data == null)
                 {
-                    Debug.LogWarningFormat(this.VariableName + " Data is null");
+                    LogTool.Log(this.VariableName + " Data is null", LogLevel.Warning);
                 }
                 else
                 {
-                    Debug.LogWarningFormat("Please bind {0} with compute shader first/or supply kernal name", this.VariableName);
+                    LogTool.LogFormat("Please bind {0} with compute shader first/or supply kernal name", LogLevel.Warning, LogChannel.Debug, this.VariableName);
                 }
             }
         }

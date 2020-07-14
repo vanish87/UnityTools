@@ -113,6 +113,8 @@ namespace UnityTools.Rendering
             tracking.Add(ret);
             #endif
 
+            ret.Create();
+
             return ret;
         }
 
@@ -123,6 +125,8 @@ namespace UnityTools.Rendering
             #if DEBUG
             tracking.Add(ret);
             #endif
+            
+            ret.Apply();
 
             return ret;
         }

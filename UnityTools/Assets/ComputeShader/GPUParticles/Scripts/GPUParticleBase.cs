@@ -75,11 +75,13 @@ namespace UnityTools.ComputeShaderTool
             public ComputeShaderParameterBuffer particlesDataBufferRead = new ComputeShaderParameterBuffer("_ParticlesDataBufferRead");
             public ComputeShaderParameterBuffer particlesDataBufferWrite = new ComputeShaderParameterBuffer("_ParticlesDataBufferWrite");
 
-#if USE_APPEND_BUFFER
+            #if USE_APPEND_BUFFER
             public ComputeShaderParameterBuffer particlesIndexBufferActive = new ComputeShaderParameterBuffer("_ParticlesIndexBufferActive");
             public ComputeShaderParameterBuffer particlesIndexBufferDead = new ComputeShaderParameterBuffer("_ParticlesIndexBufferDead");
             public ComputeShaderParameterBuffer particlesIndexBufferInit = new ComputeShaderParameterBuffer("_ParticlesIndexBufferInit");
-#endif
+
+            public ComputeShaderParameterBuffer particlesDataBufferEmitWrite = new ComputeShaderParameterBuffer("_ParticlesDataBufferEmitWrite");
+            #endif
 
             public int CurrentBufferLength { get { return this.currentBufferLength; } }
             protected int currentBufferLength = 0;
@@ -102,12 +104,14 @@ namespace UnityTools.ComputeShaderTool
 
                 if (DebugOutput) Debug.Log(this.ToString() + " DataSize " + dataSize);
 
-#if USE_APPEND_BUFFER
+                #if USE_APPEND_BUFFER
                 dataSize = Marshal.SizeOf<uint>();
                 this.particlesIndexBufferActive.Value = new ComputeBuffer(bufferLength, dataSize, ComputeBufferType.Append);
                 this.particlesIndexBufferDead.Value = this.particlesIndexBufferActive.Value;
                 this.particlesIndexBufferInit.Value = this.particlesIndexBufferActive.Value;
-#endif
+
+                this.particlesDataBufferEmitWrite.Value = this.particlesDataBufferRead.Value;
+                #endif
 
             }
         }
@@ -116,6 +120,7 @@ namespace UnityTools.ComputeShaderTool
         [SerializeField] protected GPUParticleCBufferParameterContainer parameter = new GPUParticleCBufferParameterContainer();
         [SerializeField] protected ComputeShader cs;
         [SerializeField] protected Material m;
+        [SerializeField] protected Texture2D particleTexture;
 
         protected GPUParticleBufferParameterContainer bufferParameter = new GPUParticleBufferParameterContainer();
 
@@ -125,13 +130,13 @@ namespace UnityTools.ComputeShaderTool
         }
         protected virtual void OnResetParticlesData()
         {
-#if USE_APPEND_BUFFER
+            #if USE_APPEND_BUFFER
             this.bufferParameter.particlesIndexBufferActive.Value.SetCounterValue(0);
             //they refer to same buffer instance, so only set count once
             //this.bufferParameter.particlesIndexBufferDead.Value.SetCounterValue(0);
             //this.bufferParameter.particlesIndexBufferInit.Value.SetCounterValue(0);
             this.dispather.Dispatch("Init", this.parameter.numberOfParticles.Value);
-#endif
+            #endif
         }
         protected virtual void UpdateGPUDataBuffer()
         {
@@ -141,10 +146,9 @@ namespace UnityTools.ComputeShaderTool
         {
             this.parameter.activeNumberOfParticles.Value += num;
 
-#if USE_APPEND_BUFFER
+            #if USE_APPEND_BUFFER
             this.dispather.Dispatch("Emit", num);
-            ComputeShaderParameterBuffer.SwapBuffer(this.bufferParameter.particlesDataBufferRead, this.bufferParameter.particlesDataBufferWrite);
-#endif
+            #endif
 
         }
         protected void ResizeBuffer(int desiredNum)
@@ -161,12 +165,9 @@ namespace UnityTools.ComputeShaderTool
 
         #region MonoBehaviour
         // Start is called before the first frame update
-        protected virtual void Start()
+        protected virtual void OnEnable()
         {
             Assert.IsNotNull(this.cs);
-
-            this.parameter.Bind(this.cs);
-            this.bufferParameter.Bind(this.cs);
 
             this.dispather = new ComputeShaderDispatcher(this.cs);
             this.dispather.AddParameter("Force", this.parameter);
@@ -175,26 +176,23 @@ namespace UnityTools.ComputeShaderTool
             this.dispather.AddParameter("Integration", this.parameter);
             this.dispather.AddParameter("Integration", this.bufferParameter);
 
-#if USE_APPEND_BUFFER
+            #if USE_APPEND_BUFFER
             this.dispather.AddParameter("Init", this.bufferParameter);
             this.dispather.AddParameter("Emit", this.bufferParameter);
-#endif
+            #endif
 
             this.ResizeBuffer(this.parameter.numberOfParticles.Value);
 
             //this.Emit(512);
         }
 
-        protected virtual void OnEnable()
-        {
-        }
         protected virtual void OnDisable()
         {
+            this.bufferParameter.ReleaseBuffer();
         }
 
         protected virtual void OnDestroy()
         {
-            this.bufferParameter.ReleaseBuffer();
         }
 
         // Update is called once per frame
@@ -209,12 +207,20 @@ namespace UnityTools.ComputeShaderTool
         {
             var inverseViewMatrix = Camera.main.worldToCameraMatrix.inverse;
 
-            m.SetPass(0);
-            m.SetMatrix("_InvViewMatrix", inverseViewMatrix);
-            m.SetFloat("_ParticleSize", 1);
-            m.SetBuffer("_ParticleBuffer", this.bufferParameter.particlesDataBufferRead.Value);
+            this.m.SetPass(0);
+            this.m.SetMatrix("_InvViewMatrix", inverseViewMatrix);
+            this.m.SetFloat("_ParticleSize", 1);
+            this.m.SetBuffer("_ParticleBuffer", this.bufferParameter.particlesDataBufferRead.Value);
+            this.m.SetTexture("_MainTex", this.particleTexture);
+
+            this.OnSetRenderMaterial(this.m);
 
             Graphics.DrawProceduralNow(MeshTopology.Points, this.parameter.numberOfParticles.Value);
+        }
+
+        protected virtual void OnSetRenderMaterial(Material mat)
+        {
+
         }
         #endregion
     }

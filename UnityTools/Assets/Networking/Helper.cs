@@ -5,45 +5,48 @@ using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
 
-public class Helper
+namespace UnityTools.Common
 {
-    // Convert an object to a byte array
-    public static byte[] ObjectToByteArray<T>(T obj)
+    public class Serilization
     {
-        if (obj == null)
+        // Convert an object to a byte array
+        public static byte[] ObjectToByteArray<T>(T obj)
         {
-            Debug.LogWarning("obj is null");
-            return default;
+            if (obj == null)
+            {
+                Debug.LogWarning("obj is null");
+                return default;
+            }
+            BinaryFormatter bf = new BinaryFormatter();
+            using (var ms = new MemoryStream())
+            {
+                bf.Serialize(ms, obj);
+                return ms.ToArray();
+            }
         }
-        BinaryFormatter bf = new BinaryFormatter();
-        using (var ms = new MemoryStream())
+        // Convert a byte array to an Object
+        public static T ByteArrayToObject<T>(byte[] arrBytes)
         {
-            bf.Serialize(ms, obj);
-            return ms.ToArray();
+            if (arrBytes.Length == 0)
+            {
+                Debug.LogWarning("Byte array length is " + arrBytes.Length);
+                return default;
+            }
+            using (var memStream = new MemoryStream())
+            {
+                var binForm = new BinaryFormatter();
+                memStream.Write(arrBytes, 0, arrBytes.Length);
+                memStream.Seek(0, SeekOrigin.Begin);
+                var obj = (T)binForm.Deserialize(memStream);
+                return obj;
+            }
         }
-    }
-    // Convert a byte array to an Object
-    public static T ByteArrayToObject<T>(byte[] arrBytes)
-    {
-        if (arrBytes.Length == 0)
-        {
-            Debug.LogWarning("Byte array length is " + arrBytes.Length);
-            return default;
-        }
-        using (var memStream = new MemoryStream())
-        {
-            var binForm = new BinaryFormatter();
-            memStream.Write(arrBytes, 0, arrBytes.Length);
-            memStream.Seek(0, SeekOrigin.Begin);
-            var obj = (T)binForm.Deserialize(memStream);
-            return obj;
-        }
-    }
 
-    public static double ConvertFrom2019()
-    {
-        DateTime origin = new DateTime(2019, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);        
-        TimeSpan diff = DateTime.UtcNow - origin;
-        return diff.TotalMilliseconds;
+        public static double ConvertFrom2019()
+        {
+            DateTime origin = new DateTime(2019, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
+            TimeSpan diff = DateTime.UtcNow - origin;
+            return diff.TotalMilliseconds;
+        }
     }
 }

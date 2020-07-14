@@ -17,14 +17,14 @@
 extern PROTOBUF_INTERNAL_EXPORT_ImageFile_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_Parameter_ImageFile_2eproto;
 namespace UnityTools {
 namespace ImageFile {
-class ParameterDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<Parameter> _instance;
-} _Parameter_default_instance_;
 class FileDataDefaultTypeInternal {
  public:
   ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<FileData> _instance;
 } _FileData_default_instance_;
+class ParameterDefaultTypeInternal {
+ public:
+  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<Parameter> _instance;
+} _Parameter_default_instance_;
 }  // namespace ImageFile
 }  // namespace UnityTools
 static void InitDefaultsscc_info_FileData_ImageFile_2eproto() {
@@ -62,6 +62,13 @@ static constexpr ::PROTOBUF_NAMESPACE_ID::ServiceDescriptor const** file_level_s
 
 const ::PROTOBUF_NAMESPACE_ID::uint32 TableStruct_ImageFile_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
   ~0u,  // no _has_bits_
+  PROTOBUF_FIELD_OFFSET(::UnityTools::ImageFile::FileData, _internal_metadata_),
+  ~0u,  // no _extensions_
+  ~0u,  // no _oneof_case_
+  ~0u,  // no _weak_field_map_
+  PROTOBUF_FIELD_OFFSET(::UnityTools::ImageFile::FileData, parameter_),
+  PROTOBUF_FIELD_OFFSET(::UnityTools::ImageFile::FileData, data_),
+  ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::UnityTools::ImageFile::Parameter, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
@@ -69,30 +76,23 @@ const ::PROTOBUF_NAMESPACE_ID::uint32 TableStruct_ImageFile_2eproto::offsets[] P
   PROTOBUF_FIELD_OFFSET(::UnityTools::ImageFile::Parameter, width_),
   PROTOBUF_FIELD_OFFSET(::UnityTools::ImageFile::Parameter, height_),
   PROTOBUF_FIELD_OFFSET(::UnityTools::ImageFile::Parameter, id_),
-  ~0u,  // no _has_bits_
-  PROTOBUF_FIELD_OFFSET(::UnityTools::ImageFile::FileData, _internal_metadata_),
-  ~0u,  // no _extensions_
-  ~0u,  // no _oneof_case_
-  ~0u,  // no _weak_field_map_
-  PROTOBUF_FIELD_OFFSET(::UnityTools::ImageFile::FileData, parameter_),
-  PROTOBUF_FIELD_OFFSET(::UnityTools::ImageFile::FileData, data_),
 };
 static const ::PROTOBUF_NAMESPACE_ID::internal::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
-  { 0, -1, sizeof(::UnityTools::ImageFile::Parameter)},
-  { 8, -1, sizeof(::UnityTools::ImageFile::FileData)},
+  { 0, -1, sizeof(::UnityTools::ImageFile::FileData)},
+  { 7, -1, sizeof(::UnityTools::ImageFile::Parameter)},
 };
 
 static ::PROTOBUF_NAMESPACE_ID::Message const * const file_default_instances[] = {
-  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::UnityTools::ImageFile::_Parameter_default_instance_),
   reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::UnityTools::ImageFile::_FileData_default_instance_),
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::UnityTools::ImageFile::_Parameter_default_instance_),
 };
 
 const char descriptor_table_protodef_ImageFile_2eproto[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) =
   "\n\017ImageFile.proto\022\024UnityTools.ImageFile\""
-  "6\n\tParameter\022\r\n\005width\030\001 \001(\005\022\016\n\006height\030\002 "
-  "\001(\005\022\n\n\002id\030\003 \001(\t\"L\n\010FileData\0222\n\tparameter"
-  "\030\001 \001(\0132\037.UnityTools.ImageFile.Parameter\022"
-  "\014\n\004data\030\002 \001(\014b\006proto3"
+  "L\n\010FileData\0222\n\tparameter\030\001 \001(\0132\037.UnityTo"
+  "ols.ImageFile.Parameter\022\014\n\004data\030\002 \001(\014\"6\n"
+  "\tParameter\022\r\n\005width\030\001 \001(\005\022\016\n\006height\030\002 \001("
+  "\005\022\n\n\002id\030\003 \001(\tb\006proto3"
   ;
 static const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable*const descriptor_table_ImageFile_2eproto_deps[1] = {
 };
@@ -113,6 +113,243 @@ const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_ImageF
 static bool dynamic_init_dummy_ImageFile_2eproto = (  ::PROTOBUF_NAMESPACE_ID::internal::AddDescriptors(&descriptor_table_ImageFile_2eproto), true);
 namespace UnityTools {
 namespace ImageFile {
+
+// ===================================================================
+
+void FileData::InitAsDefaultInstance() {
+  ::UnityTools::ImageFile::_FileData_default_instance_._instance.get_mutable()->parameter_ = const_cast< ::UnityTools::ImageFile::Parameter*>(
+      ::UnityTools::ImageFile::Parameter::internal_default_instance());
+}
+class FileData::_Internal {
+ public:
+  static const ::UnityTools::ImageFile::Parameter& parameter(const FileData* msg);
+};
+
+const ::UnityTools::ImageFile::Parameter&
+FileData::_Internal::parameter(const FileData* msg) {
+  return *msg->parameter_;
+}
+FileData::FileData()
+  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
+  SharedCtor();
+  // @@protoc_insertion_point(constructor:UnityTools.ImageFile.FileData)
+}
+FileData::FileData(const FileData& from)
+  : ::PROTOBUF_NAMESPACE_ID::Message(),
+      _internal_metadata_(nullptr) {
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  data_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  if (!from._internal_data().empty()) {
+    data_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.data_);
+  }
+  if (from._internal_has_parameter()) {
+    parameter_ = new ::UnityTools::ImageFile::Parameter(*from.parameter_);
+  } else {
+    parameter_ = nullptr;
+  }
+  // @@protoc_insertion_point(copy_constructor:UnityTools.ImageFile.FileData)
+}
+
+void FileData::SharedCtor() {
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_FileData_ImageFile_2eproto.base);
+  data_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  parameter_ = nullptr;
+}
+
+FileData::~FileData() {
+  // @@protoc_insertion_point(destructor:UnityTools.ImageFile.FileData)
+  SharedDtor();
+}
+
+void FileData::SharedDtor() {
+  data_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  if (this != internal_default_instance()) delete parameter_;
+}
+
+void FileData::SetCachedSize(int size) const {
+  _cached_size_.Set(size);
+}
+const FileData& FileData::default_instance() {
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_FileData_ImageFile_2eproto.base);
+  return *internal_default_instance();
+}
+
+
+void FileData::Clear() {
+// @@protoc_insertion_point(message_clear_start:UnityTools.ImageFile.FileData)
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  data_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  if (GetArenaNoVirtual() == nullptr && parameter_ != nullptr) {
+    delete parameter_;
+  }
+  parameter_ = nullptr;
+  _internal_metadata_.Clear();
+}
+
+const char* FileData::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
+    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
+    CHK_(ptr);
+    switch (tag >> 3) {
+      // .UnityTools.ImageFile.Parameter parameter = 1;
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 10)) {
+          ptr = ctx->ParseMessage(_internal_mutable_parameter(), ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
+      // bytes data = 2;
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 18)) {
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(_internal_mutable_data(), ptr, ctx);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
+      default: {
+      handle_unusual:
+        if ((tag & 7) == 4 || tag == 0) {
+          ctx->SetLastTag(tag);
+          goto success;
+        }
+        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        CHK_(ptr != nullptr);
+        continue;
+      }
+    }  // switch
+  }  // while
+success:
+  return ptr;
+failure:
+  ptr = nullptr;
+  goto success;
+#undef CHK_
+}
+
+::PROTOBUF_NAMESPACE_ID::uint8* FileData::InternalSerializeWithCachedSizesToArray(
+    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:UnityTools.ImageFile.FileData)
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // .UnityTools.ImageFile.Parameter parameter = 1;
+  if (this->has_parameter()) {
+    stream->EnsureSpace(&target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+      InternalWriteMessageToArray(
+        1, _Internal::parameter(this), target, stream);
+  }
+
+  // bytes data = 2;
+  if (this->data().size() > 0) {
+    target = stream->WriteBytesMaybeAliased(
+        2, this->_internal_data(), target);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields(), target, stream);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:UnityTools.ImageFile.FileData)
+  return target;
+}
+
+size_t FileData::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:UnityTools.ImageFile.FileData)
+  size_t total_size = 0;
+
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  // bytes data = 2;
+  if (this->data().size() > 0) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::BytesSize(
+        this->_internal_data());
+  }
+
+  // .UnityTools.ImageFile.Parameter parameter = 1;
+  if (this->has_parameter()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
+        *parameter_);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
+        _internal_metadata_, total_size, &_cached_size_);
+  }
+  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
+  SetCachedSize(cached_size);
+  return total_size;
+}
+
+void FileData::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
+// @@protoc_insertion_point(generalized_merge_from_start:UnityTools.ImageFile.FileData)
+  GOOGLE_DCHECK_NE(&from, this);
+  const FileData* source =
+      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<FileData>(
+          &from);
+  if (source == nullptr) {
+  // @@protoc_insertion_point(generalized_merge_from_cast_fail:UnityTools.ImageFile.FileData)
+    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
+  } else {
+  // @@protoc_insertion_point(generalized_merge_from_cast_success:UnityTools.ImageFile.FileData)
+    MergeFrom(*source);
+  }
+}
+
+void FileData::MergeFrom(const FileData& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:UnityTools.ImageFile.FileData)
+  GOOGLE_DCHECK_NE(&from, this);
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (from.data().size() > 0) {
+
+    data_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.data_);
+  }
+  if (from.has_parameter()) {
+    _internal_mutable_parameter()->::UnityTools::ImageFile::Parameter::MergeFrom(from._internal_parameter());
+  }
+}
+
+void FileData::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
+// @@protoc_insertion_point(generalized_copy_from_start:UnityTools.ImageFile.FileData)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+void FileData::CopyFrom(const FileData& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:UnityTools.ImageFile.FileData)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool FileData::IsInitialized() const {
+  return true;
+}
+
+void FileData::InternalSwap(FileData* other) {
+  using std::swap;
+  _internal_metadata_.Swap(&other->_internal_metadata_);
+  data_.Swap(&other->data_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
+    GetArenaNoVirtual());
+  swap(parameter_, other->parameter_);
+}
+
+::PROTOBUF_NAMESPACE_ID::Metadata FileData::GetMetadata() const {
+  return GetMetadataStatic();
+}
+
 
 // ===================================================================
 
@@ -368,252 +605,15 @@ void Parameter::InternalSwap(Parameter* other) {
 }
 
 
-// ===================================================================
-
-void FileData::InitAsDefaultInstance() {
-  ::UnityTools::ImageFile::_FileData_default_instance_._instance.get_mutable()->parameter_ = const_cast< ::UnityTools::ImageFile::Parameter*>(
-      ::UnityTools::ImageFile::Parameter::internal_default_instance());
-}
-class FileData::_Internal {
- public:
-  static const ::UnityTools::ImageFile::Parameter& parameter(const FileData* msg);
-};
-
-const ::UnityTools::ImageFile::Parameter&
-FileData::_Internal::parameter(const FileData* msg) {
-  return *msg->parameter_;
-}
-FileData::FileData()
-  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
-  SharedCtor();
-  // @@protoc_insertion_point(constructor:UnityTools.ImageFile.FileData)
-}
-FileData::FileData(const FileData& from)
-  : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _internal_metadata_(nullptr) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  data_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  if (!from._internal_data().empty()) {
-    data_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.data_);
-  }
-  if (from._internal_has_parameter()) {
-    parameter_ = new ::UnityTools::ImageFile::Parameter(*from.parameter_);
-  } else {
-    parameter_ = nullptr;
-  }
-  // @@protoc_insertion_point(copy_constructor:UnityTools.ImageFile.FileData)
-}
-
-void FileData::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_FileData_ImageFile_2eproto.base);
-  data_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  parameter_ = nullptr;
-}
-
-FileData::~FileData() {
-  // @@protoc_insertion_point(destructor:UnityTools.ImageFile.FileData)
-  SharedDtor();
-}
-
-void FileData::SharedDtor() {
-  data_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  if (this != internal_default_instance()) delete parameter_;
-}
-
-void FileData::SetCachedSize(int size) const {
-  _cached_size_.Set(size);
-}
-const FileData& FileData::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_FileData_ImageFile_2eproto.base);
-  return *internal_default_instance();
-}
-
-
-void FileData::Clear() {
-// @@protoc_insertion_point(message_clear_start:UnityTools.ImageFile.FileData)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
-  // Prevent compiler warnings about cached_has_bits being unused
-  (void) cached_has_bits;
-
-  data_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  if (GetArenaNoVirtual() == nullptr && parameter_ != nullptr) {
-    delete parameter_;
-  }
-  parameter_ = nullptr;
-  _internal_metadata_.Clear();
-}
-
-const char* FileData::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
-#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
-  while (!ctx->Done(&ptr)) {
-    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
-    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
-    switch (tag >> 3) {
-      // .UnityTools.ImageFile.Parameter parameter = 1;
-      case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 10)) {
-          ptr = ctx->ParseMessage(_internal_mutable_parameter(), ptr);
-          CHK_(ptr);
-        } else goto handle_unusual;
-        continue;
-      // bytes data = 2;
-      case 2:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 18)) {
-          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(_internal_mutable_data(), ptr, ctx);
-          CHK_(ptr);
-        } else goto handle_unusual;
-        continue;
-      default: {
-      handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
-          ctx->SetLastTag(tag);
-          goto success;
-        }
-        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
-        CHK_(ptr != nullptr);
-        continue;
-      }
-    }  // switch
-  }  // while
-success:
-  return ptr;
-failure:
-  ptr = nullptr;
-  goto success;
-#undef CHK_
-}
-
-::PROTOBUF_NAMESPACE_ID::uint8* FileData::InternalSerializeWithCachedSizesToArray(
-    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
-  // @@protoc_insertion_point(serialize_to_array_start:UnityTools.ImageFile.FileData)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  // .UnityTools.ImageFile.Parameter parameter = 1;
-  if (this->has_parameter()) {
-    stream->EnsureSpace(&target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessageToArray(
-        1, _Internal::parameter(this), target, stream);
-  }
-
-  // bytes data = 2;
-  if (this->data().size() > 0) {
-    target = stream->WriteBytesMaybeAliased(
-        2, this->_internal_data(), target);
-  }
-
-  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target, stream);
-  }
-  // @@protoc_insertion_point(serialize_to_array_end:UnityTools.ImageFile.FileData)
-  return target;
-}
-
-size_t FileData::ByteSizeLong() const {
-// @@protoc_insertion_point(message_byte_size_start:UnityTools.ImageFile.FileData)
-  size_t total_size = 0;
-
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
-  // Prevent compiler warnings about cached_has_bits being unused
-  (void) cached_has_bits;
-
-  // bytes data = 2;
-  if (this->data().size() > 0) {
-    total_size += 1 +
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::BytesSize(
-        this->_internal_data());
-  }
-
-  // .UnityTools.ImageFile.Parameter parameter = 1;
-  if (this->has_parameter()) {
-    total_size += 1 +
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-        *parameter_);
-  }
-
-  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
-        _internal_metadata_, total_size, &_cached_size_);
-  }
-  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
-  SetCachedSize(cached_size);
-  return total_size;
-}
-
-void FileData::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
-// @@protoc_insertion_point(generalized_merge_from_start:UnityTools.ImageFile.FileData)
-  GOOGLE_DCHECK_NE(&from, this);
-  const FileData* source =
-      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<FileData>(
-          &from);
-  if (source == nullptr) {
-  // @@protoc_insertion_point(generalized_merge_from_cast_fail:UnityTools.ImageFile.FileData)
-    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
-  } else {
-  // @@protoc_insertion_point(generalized_merge_from_cast_success:UnityTools.ImageFile.FileData)
-    MergeFrom(*source);
-  }
-}
-
-void FileData::MergeFrom(const FileData& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:UnityTools.ImageFile.FileData)
-  GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  if (from.data().size() > 0) {
-
-    data_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.data_);
-  }
-  if (from.has_parameter()) {
-    _internal_mutable_parameter()->::UnityTools::ImageFile::Parameter::MergeFrom(from._internal_parameter());
-  }
-}
-
-void FileData::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
-// @@protoc_insertion_point(generalized_copy_from_start:UnityTools.ImageFile.FileData)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
-}
-
-void FileData::CopyFrom(const FileData& from) {
-// @@protoc_insertion_point(class_specific_copy_from_start:UnityTools.ImageFile.FileData)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
-}
-
-bool FileData::IsInitialized() const {
-  return true;
-}
-
-void FileData::InternalSwap(FileData* other) {
-  using std::swap;
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  data_.Swap(&other->data_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
-  swap(parameter_, other->parameter_);
-}
-
-::PROTOBUF_NAMESPACE_ID::Metadata FileData::GetMetadata() const {
-  return GetMetadataStatic();
-}
-
-
 // @@protoc_insertion_point(namespace_scope)
 }  // namespace ImageFile
 }  // namespace UnityTools
 PROTOBUF_NAMESPACE_OPEN
-template<> PROTOBUF_NOINLINE ::UnityTools::ImageFile::Parameter* Arena::CreateMaybeMessage< ::UnityTools::ImageFile::Parameter >(Arena* arena) {
-  return Arena::CreateInternal< ::UnityTools::ImageFile::Parameter >(arena);
-}
 template<> PROTOBUF_NOINLINE ::UnityTools::ImageFile::FileData* Arena::CreateMaybeMessage< ::UnityTools::ImageFile::FileData >(Arena* arena) {
   return Arena::CreateInternal< ::UnityTools::ImageFile::FileData >(arena);
+}
+template<> PROTOBUF_NOINLINE ::UnityTools::ImageFile::Parameter* Arena::CreateMaybeMessage< ::UnityTools::ImageFile::Parameter >(Arena* arena) {
+  return Arena::CreateInternal< ::UnityTools::ImageFile::Parameter >(arena);
 }
 PROTOBUF_NAMESPACE_CLOSE
 
