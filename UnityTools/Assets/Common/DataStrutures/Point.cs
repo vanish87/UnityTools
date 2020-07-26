@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Unity.Mathematics;
 using UnityEngine;
+using UnityTools.Debuging.EditorTool;
 
 namespace UnityTools.Common
 {
@@ -9,15 +10,23 @@ namespace UnityTools.Common
     {
         float3 Position { get; set; }
     }
+
     [System.Serializable]
     public class Point : IPoint
     {
         static public Point Zero = new Point { Position = float3.zero };
 
-        [SerializeField] protected float3 pooo { get; set; }
+        [SerializeField] protected float3 position;
         public Point() { this.Position = float3.zero; }
 
-        public virtual float3 Position { get ; set ; }
+        public virtual float3 Position { get => this.position; set => this.position = value; }
+        public void OnGizmos(float size = 1)
+        {
+            using( new GizmosScope(Color.cyan, Matrix4x4.identity))
+            {
+                Gizmos.DrawSphere(this.Position, size);
+            }
+        }
     }
 
     [System.Serializable]
@@ -28,10 +37,10 @@ namespace UnityTools.Common
             this.data = new T[size];
             for (var p = 0; p < this.data.Length; p++)
             {
-                this.data[p] = new T();
+                this.data[p] = this.OnCreate();
             }
         }
-        public T[] data;
+        protected T[] data;
         public T Left { get => this.data[0]; set => this.data[0] = value; }
         public T Right { get => this.data[this.data.Length - 1]; set => this.data[this.data.Length - 1] = value; }
 
@@ -43,5 +52,7 @@ namespace UnityTools.Common
                 Gizmos.DrawLine(this.data[p - 1].Position, this.data[p].Position);
             }
         }
+
+        protected virtual T OnCreate() { return new T(); }
     }
 }

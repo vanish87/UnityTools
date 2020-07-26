@@ -2,15 +2,18 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Point : MonoBehaviour
+namespace UnityTools.Lagacy
 {
-    public Color color = Color.red;
-    
-    void OnDrawGizmos()
+    public class Point : MonoBehaviour
     {
-        var old = Gizmos.color;
-        Gizmos.color = this.color;
-        Gizmos.DrawSphere(this.transform.position, 1);
-        Gizmos.color = old;
+        public Color color = Color.red;
+
+        void OnDrawGizmos()
+        {
+            var old = Gizmos.color;
+            Gizmos.color = this.color;
+            Gizmos.DrawSphere(this.transform.position, 1);
+            Gizmos.color = old;
+        }
     }
 }
