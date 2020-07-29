@@ -18,6 +18,7 @@ namespace UnityTools.Common
         protected bool isDirectioanl = false;
 
         public IEnumerable<Node> Nodes { get => this.nodes; }
+        public IEnumerable<Adjacent> Edges { get => this.GetAllEdges(); }
         public Matrix<Adjacent> AdjMatrix { get => this.matrix; }
 
         public Graph(): this(1) { }
@@ -65,6 +66,22 @@ namespace UnityTools.Common
         public Adjacent GetEdge(int from, int to)
         {
             return this.matrix[from, to];
+        }
+
+        public IEnumerable<Adjacent> GetAllEdges()
+        {
+            var ret = new List<Adjacent>();
+            for (var r = 0; r < this.AdjMatrix.Size.x; ++r)
+            {
+                for (var c = this.isDirectioanl?0:r; c < this.AdjMatrix.Size.y; ++c)
+                {
+                    var s = this.GetEdge(r, c);
+                    if (s == null ) continue;
+                    ret.Add(s);
+                }
+            }
+
+            return ret;
         }
 
         public void AddEdge(Node from, Node to, Adjacent value)

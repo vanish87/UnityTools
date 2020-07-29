@@ -26,6 +26,7 @@ namespace UnityTools.Common
         public int Current { get { return this.current; } }
         public int Size { get { return this.size; } }
         public int GetIndex(int index) { if (index < 0) index += this.size; return index % this.size; }
+        public void MoveCurrentToPrev() { this.current = this.GetIndex(this.current - 1); }
         public void MoveCurrentToNext() { this.current = this.GetIndex(this.current + 1); }
     }
     [System.Serializable]
@@ -58,6 +59,7 @@ namespace UnityTools.Common
             }
         }
 
+        public void MoveToPrev() { this.cricleIndexer.MoveCurrentToPrev(); }
         public void MoveToNext() { this.cricleIndexer.MoveCurrentToNext(); }
 
         public T this[int key]
@@ -67,9 +69,10 @@ namespace UnityTools.Common
         }
     }
 
-
+    [System.Serializable]
     public class CricleData<T, S> : CricleDataBase<T, S> where T : new()
     {
+        public CricleData(int size = 1, S para = default) : base(size, para) { }
         protected override T OnCreate(S para)
         {
             return new T();
