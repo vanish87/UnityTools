@@ -3,10 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityTools.Debuging;
 
 namespace UnityTools.Common
 {
-    public class ObjectStateMachine<T> : MonoBehaviour where T : class, new()
+    public class ObjectStateMachine<T> : MonoBehaviour where T : class
     {
         [SerializeField] protected StateBase<T> currentState_;
         [SerializeField] protected StateBase<T> globalState_;
@@ -48,6 +49,11 @@ namespace UnityTools.Common
 
         public void ChangeState(StateBase<T> newState)
         {
+            if (this.currentState_ == newState)
+            {
+                LogTool.Log("Current state is same with new state, Restart", LogLevel.Warning);
+            }
+
             if (this.currentState_ != null)
             {
                 this.currentState_.Leave(this.Owner);
