@@ -60,7 +60,7 @@ namespace UnityTools.Common
 
         public Adjacent GetEdge(Node from, Node to)
         {
-            return this.matrix[from.Index, to.Index];
+            return this.GetEdge(from.Index, to.Index);
         }
 
         public Adjacent GetEdge(int from, int to)
