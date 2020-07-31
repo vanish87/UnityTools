@@ -139,7 +139,7 @@ namespace UnityTools.Math
         {
 
         }
-        public void RandomNextValues()
+        public virtual void RandomNextValues()
         {
             for (var i = 0; i < this.valueMap.Next.Count; ++i)
             {

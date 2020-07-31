@@ -1,12 +1,96 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityTools.Debuging;
 
 namespace UnityTools.Common
 {
+    public class ObjectStateMachine : Disposable
+    {
+        private enum ThreadState
+        {
+            Ready,
+            Running,
+            Pause,
+            Stopped,
+        }
+        [SerializeField] protected StateBase<ObjectStateMachine> currentState = null;
+        [SerializeField] protected StateBase<ObjectStateMachine> globalState = null;
+
+        private Thread thread;
+        private ThreadState state = ThreadState.Ready;
+        private object lockObj = new object();
+
+        public ObjectStateMachine()
+        {
+            this.thread = new Thread(new ThreadStart(this.ThreadMain));
+            this.thread.Start();
+        }
+
+        public void Stop()
+        {
+            lock(this.lockObj)
+            {
+                this.state = ThreadState.Stopped;
+            }
+        }
+        public void Pause()
+        {
+            lock (this.lockObj)
+            {
+                this.state = ThreadState.Pause;
+            }
+        }
+
+        public void ChangeState(StateBase<ObjectStateMachine> newState)
+        {
+            lock (this.lockObj)
+            {
+                if (this.currentState == newState)
+                {
+                    LogTool.Log("Current state is same with new state, Restart", LogLevel.Warning);
+                }
+
+                if (this.currentState != null)
+                {
+                    this.currentState.Leave(this);
+                }
+
+                this.currentState = newState;
+
+                this.currentState.Enter(this);
+            }
+        }
+
+        private void ThreadMain()
+        {
+            var current = this.state = ThreadState.Running;
+
+            while (current != ThreadState.Stopped)
+            {
+                if (current == ThreadState.Running)
+                {
+                    if (this.globalState != null)
+                    {
+                        this.globalState.Excute(this);
+                    }
+                    if (this.currentState != null)
+                    {
+                        this.currentState.Excute(this);
+                    }
+                }
+
+                lock (this.lockObj)
+                {
+                    current = this.state;
+                }
+            }
+        }
+
+    }
     public class ObjectStateMachine<T> : MonoBehaviour where T : class
     {
         [SerializeField] protected StateBase<T> currentState_;
