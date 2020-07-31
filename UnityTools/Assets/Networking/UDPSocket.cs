@@ -234,6 +234,8 @@ namespace UnityTools.Networking
             Assert.IsTrue(byteData.Length < 64 * 1024, "Data length "+ byteData.Length+ " exceeds max 64k");
             Assert.IsNotNull(epTo.socket);
 
+            if (byteData.Length > 64 * 1024) return;
+
             if (epTo.reachable)
             {
                 try

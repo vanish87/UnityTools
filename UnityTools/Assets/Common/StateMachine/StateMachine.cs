@@ -22,7 +22,7 @@ namespace UnityTools.Common
 
         private Thread thread;
         private ThreadState state = ThreadState.Ready;
-        private object lockObj = new object();
+        protected object lockObj = new object();
 
         public ObjectStateMachine()
         {
