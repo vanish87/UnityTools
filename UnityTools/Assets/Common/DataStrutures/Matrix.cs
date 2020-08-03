@@ -13,7 +13,7 @@ namespace UnityTools.Common
 
         public Matrix(int row = 0, int col = 0)
         {
-            this.Clean();
+            this.Clear();
 
             if (row <= 0 || col <= 0)
             {
@@ -32,7 +32,7 @@ namespace UnityTools.Common
                 }
             }
         }
-        public void Clean()
+        public void Clear()
         {
             if (this.data == null) return;
 
