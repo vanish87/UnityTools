@@ -9,27 +9,21 @@ namespace UnityTools.Common
     [System.Serializable]
     public class Matrix<T>
     {
-        protected T[][] data;
+        protected Vector<T>[] data;
 
         public Matrix(int row = 0, int col = 0)
         {
-            this.Clear();
-
             if (row <= 0 || col <= 0)
             {
                 LogTool.Log("row/col is less than 0", LogLevel.Error);
                 return;
             }
 
-            this.data = new T[row][];
+            this.data = new Vector<T>[row];
 
             for (var r = 0; r < row; ++r)
             {
-                this.data[r] = new T[col];
-                for (var c = 0; c < this.data[r].Length; ++c)
-                {
-                    this.data[r][c] = default;
-                }
+                this.data[r] = new Vector<T>(col);
             }
         }
         public void Clear()
@@ -38,10 +32,7 @@ namespace UnityTools.Common
 
             for (var r = 0; r < this.data.Length; ++r)
             {
-                for (var c = 0; c < this.data[r].Length; ++c)
-                {
-                    this.data[r][c] = default;
-                }
+                this.data[r].Clear();
             }
         }
 
@@ -51,13 +42,13 @@ namespace UnityTools.Common
             set => this.data[row][col] = value;
         }
 
-        public T[] this[int row]
+        public Vector<T> this[int row]
         {
             get => this.data[row];
             set => this.data[row] = value;
         }
 
-        public int2 Size { get =>new int2(this.data.Length, this.data[0].Length); }
+        public int2 Size { get =>new int2(this.data.Length, this.data[0].Size); }
     
 
         public void Print(string nullString = "0")

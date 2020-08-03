@@ -55,7 +55,7 @@ namespace UnityTools.Common
 
         public List<AdjacentEdge> GetNeighborsEdges(int from)
         {
-            return this.matrix[from].Data.Where(c => c != null).ToList();
+            return this.matrix[from].Where(c => c != null).ToList();
         }
 
         public AdjacentEdge GetEdge(Node from, Node to)
