@@ -8,6 +8,7 @@ using UnityTools.Debuging;
 
 namespace UnityTools.Common
 {
+    [System.Serializable]
     public class ObjectStateMachine : Disposable
     {
         private enum ThreadState
@@ -20,8 +21,8 @@ namespace UnityTools.Common
         [SerializeField] protected StateBase<ObjectStateMachine> currentState = null;
         [SerializeField] protected StateBase<ObjectStateMachine> globalState = null;
 
-        private Thread thread;
-        private ThreadState state = ThreadState.Ready;
+        [NonSerialized] private Thread thread;
+        [NonSerialized] private ThreadState state = ThreadState.Ready;
         protected object lockObj = new object();
 
         public ObjectStateMachine()

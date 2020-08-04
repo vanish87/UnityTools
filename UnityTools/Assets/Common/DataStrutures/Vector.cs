@@ -11,6 +11,67 @@ namespace UnityTools.Common
     {
         private T[] data;
 
+
+        public static Vector<T> operator +(Vector<T> a, Vector<T> b)
+        {
+            LogTool.LogAssertIsTrue(a.Size == b.Size, "Vector size is not same");
+
+            var ret = new Vector<T>(a.Size);
+            for(var i = 0; i < a.Size; ++i)
+            {
+                dynamic lhs = a[i];
+                dynamic rhs = b[i];
+                ret[i] = lhs + rhs;
+
+            }
+            return ret;
+        }
+
+        public static Vector<T> operator -(Vector<T> a, Vector<T> b)
+        {
+            LogTool.LogAssertIsTrue(a.Size == b.Size, "Vector size is not same");
+
+            var ret = new Vector<T>(a.Size);
+            for (var i = 0; i < a.Size; ++i)
+            {
+                dynamic lhs = a[i];
+                dynamic rhs = b[i];
+                ret[i] = lhs - rhs;
+
+            }
+            return ret;
+        }
+        public static Vector<T> operator *(float b, Vector<T> a)
+        {
+            return a * b;
+        }
+
+        public static Vector<T> operator *(Vector<T> a, float b)
+        {
+            dynamic rhs = b;
+            var ret = new Vector<T>(a.Size);
+            for (var i = 0; i < a.Size; ++i)
+            {
+                dynamic lhs = a[i];
+                ret[i] = lhs * rhs;
+
+            }
+            return ret;
+        }
+        public static Vector<T> operator /(Vector<T> a, float b)
+        {
+            dynamic rhs = b;
+            LogTool.LogAssertIsTrue(rhs != 0, "Vector size is not same");
+            var ret = new Vector<T>(a.Size);
+            for (var i = 0; i < a.Size; ++i)
+            {
+                dynamic lhs = a[i];
+                ret[i] = lhs / rhs;
+
+            }
+            return ret;
+        }
+
         public Vector(int size = 0)
         {
             if (size <= 0)

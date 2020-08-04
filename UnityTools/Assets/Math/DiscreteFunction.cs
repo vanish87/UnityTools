@@ -12,7 +12,7 @@ namespace UnityTools.Math
 
     public class DiscreteFunction<XValue, YValue>
     {
-        [SerializeField] protected CricleData<List<Tuple<XValue, YValue>>, int> valueMap;
+        [SerializeField] protected List<Tuple<XValue, YValue>> valueMap;
         [SerializeField] protected Tuple<XValue, YValue> start;
         [SerializeField] protected Tuple<XValue, YValue> end;
         [SerializeField] protected int sampleNum;
@@ -43,7 +43,7 @@ namespace UnityTools.Math
             }
             this.AddValue(this.end);
 
-            LogTool.LogAssertIsTrue(this.valueMap.Current.Count == this.valueMap.Next.Count && this.valueMap.Current.Count == sampleNum, "Sample size inconstant");
+            LogTool.LogAssertIsTrue(this.valueMap.Count == sampleNum, "Sample size inconstant");
         }
 
 
@@ -55,7 +55,8 @@ namespace UnityTools.Math
             start = start ?? new Tuple<XValue, YValue>(default, default);
             end = end ?? new Tuple<XValue, YValue>(default, default);
 
-            this.valueMap = new CricleData<List<Tuple<XValue, YValue>>, int>(2);
+            //this.valueMap = new CricleData<List<Tuple<XValue, YValue>>, int>(2);
+            this.valueMap = new List<Tuple<XValue, YValue>>();
             this.start = start;
             this.end = end;
             this.sampleNum = sampleNum;
@@ -64,29 +65,26 @@ namespace UnityTools.Math
         }
         public void ResetValues()
         {
-            this.valueMap.Current.Clear();
-            this.valueMap.Next.Clear();
+            this.valueMap.Clear();
             this.InitValues();
         }
-        public void MoveToNext()
-        {
-            this.valueMap.MoveToNext();
-        }
-        public void MoveToPrev()
-        {
-            this.valueMap.MoveToPrev();
-        }
+        
         public XValue GetValueX(int index)
         {
-            var x = math.clamp(index, 0, this.valueMap.Current.Count - 1);
-            return this.valueMap.Current[x].Item1;
+            var x = math.clamp(index, 0, this.valueMap.Count - 1);
+            return this.valueMap[x].Item1;
+        }
+        public YValue GetValueY(int index)
+        {
+            var x = math.clamp(index, 0, this.valueMap.Count - 1);
+            return this.valueMap[x].Item2;
         }
 
         public void SetValueY(int index, YValue value)
         {
-            var x = math.clamp(index, 0, this.valueMap.Current.Count - 1);
-            var old = this.valueMap.Current[x];
-            this.valueMap.Current[x] = new Tuple<XValue, YValue>(old.Item1, value);
+            var x = math.clamp(index, 0, this.valueMap.Count - 1);
+            var old = this.valueMap[x];
+            this.valueMap[x] = new Tuple<XValue, YValue>(old.Item1, value);
         }
         public YValue Evaluate(float t)
         {
@@ -97,7 +95,7 @@ namespace UnityTools.Math
             LogTool.LogAssertIsFalse(range == 0, "range is 0");
 
             if (range == 0) return default;
-            var h = range / this.valueMap.Current.Count;
+            var h = range / this.valueMap.Count;
 
             var index = (t % range) / h;
             var from = Mathf.FloorToInt(index);
@@ -110,14 +108,14 @@ namespace UnityTools.Math
 
         public YValue EvaluateIndex(int index)
         {
-            var x = math.clamp(index, 0, this.valueMap.Current.Count - 1);
-            return this.valueMap.Current[x].Item2;
+            var x = math.clamp(index, 0, this.valueMap.Count - 1);
+            return this.valueMap[x].Item2;
         }
 
         protected void AddValue(Tuple<XValue, YValue> value)
         {
-            this.valueMap.Current.Add(value);
-            this.valueMap.Next.Add(value);
+            this.valueMap.Add(value);
+            //this.valueMap.Next.Add(value);
         }
 
         public YValue Devrivate(int index, XValue h)
@@ -144,12 +142,12 @@ namespace UnityTools.Math
         {
 
         }
-        public virtual void RandomNextValues()
+        public virtual void RandomValues()
         {
-            for (var i = 0; i < this.valueMap.Next.Count; ++i)
+            for (var i = 0; i < this.valueMap.Count; ++i)
             {
-                var n = this.valueMap.Next[i].Item1;
-                this.valueMap.Next[i] = new Tuple<X, float>(n, UnityEngine.Random.value);
+                var n = this.valueMap[i].Item1;
+                this.valueMap[i] = new Tuple<X, float>(n, UnityEngine.Random.value);
             }
         }
     }

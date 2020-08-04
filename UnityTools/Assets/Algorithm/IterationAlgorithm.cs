@@ -7,6 +7,7 @@ namespace UnityTools.Algorithm
         ISolution CurrentSolution { get; }
         bool IsSolutionAcceptable(ISolution solution);
     }
+    [System.Serializable]
 
     public abstract class IterationAlgorithm : ObjectStateMachine, IIterationAlgorithm
     {
