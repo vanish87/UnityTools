@@ -6,7 +6,9 @@ using UnityEngine.Assertions;
 using UnityTools.Common;
 
 namespace UnityTools.Algorithm
-{
+{ 
+    
+
     public static class Solver
     {
         public static Vector<float3> SolverFS(Matrix<float3> L, Vector<float3> b)

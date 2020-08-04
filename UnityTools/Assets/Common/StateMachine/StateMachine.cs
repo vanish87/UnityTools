@@ -67,7 +67,12 @@ namespace UnityTools.Common
 
         private void ThreadMain()
         {
-            var current = this.state = ThreadState.Running;
+            var current = ThreadState.Ready;
+
+            lock (this.lockObj)
+            {
+                current = this.state = ThreadState.Running;
+            }
 
             while (current != ThreadState.Stopped)
             {

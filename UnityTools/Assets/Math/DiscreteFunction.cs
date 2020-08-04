@@ -17,6 +17,11 @@ namespace UnityTools.Math
         [SerializeField] protected Tuple<XValue, YValue> end;
         [SerializeField] protected int sampleNum;
 
+        public Tuple<XValue, YValue> Start { get => this.start; }
+        public Tuple<XValue, YValue> End { get => this.end; }
+        public int SampleNum { get => this.sampleNum; }
+
+
         private static readonly List<Type> SupportedTypes =
             new List<Type>() {
                 typeof(int), typeof(float), typeof(double),
