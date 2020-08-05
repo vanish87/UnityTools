@@ -11,7 +11,6 @@ namespace UnityTools.Common
     {
         private T[] data;
 
-
         public static Vector<T> operator +(Vector<T> a, Vector<T> b)
         {
             LogTool.LogAssertIsTrue(a.Size == b.Size, "Vector size is not same");
@@ -72,7 +71,16 @@ namespace UnityTools.Common
             return ret;
         }
 
-        public Vector(int size = 0)
+        public static Vector<T> Concatenation(Vector<T> lhs, Vector<T> rhs)
+        {
+            var ret = new Vector<T>(lhs.Size + rhs.Size);
+            var i = 0;
+            foreach (var v in lhs) ret[i++] = v;
+            foreach (var v in rhs) ret[i++] = v;
+            return ret;
+        }
+
+        public Vector(int size = 1)
         {
             if (size <= 0)
             {
@@ -83,6 +91,14 @@ namespace UnityTools.Common
             this.data = new T[size];
 
             this.Clear();
+        }
+        public Vector(T[] data)
+        {
+            this.data = data.DeepCopy();
+        }
+        public Vector(List<T> data)
+        {
+            this.data = data.ToArray().DeepCopy();
         }
         public void Clear()
         {
