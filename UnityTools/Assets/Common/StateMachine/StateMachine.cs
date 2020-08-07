@@ -8,6 +8,14 @@ using UnityTools.Debuging;
 
 namespace UnityTools.Common
 {
+    public class ThreadDebug
+    {
+        protected static List<Thread> currentThread = new List<Thread>();
+        public static void Add(Thread thrad) { currentThread.Add(thrad); }
+        public static void Remove(Thread thrad) { currentThread.Remove(thrad); }
+
+        public static void Print() { foreach(var t in currentThread) { LogTool.Log(t.Name + " is running"); } }
+    }
     [System.Serializable]
     public class ObjectStateMachine : Disposable
     {
@@ -28,7 +36,20 @@ namespace UnityTools.Common
         public ObjectStateMachine()
         {
             this.thread = new Thread(new ThreadStart(this.ThreadMain));
+            this.thread.Name = System.Environment.StackTrace;
             this.thread.Start();
+
+            ThreadDebug.Add(this.thread);
+        }
+
+        ~ObjectStateMachine()
+        {
+            this.Stop();
+        }
+
+        protected override void DisposeManaged()
+        {
+            this.Stop();
         }
 
         public void Stop()
@@ -37,6 +58,8 @@ namespace UnityTools.Common
             {
                 this.state = ThreadState.Stopped;
             }
+
+            ThreadDebug.Remove(this.thread);
         }
         public void Pause()
         {
@@ -93,7 +116,11 @@ namespace UnityTools.Common
                 {
                     current = this.state;
                 }
+
+                Debug.Log("running");
             }
+
+            Debug.Log("Stoped");
         }
 
     }

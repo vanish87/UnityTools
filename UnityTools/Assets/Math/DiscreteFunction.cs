@@ -9,9 +9,15 @@ using UnityTools.Debuging;
 namespace UnityTools.Math
 {
     [Serializable]
-
     public class DiscreteFunction<XValue, YValue>
     {
+        public enum FiniteDifferenceType
+        {
+            Central,
+            Forward,
+            Backward,
+        }
+        protected FiniteDifferenceType fdType = FiniteDifferenceType.Central;
         protected List<Tuple<XValue, YValue>> valueMap;
         protected Tuple<XValue, YValue> start;
         protected Tuple<XValue, YValue> end;
@@ -39,13 +45,40 @@ namespace UnityTools.Math
             LogTool.LogAssertIsTrue(SupportedAnimationTypes.Contains(typeof(YValue)), typeof(YValue) + " for YValue is not supported");
 
             var ret = new AnimationCurve();
+            var index = 0;
             foreach(var d in this.valueMap)
             {
                 dynamic time = d.Item1;
                 dynamic value = d.Item2;
-                ret.AddKey(new Keyframe() { time = time, value = value });
+                dynamic dev = this.Devrivate(index);
+                var key = new Keyframe() { time = time, value = value };
+                key.weightedMode = WeightedMode.None;
+                key.inTangent = key.outTangent = dev;
+                ret.AddKey(key);
+
+                index++;
             }
 
+            return ret;
+        }
+        public Vector<XValue> ToXVector()
+        {
+            var ret = new Vector<XValue>(this.SampleNum);
+            var count = 0;
+            foreach (var y in this.valueMap)
+            {
+                ret[count++] = y.Item1;
+            }
+            return ret;
+        }
+        public Vector<YValue> ToYVector()
+        {
+            var ret = new Vector<YValue>(this.SampleNum);
+            var count = 0;
+            foreach(var y in this.valueMap)
+            {
+                ret[count++] = y.Item2;
+            }
             return ret;
         }
         public DiscreteFunction(AnimationCurve from)
@@ -150,19 +183,43 @@ namespace UnityTools.Math
         }
         protected void AddValue(Tuple<XValue, YValue> value)
         {
-            this.valueMap.Add(value);
-            //this.valueMap.Next.Add(value);
+            if (this.valueMap.Count < this.sampleNum)
+            {
+                this.valueMap.Add(value);
+                //this.valueMap.Next.Add(value);
+            }
+            else
+            {
+                LogTool.Log("Sample num is bigger than " + this.sampleNum, LogLevel.Warning);
+            }
         }
 
+        public YValue Devrivate(int index)
+        {
+            return this.Devrivate(index, this.h);
+        }
+        public YValue Devrivate2(int index)
+        {
+            return this.Devrivate2(index, this.h);
+        }
         public YValue Devrivate(int index, XValue h)
         {
             dynamic prev = this[index - 1];
             dynamic next = this[index + 1];
+            dynamic current = this[index];
             dynamic dh = h;
-            return (prev + next) / (2 * dh);
+
+            switch (this.fdType)
+            {
+                case FiniteDifferenceType.Forward:  return (next - current) / dh;
+                case FiniteDifferenceType.Central:  return (next - prev) / (2 * dh);
+                case FiniteDifferenceType.Backward: return (current - prev) / dh;
+                default: return default;
+            }
         }
         public YValue Devrivate2(int index, XValue h)
         {
+            //TODO add FiniteDifferenceType switch for dev2
             dynamic prev = this[index - 1];
             dynamic next = this[index + 1];
             dynamic current = this[index];

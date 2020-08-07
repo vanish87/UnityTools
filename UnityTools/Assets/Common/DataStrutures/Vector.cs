@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityTools.Debuging;
@@ -73,6 +74,9 @@ namespace UnityTools.Common
 
         public static Vector<T> Concatenation(Vector<T> lhs, Vector<T> rhs)
         {
+            if (lhs == null) return rhs.DeepCopy();
+            if (rhs == null) return lhs.DeepCopy();
+
             var ret = new Vector<T>(lhs.Size + rhs.Size);
             var i = 0;
             foreach (var v in lhs) ret[i++] = v;
@@ -132,12 +136,12 @@ namespace UnityTools.Common
 
         public IEnumerator<T> GetEnumerator()
         {
-            return this.GetEnumerator();
+            return this.data.Cast<T>().GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return this.data.GetEnumerator();
+            return this.GetEnumerator();
         }
     }
 }
