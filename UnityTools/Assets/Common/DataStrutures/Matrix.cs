@@ -7,7 +7,7 @@ using UnityTools.Debuging;
 namespace UnityTools.Common
 {
     [System.Serializable]
-    public class Matrix<T>
+    public class Matrix<T> : IEnumerable<T>
     {
         protected Vector<T>[] data;
 
@@ -30,9 +30,9 @@ namespace UnityTools.Common
         {
             if (this.data == null) return;
 
-            for (var r = 0; r < this.data.Length; ++r)
+            foreach(var r in this.data)
             {
-                this.data[r].Clear();
+                r.Clear();
             }
         }
 
@@ -49,7 +49,21 @@ namespace UnityTools.Common
         }
 
         public int2 Size { get =>new int2(this.data.Length, this.data[0].Size); }
-    
+        public IEnumerator<T> GetEnumerator()
+        {
+            foreach (var r in this.data)
+            {
+                foreach (var c in r)
+                {
+                    yield return c;
+                }
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return this.GetEnumerator();
+        }
 
         public void Print(string nullString = "0")
         {

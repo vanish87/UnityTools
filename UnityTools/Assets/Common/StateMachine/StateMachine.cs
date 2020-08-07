@@ -117,10 +117,10 @@ namespace UnityTools.Common
                     current = this.state;
                 }
 
-                Debug.Log("running");
+                //Debug.Log("running");
             }
 
-            Debug.Log("Stoped");
+            //Debug.Log("Stoped");
         }
 
     }
