@@ -34,7 +34,7 @@ namespace UnityTools.Algorithm
     }
     public interface IState<S>
     {
-        public S State { get; set; }
+        S State { get; set; }
         S Dev(int order);
     }
 
