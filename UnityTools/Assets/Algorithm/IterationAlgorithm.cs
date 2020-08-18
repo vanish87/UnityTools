@@ -17,9 +17,9 @@ namespace UnityTools.Algorithm
         public abstract bool IsSolutionAcceptable(ISolution solution);
         public abstract ISolution Solve(IProblem problem);
 
-        public virtual SimulatorSateReady Ready { get => SimulatorSateReady.Instance; }
-        public virtual SimulatorSateRunning Running { get => SimulatorSateRunning.Instance; }
-        public virtual SimulatorSateDone Done { get => SimulatorSateDone.Instance; }
+        public virtual IterationSateReady Ready { get => IterationSateReady.Instance; }
+        public virtual IterationSateRunning Running { get => IterationSateRunning.Instance; }
+        public virtual IterationSateDone Done { get => IterationSateDone.Instance; }
 
         public ISolution CurrentSolution => this.currentSolution;
 
@@ -42,20 +42,20 @@ namespace UnityTools.Algorithm
         }
 
         [System.Serializable]
-        public class SimulatorSateReady : StateBase<IterationAlgorithmMono>
+        public class IterationSateReady : StateBase<IterationAlgorithmMono>
         {
-            public static SimulatorSateReady Instance { get => instance; }
-            protected static SimulatorSateReady instance = new SimulatorSateReady();
+            public static IterationSateReady Instance { get => instance; }
+            protected static IterationSateReady instance = new IterationSateReady();
             internal override void Enter(IterationAlgorithmMono obj) { }
             internal override void Excute(IterationAlgorithmMono obj) { }
             internal override void Leave(IterationAlgorithmMono obj) { }
         }
 
         [System.Serializable]
-        public class SimulatorSateRunning : StateBase<IterationAlgorithmMono>
+        public class IterationSateRunning : StateBase<IterationAlgorithmMono>
         {
-            public static SimulatorSateRunning Instance { get => instance; }
-            protected static SimulatorSateRunning instance = new SimulatorSateRunning();
+            public static IterationSateRunning Instance { get => instance; }
+            protected static IterationSateRunning instance = new IterationSateRunning();
 
             internal override void Enter(IterationAlgorithmMono obj)
             {
@@ -67,7 +67,7 @@ namespace UnityTools.Algorithm
 
                 if (obj.IsSolutionAcceptable(sol))
                 {
-                    obj.ChangeState(SimulatorSateDone.Instance);
+                    obj.ChangeState(IterationSateDone.Instance);
                 }
 
                 obj.currentSolution = sol;
@@ -79,10 +79,10 @@ namespace UnityTools.Algorithm
         }
 
         [System.Serializable]
-        public class SimulatorSateDone : StateBase<IterationAlgorithmMono>
+        public class IterationSateDone : StateBase<IterationAlgorithmMono>
         {
-            public static SimulatorSateDone Instance { get => instance; }
-            protected static SimulatorSateDone instance = new SimulatorSateDone();
+            public static IterationSateDone Instance { get => instance; }
+            protected static IterationSateDone instance = new IterationSateDone();
             internal override void Enter(IterationAlgorithmMono obj) { }
             internal override void Excute(IterationAlgorithmMono obj) { }
             internal override void Leave(IterationAlgorithmMono obj) { }
@@ -98,9 +98,9 @@ namespace UnityTools.Algorithm
         public abstract bool IsSolutionAcceptable(ISolution solution);
         public abstract ISolution Solve(IProblem problem);
 
-        public virtual SimulatorSateReady Ready { get => SimulatorSateReady.Instance; }
-        public virtual SimulatorSateRunning Running { get => SimulatorSateRunning.Instance; }
-        public virtual SimulatorSateDone Done { get => SimulatorSateDone.Instance; }
+        public virtual IterationSateReady Ready { get => IterationSateReady.Instance; }
+        public virtual IterationSateRunning Running { get => IterationSateRunning.Instance; }
+        public virtual IterationSateDone Done { get => IterationSateDone.Instance; }
 
         public ISolution CurrentSolution => this.currentSolution;
 
@@ -123,20 +123,20 @@ namespace UnityTools.Algorithm
         }
 
         [System.Serializable]
-        public class SimulatorSateReady : StateBase<ObjectStateMachine>
+        public class IterationSateReady : StateBase<ObjectStateMachine>
         {
-            public static SimulatorSateReady Instance { get => instance; }
-            protected static SimulatorSateReady instance = new SimulatorSateReady();
+            public static IterationSateReady Instance { get => instance; }
+            protected static IterationSateReady instance = new IterationSateReady();
             internal override void Enter(ObjectStateMachine obj) { }
             internal override void Excute(ObjectStateMachine obj) { }
             internal override void Leave(ObjectStateMachine obj) { }
         }
 
         [System.Serializable]
-        public class SimulatorSateRunning : StateBase<ObjectStateMachine>
+        public class IterationSateRunning : StateBase<ObjectStateMachine>
         {
-            public static SimulatorSateRunning Instance { get => instance; }
-            protected static SimulatorSateRunning instance = new SimulatorSateRunning();
+            public static IterationSateRunning Instance { get => instance; }
+            protected static IterationSateRunning instance = new IterationSateRunning();
 
             internal override void Enter(ObjectStateMachine obj)
             {
@@ -150,7 +150,7 @@ namespace UnityTools.Algorithm
 
                 if (sim.IsSolutionAcceptable(sol))
                 {
-                    sim.ChangeState(SimulatorSateDone.Instance);
+                    sim.ChangeState(IterationSateDone.Instance);
                 }
 
                 sim.currentSolution = sol;
@@ -162,10 +162,10 @@ namespace UnityTools.Algorithm
         }
 
         [System.Serializable]
-        public class SimulatorSateDone : StateBase<ObjectStateMachine>
+        public class IterationSateDone : StateBase<ObjectStateMachine>
         {
-            public static SimulatorSateDone Instance { get => instance; }
-            protected static SimulatorSateDone instance = new SimulatorSateDone();
+            public static IterationSateDone Instance { get => instance; }
+            protected static IterationSateDone instance = new IterationSateDone();
             internal override void Enter(ObjectStateMachine obj) { }
             internal override void Excute(ObjectStateMachine obj) { }
             internal override void Leave(ObjectStateMachine obj) { }
