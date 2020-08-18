@@ -31,7 +31,6 @@ namespace UnityTools.Common
 
         [NonSerialized] private Thread thread;
         [NonSerialized] private ThreadState state = ThreadState.Ready;
-        protected object lockObj = new object();
 
         public ObjectStateMachine()
         {
@@ -54,7 +53,7 @@ namespace UnityTools.Common
 
         public void Stop()
         {
-            lock(this.lockObj)
+            lock(this)
             {
                 this.state = ThreadState.Stopped;
             }
@@ -63,7 +62,7 @@ namespace UnityTools.Common
         }
         public void Pause()
         {
-            lock (this.lockObj)
+            lock (this)
             {
                 this.state = ThreadState.Pause;
             }
@@ -71,7 +70,7 @@ namespace UnityTools.Common
 
         public void ChangeState(StateBase<ObjectStateMachine> newState)
         {
-            lock (this.lockObj)
+            lock (this)
             {
                 if (this.currentState == newState)
                 {
@@ -93,7 +92,7 @@ namespace UnityTools.Common
         {
             var current = ThreadState.Ready;
 
-            lock (this.lockObj)
+            lock (this)
             {
                 current = this.state = ThreadState.Running;
             }
@@ -112,7 +111,7 @@ namespace UnityTools.Common
                     }
                 }
 
-                lock (this.lockObj)
+                lock (this)
                 {
                     current = this.state;
                 }
@@ -120,7 +119,7 @@ namespace UnityTools.Common
                 //Debug.Log("running");
             }
 
-            //Debug.Log("Stoped");
+            LogTool.Log("Thread Stopped " + this.ToString());
         }
 
     }
