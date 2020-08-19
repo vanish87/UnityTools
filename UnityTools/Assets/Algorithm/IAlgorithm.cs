@@ -48,10 +48,6 @@ namespace UnityTools.Algorithm
 
     public class ParticleEulerSolver : IterationAlgorithmMono
     {
-        public ParticleEulerSolver(IProblem problem, IDelta dt) : base(problem, dt)
-        {
-        }
-
         public override bool IsSolutionAcceptable(ISolution solution)
         {
             throw new System.NotImplementedException();

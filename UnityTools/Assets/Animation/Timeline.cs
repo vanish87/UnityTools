@@ -142,7 +142,7 @@ namespace UnityTools.Animation
             {
                 this.timelineQueue.Enqueue(t);
             }
-            this.globalState_ = new TimelineGlobalState();
+            this.globalState = new TimelineGlobalState();
         }
         protected void MoveToNext()
         {

@@ -77,7 +77,7 @@ namespace UnityTools.Algorithm
 
         protected List<Vertice> simplex = new List<Vertice>();
 
-        public DownhillSimplex(IProblem problem, IDelta dt) : base(problem, dt)
+        public DownhillSimplex(IProblem problem, IDelta dt, IterationAlgorithmMode mode = IterationAlgorithmMode.FullStep) : base(problem, dt, mode)
         {
             var p = problem as Problem;
             var vn = p.dim + 1;

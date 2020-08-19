@@ -1,10 +1,17 @@
 ﻿using System;
 using UnityTools.Common;
+using UnityTools.Debuging;
 
 namespace UnityTools.Algorithm
 {
+    public enum IterationAlgorithmMode
+    {
+        PerStep,
+        FullStep
+    }
     public interface IIterationAlgorithm : IAlgorithm
     {
+        IterationAlgorithmMode RunMode { get; }
         ISolution CurrentSolution { get; }
         bool IsSolutionAcceptable(ISolution solution);
     }
@@ -14,6 +21,7 @@ namespace UnityTools.Algorithm
         protected IProblem problem;
         protected IDelta dt;
         protected ISolution currentSolution;
+        protected IterationAlgorithmMode runMode = IterationAlgorithmMode.FullStep;
 
         protected Action<IProblem, ISolution, IDelta, IAlgorithm> startActions;
         protected Action<IProblem, ISolution, IDelta, IAlgorithm> endActions;
@@ -21,6 +29,7 @@ namespace UnityTools.Algorithm
         public abstract bool IsSolutionAcceptable(ISolution solution);
         public abstract ISolution Solve(IProblem problem);
 
+        public virtual IterationAlgorithmMode RunMode => this.runMode;
         public virtual IterationSateReady Ready { get => IterationSateReady.Instance; }
         public virtual IterationSateRunning Running { get => IterationSateRunning.Instance; }
         public virtual IterationSateDone Done { get => IterationSateDone.Instance; }
@@ -38,16 +47,29 @@ namespace UnityTools.Algorithm
             this.endActions -= endAction;
             this.endActions += endAction;
         }
-        public IterationAlgorithmMono(IProblem problem, IDelta dt) : base()
+        public void Init(IProblem problem, IDelta dt, IterationAlgorithmMode runMode = IterationAlgorithmMode.FullStep)
         {
             this.problem = problem;
             this.dt = dt;
+            this.runMode = runMode;
             this.Reset();
         }
 
         public void Reset()
         {
             this.ChangeState(this.Ready);
+        }
+
+        public void TryToRun()
+        {
+            if(this.currentState == this.Running)
+            {
+                LogTool.Log("IterationAlgorithm is running, nothing to do");
+            }
+            else
+            {
+                this.ChangeState(this.Running);
+            }
         }
 
         private ISolution SolveInternal()
@@ -87,6 +109,11 @@ namespace UnityTools.Algorithm
                 }
 
                 obj.currentSolution = sol;
+
+                if(obj.RunMode == IterationAlgorithmMode.PerStep)
+                {
+                    obj.ChangeState(obj.Ready);
+                }
             }
 
             internal override void Leave(IterationAlgorithmMono obj)
@@ -111,6 +138,7 @@ namespace UnityTools.Algorithm
         protected IProblem problem;
         protected IDelta dt;
         protected ISolution currentSolution;
+        protected IterationAlgorithmMode runMode = IterationAlgorithmMode.FullStep;
 
         protected Action<IProblem, ISolution, IDelta, IAlgorithm> startActions;
         protected Action<IProblem, ISolution, IDelta, IAlgorithm> endActions;
@@ -118,6 +146,7 @@ namespace UnityTools.Algorithm
         public abstract bool IsSolutionAcceptable(ISolution solution);
         public abstract ISolution Solve(IProblem problem);
 
+        public virtual IterationAlgorithmMode RunMode => this.runMode;
         public virtual IterationSateReady Ready { get => IterationSateReady.Instance; }
         public virtual IterationSateRunning Running { get => IterationSateRunning.Instance; }
         public virtual IterationSateDone Done { get => IterationSateDone.Instance; }
@@ -135,16 +164,28 @@ namespace UnityTools.Algorithm
             this.endActions += endAction;
         }
 
-        public IterationAlgorithm(IProblem problem, IDelta dt) : base()
+        public IterationAlgorithm(IProblem problem, IDelta dt, IterationAlgorithmMode runMode = IterationAlgorithmMode.FullStep) : base()
         {
             this.problem = problem;
             this.dt = dt;
+            this.runMode = runMode;
             this.Reset();
         }
 
         public void Reset()
         {
             this.ChangeState(this.Ready);
+        }
+        public void TryToRun()
+        {
+            if (this.currentState == this.Running)
+            {
+                LogTool.Log("IterationAlgorithm is running, nothing to do");
+            }
+            else
+            {
+                this.ChangeState(this.Running);
+            }
         }
 
         private ISolution SolveInternal()
@@ -187,6 +228,12 @@ namespace UnityTools.Algorithm
                 }
 
                 sim.currentSolution = sol;
+
+
+                if (sim.RunMode == IterationAlgorithmMode.PerStep)
+                {
+                    obj.ChangeState(sim.Ready);
+                }
             }
 
             internal override void Leave(ObjectStateMachine obj)

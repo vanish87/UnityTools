@@ -125,10 +125,10 @@ namespace UnityTools.Common
     }
     public class ObjectStateMachine<T> : MonoBehaviour where T : class
     {
-        [SerializeField] protected StateBase<T> currentState_;
-        [SerializeField] protected StateBase<T> globalState_;
+        [SerializeField] protected StateBase<T> currentState;
+        [SerializeField] protected StateBase<T> globalState;
 
-        private T owner_ = null;
+        private T owner = null;
 
         /// <summary>
         /// here, some objects may not find a owner when calling OnEnable function
@@ -139,12 +139,12 @@ namespace UnityTools.Common
         {
             get
             {
-                if (this.owner_ == null)
+                if (this.owner == null)
                 {
-                    this.owner_ = this.GetComponent<T>();
+                    this.owner = this.GetComponent<T>();
                 }
-                Assert.IsNotNull(owner_);
-                return this.owner_;
+                Assert.IsNotNull(owner);
+                return this.owner;
             }
         }
 
@@ -160,35 +160,35 @@ namespace UnityTools.Common
 
         protected virtual void OnDisable()
         {
-            this.owner_ = null;
+            this.owner = null;
         }
 
         public void ChangeState(StateBase<T> newState)
         {
-            if (this.currentState_ == newState)
+            if (this.currentState == newState)
             {
                 LogTool.Log("Current state is same with new state, Restart", LogLevel.Warning);
             }
 
-            if (this.currentState_ != null)
+            if (this.currentState != null)
             {
-                this.currentState_.Leave(this.Owner);
+                this.currentState.Leave(this.Owner);
             }
 
-            this.currentState_ = newState;
+            this.currentState = newState;
 
-            this.currentState_.Enter(this.Owner);
+            this.currentState.Enter(this.Owner);
         }
 
         protected virtual void Update()
         {
-            if (this.globalState_ != null)
+            if (this.globalState != null)
             {
-                this.globalState_.Excute(this.Owner);
+                this.globalState.Excute(this.Owner);
             }
-            if (this.currentState_ != null)
+            if (this.currentState != null)
             {
-                this.currentState_.Excute(this.Owner);
+                this.currentState.Excute(this.Owner);
             }
         }
     }

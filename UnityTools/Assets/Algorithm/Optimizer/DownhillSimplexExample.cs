@@ -78,7 +78,7 @@ namespace UnityTools.Algorithm
                 this.count++;
             }
         }
-        
+        [SerializeField] protected IterationAlgorithmMode mode = IterationAlgorithmMode.FullStep;
         protected DownhillSimplex<float> simplex;
         protected DownhillSimplex<float>.Problem p = new HimmelblauProblem();
 
@@ -86,7 +86,7 @@ namespace UnityTools.Algorithm
 
         protected void Start()
         {
-            this.simplex = new DownhillSimplex<float>(this.p, new Delta());
+            this.simplex = new DownhillSimplex<float>(this.p, new Delta(), this.mode);
 
             this.simplex.End((p, s, dt, a)=>
             {
@@ -95,16 +95,15 @@ namespace UnityTools.Algorithm
                 sol.min.Print();
                 LogTool.Log("Running count: " + (dt as Delta).count);
             });
-            
-            this.simplex.ChangeState(this.simplex.Running);
+
+            this.simplex.TryToRun();
         }
 
         protected void Update()
         {
-            if(Input.GetKeyDown(KeyCode.S))
+            if(Input.GetKeyDown(KeyCode.S) && this.mode == IterationAlgorithmMode.PerStep)
             {
-                var sol = this.simplex.Solve(this.p) as DownhillSimplex<float>.Solution;
-                sol.min.Print();
+                this.simplex.TryToRun();
             }
         }
 
