@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.Mathematics;
 using UnityEngine;
+using UnityTools.Algorithm;
 using UnityTools.Common;
 using UnityTools.Debuging;
 
@@ -83,6 +84,9 @@ namespace UnityTools.Math
         }
         public DiscreteFunction(AnimationCurve from)
         {
+            this.valueMap = new List<Tuple<XValue, YValue>>();
+            this.sampleNum = from.keys.Length;
+
             foreach (var key in from.keys)
             {
                 dynamic t = key.time;
@@ -92,9 +96,19 @@ namespace UnityTools.Math
 
             this.start = this.valueMap[0];
             this.end = this.valueMap[this.valueMap.Count-1];
-            this.sampleNum = this.valueMap.Count;
 
             this.InitH();
+        }
+
+        public DiscreteFunction(Tuple<XValue, YValue> start, Tuple<XValue, YValue> end, Vector <YValue> from)
+        {
+            this.valueMap = new List<Tuple<XValue, YValue>>();
+            this.start  = new Tuple<XValue, YValue>(start.Item1, from[0]);
+            this.end    = new Tuple<XValue, YValue>(end.Item1, from[from.Size-1]);
+            this.sampleNum = from.Size;
+
+            this.InitH();
+            this.InitValues(from);
         }
 
         public DiscreteFunction(Tuple<XValue, YValue> start = null, Tuple<XValue, YValue> end = null, int sampleNum = 1)
@@ -145,7 +159,6 @@ namespace UnityTools.Math
             dynamic s = this.Start.Item1;
             dynamic e = this.End.Item1;
             dynamic range = e - s;
-            dynamic dh = this.h;
 
             t = clamp? math.clamp(t, s, e):t;
 
@@ -157,7 +170,7 @@ namespace UnityTools.Math
 
             return lerp != null ? lerp(yfrom, yto, index - from) : math.lerp(yfrom, yto, index - from);
         }
-        protected virtual void InitValues()
+        protected virtual void InitValues(Vector<YValue> y = null)
         {
             dynamic s = this.Start.Item1;
             dynamic dh = this.h;
@@ -165,7 +178,7 @@ namespace UnityTools.Math
             this.AddValue(this.Start);
             for (var i = 1; i < this.sampleNum - 1; ++i)
             {
-                this.AddValue(new Tuple<XValue, YValue>(s + i * dh, default(YValue)));
+                this.AddValue(new Tuple<XValue, YValue>(s + i * dh, y != null ? y[i] : default(YValue)));
             }
             this.AddValue(this.End);
 
@@ -231,6 +244,8 @@ namespace UnityTools.Math
     [Serializable]
     public class X2FDiscreteFunction<X> : DiscreteFunction<X, float>
     {
+        public X2FDiscreteFunction(AnimationCurve from) : base(from) { }
+        public X2FDiscreteFunction(Tuple<X, float> start, Tuple<X, float> end, Vector<float> from) : base(start, end, from) { }
         public X2FDiscreteFunction(Tuple<X, float> start, Tuple<X, float> end, int sampleNum) : base(start, end, sampleNum)
         {
 
@@ -240,7 +255,7 @@ namespace UnityTools.Math
             for (var i = 0; i < this.valueMap.Count; ++i)
             {
                 var n = this.valueMap[i].Item1;
-                this.valueMap[i] = new Tuple<X, float>(n, UnityEngine.Random.value);
+                this.valueMap[i] = new Tuple<X, float>(n, ThreadSafeRandom.NextFloat());
             }
         }
     }

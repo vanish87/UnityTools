@@ -84,6 +84,19 @@ namespace UnityTools.Common
             return ret;
         }
 
+        public static Vector<T> Sub(int from, int to, Vector<T> src)
+        {
+            LogTool.LogAssertIsTrue(to > from && from >= 0, "Vector index Error");
+            var ret = new Vector<T>(to - from);
+            var count = 0;
+            for(var i = from; i < to; ++i)
+            {
+                ret[count++] = src[i];
+            }
+
+            return ret;
+        }
+
         public Vector(int size = 1)
         {
             if (size <= 0)

@@ -1,4 +1,5 @@
-﻿using UnityTools.Common;
+﻿using System;
+using UnityTools.Common;
 
 namespace UnityTools.Algorithm
 {
@@ -14,6 +15,9 @@ namespace UnityTools.Algorithm
         protected IDelta dt;
         protected ISolution currentSolution;
 
+        protected Action<IProblem, ISolution, IDelta, IAlgorithm> startActions;
+        protected Action<IProblem, ISolution, IDelta, IAlgorithm> endActions;
+
         public abstract bool IsSolutionAcceptable(ISolution solution);
         public abstract ISolution Solve(IProblem problem);
 
@@ -23,6 +27,17 @@ namespace UnityTools.Algorithm
 
         public ISolution CurrentSolution => this.currentSolution;
 
+        public void Start(Action<IProblem, ISolution, IDelta, IAlgorithm> startAction)
+        {
+            this.startActions -= startAction;
+            this.startActions += startAction;
+        }
+
+        public void End(Action<IProblem, ISolution, IDelta, IAlgorithm> endAction)
+        {
+            this.endActions -= endAction;
+            this.endActions += endAction;
+        }
         public IterationAlgorithmMono(IProblem problem, IDelta dt) : base()
         {
             this.problem = problem;
@@ -60,6 +75,7 @@ namespace UnityTools.Algorithm
             internal override void Enter(IterationAlgorithmMono obj)
             {
                 obj.dt.Reset();
+                obj.startActions?.Invoke(obj.problem, obj.CurrentSolution, obj.dt, obj);
             }
             internal override void Excute(IterationAlgorithmMono obj)
             {
@@ -67,7 +83,7 @@ namespace UnityTools.Algorithm
 
                 if (obj.IsSolutionAcceptable(sol))
                 {
-                    obj.ChangeState(IterationSateDone.Instance);
+                    obj.ChangeState(obj.Done);
                 }
 
                 obj.currentSolution = sol;
@@ -75,6 +91,7 @@ namespace UnityTools.Algorithm
 
             internal override void Leave(IterationAlgorithmMono obj)
             {
+                obj.endActions?.Invoke(obj.problem, obj.CurrentSolution, obj.dt, obj);
             }
         }
 
@@ -95,6 +112,9 @@ namespace UnityTools.Algorithm
         protected IDelta dt;
         protected ISolution currentSolution;
 
+        protected Action<IProblem, ISolution, IDelta, IAlgorithm> startActions;
+        protected Action<IProblem, ISolution, IDelta, IAlgorithm> endActions;
+
         public abstract bool IsSolutionAcceptable(ISolution solution);
         public abstract ISolution Solve(IProblem problem);
 
@@ -103,6 +123,17 @@ namespace UnityTools.Algorithm
         public virtual IterationSateDone Done { get => IterationSateDone.Instance; }
 
         public ISolution CurrentSolution => this.currentSolution;
+        public void Start(Action<IProblem, ISolution, IDelta, IAlgorithm> startAction)
+        {
+            this.startActions -= startAction;
+            this.startActions += startAction;
+        }
+
+        public void End(Action<IProblem, ISolution, IDelta, IAlgorithm> endAction)
+        {
+            this.endActions -= endAction;
+            this.endActions += endAction;
+        }
 
         public IterationAlgorithm(IProblem problem, IDelta dt) : base()
         {
@@ -142,6 +173,8 @@ namespace UnityTools.Algorithm
             {
                 var sim = obj as IterationAlgorithm;
                 sim.dt.Reset();
+
+                sim.startActions?.Invoke(sim.problem, sim.CurrentSolution, sim.dt, sim);
             }
             internal override void Excute(ObjectStateMachine obj)
             {
@@ -150,7 +183,7 @@ namespace UnityTools.Algorithm
 
                 if (sim.IsSolutionAcceptable(sol))
                 {
-                    sim.ChangeState(IterationSateDone.Instance);
+                    sim.ChangeState(sim.Done);
                 }
 
                 sim.currentSolution = sol;
@@ -158,6 +191,8 @@ namespace UnityTools.Algorithm
 
             internal override void Leave(ObjectStateMachine obj)
             {
+                var sim = obj as IterationAlgorithm;
+                sim.endActions?.Invoke(sim.problem, sim.CurrentSolution, sim.dt, sim);
             }
         }
 
