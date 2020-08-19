@@ -11,7 +11,7 @@ namespace UnityTools.Algorithm
     {
         public interface IState : Function<IState, float>
         {
-            void UpdateNewValue();
+
         }
 
         public abstract class Problem : IProblem
@@ -49,7 +49,7 @@ namespace UnityTools.Algorithm
             var sol = new Solution();
             var p = this.problem as Problem;
 
-            p.Next.UpdateNewValue();
+            p.Next.Generate(p.Next);
 
             var current = p.Current.Evaluate(p.Current);
             var next = p.Next.Evaluate(p.Next);

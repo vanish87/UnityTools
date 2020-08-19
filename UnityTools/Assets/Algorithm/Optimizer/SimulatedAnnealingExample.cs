@@ -15,7 +15,9 @@ namespace UnityTools.Algorithm
             public class Data : SimulatedAnnealing.IState
             {
                 protected float3 scale = new float3(1, 0.01f, 1);
-                public float2 currentx;
+                protected float2 currentx;
+
+                public float2 CurrentX => this.currentx;
                 public float Evaluate(SimulatedAnnealing.IState state)
                 {
                     var x = currentx.x * scale.x;
@@ -27,15 +29,12 @@ namespace UnityTools.Algorithm
                 }
                 public SimulatedAnnealing.IState Generate(SimulatedAnnealing.IState x)
                 {
-                    return x;
-                }
-
-                public void UpdateNewValue()
-                {
                     this.currentx = new float2(ThreadSafeRandom.NextFloat(), ThreadSafeRandom.NextFloat());
                     //make random value to cover the range of min
                     //see for detail: https://en.wikipedia.org/wiki/Himmelblau%27s_function
                     this.currentx = (this.currentx - 0.5f) * 2 * 10;
+
+                    return x;
                 }
             }
             public HimmelblauState() : base(2)
@@ -99,7 +98,7 @@ namespace UnityTools.Algorithm
             this.SA.End((p, s, dt, a) =>
             {
                 var state = (p as Problem).Current as HimmelblauState.Data;
-                LogTool.Log("Solution: " + state.currentx + " min= " + state.Evaluate(null), LogLevel.Info);
+                LogTool.Log("Solution: " + state.CurrentX + " min= " + state.Evaluate(null), LogLevel.Info);
             });
         }
 
