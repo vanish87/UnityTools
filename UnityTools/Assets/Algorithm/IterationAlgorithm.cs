@@ -15,6 +15,11 @@ namespace UnityTools.Algorithm
         ISolution CurrentSolution { get; }
         bool IsSolutionAcceptable(ISolution solution);
     }
+    /// <summary>
+    /// It seems not necessary that use IterationAlgorithm as MonoBehaviour
+    /// Using Thread version below and checking solution/step algorithm 
+    /// in MonoBehaviour's Update would be a better way to do this
+    /// </summary>
     [System.Serializable]
     public abstract class IterationAlgorithmMono: ObjectStateMachine<IterationAlgorithmMono>, IIterationAlgorithm
     {
@@ -24,6 +29,7 @@ namespace UnityTools.Algorithm
         protected IterationAlgorithmMode runMode = IterationAlgorithmMode.FullStep;
 
         protected Action<IProblem, ISolution, IDelta, IAlgorithm> startActions;
+        protected Action<IProblem, ISolution, IDelta, IAlgorithm> perStepActions;
         protected Action<IProblem, ISolution, IDelta, IAlgorithm> endActions;
 
         public abstract bool IsSolutionAcceptable(ISolution solution);
@@ -40,6 +46,11 @@ namespace UnityTools.Algorithm
         {
             this.startActions -= startAction;
             this.startActions += startAction;
+        }
+        public void PerStep(Action<IProblem, ISolution, IDelta, IAlgorithm> perStepAction)
+        {
+            this.perStepActions -= perStepAction;
+            this.perStepActions += perStepAction;
         }
 
         public void End(Action<IProblem, ISolution, IDelta, IAlgorithm> endAction)
@@ -102,18 +113,20 @@ namespace UnityTools.Algorithm
             internal override void Excute(IterationAlgorithmMono obj)
             {
                 var sol = obj.SolveInternal();
+                obj.currentSolution = sol;
+                obj.perStepActions?.Invoke(obj.problem, obj.CurrentSolution, obj.dt, obj);
 
                 if (obj.IsSolutionAcceptable(sol))
                 {
                     obj.ChangeState(obj.Done);
                 }
 
-                obj.currentSolution = sol;
 
-                if(obj.RunMode == IterationAlgorithmMode.PerStep)
+                if (obj.RunMode == IterationAlgorithmMode.PerStep)
                 {
                     obj.ChangeState(obj.Ready);
                 }
+
             }
 
             internal override void Leave(IterationAlgorithmMono obj)
@@ -141,6 +154,7 @@ namespace UnityTools.Algorithm
         protected IterationAlgorithmMode runMode = IterationAlgorithmMode.FullStep;
 
         protected Action<IProblem, ISolution, IDelta, IAlgorithm> startActions;
+        protected Action<IProblem, ISolution, IDelta, IAlgorithm> perStepActions;
         protected Action<IProblem, ISolution, IDelta, IAlgorithm> endActions;
 
         public abstract bool IsSolutionAcceptable(ISolution solution);
@@ -156,6 +170,11 @@ namespace UnityTools.Algorithm
         {
             this.startActions -= startAction;
             this.startActions += startAction;
+        }
+        public void PerStep(Action<IProblem, ISolution, IDelta, IAlgorithm> perStepAction)
+        {
+            this.perStepActions -= perStepAction;
+            this.perStepActions += perStepAction;
         }
 
         public void End(Action<IProblem, ISolution, IDelta, IAlgorithm> endAction)
@@ -221,14 +240,14 @@ namespace UnityTools.Algorithm
             {
                 var sim = obj as IterationAlgorithm;
                 var sol = sim.SolveInternal();
+                                             
+                sim.currentSolution = sol;
+                sim.perStepActions?.Invoke(sim.problem, sim.CurrentSolution, sim.dt, sim);
 
                 if (sim.IsSolutionAcceptable(sol))
                 {
                     sim.ChangeState(sim.Done);
                 }
-
-                sim.currentSolution = sol;
-
 
                 if (sim.RunMode == IterationAlgorithmMode.PerStep)
                 {

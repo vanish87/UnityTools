@@ -100,11 +100,11 @@ namespace UnityTools.Math
             this.InitH();
         }
 
-        public DiscreteFunction(Tuple<XValue, YValue> start, Tuple<XValue, YValue> end, Vector <YValue> from)
+        public DiscreteFunction(XValue start, XValue end, Vector<YValue> from)
         {
             this.valueMap = new List<Tuple<XValue, YValue>>();
-            this.start  = new Tuple<XValue, YValue>(start.Item1, from[0]);
-            this.end    = new Tuple<XValue, YValue>(end.Item1, from[from.Size-1]);
+            this.start  = new Tuple<XValue, YValue>(start, from[0]);
+            this.end    = new Tuple<XValue, YValue>(end, from[from.Size-1]);
             this.sampleNum = from.Size;
 
             this.InitH();
@@ -245,7 +245,7 @@ namespace UnityTools.Math
     public class X2FDiscreteFunction<X> : DiscreteFunction<X, float>
     {
         public X2FDiscreteFunction(AnimationCurve from) : base(from) { }
-        public X2FDiscreteFunction(Tuple<X, float> start, Tuple<X, float> end, Vector<float> from) : base(start, end, from) { }
+        public X2FDiscreteFunction(X start, X end, Vector<float> from) : base(start, end, from) { }
         public X2FDiscreteFunction(Tuple<X, float> start, Tuple<X, float> end, int sampleNum) : base(start, end, sampleNum)
         {
 
