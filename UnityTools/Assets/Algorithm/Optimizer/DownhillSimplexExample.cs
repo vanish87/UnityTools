@@ -109,7 +109,7 @@ namespace UnityTools.Algorithm
 
         protected void OnDisable()
         {
-            this.simplex.Stop();
+            this.simplex.StopThread();
         }
 
         protected void OnDrawGizmos()

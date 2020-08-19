@@ -43,15 +43,15 @@ namespace UnityTools.Common
 
         ~ObjectStateMachine()
         {
-            this.Stop();
+            this.StopThread();
         }
 
         protected override void DisposeManaged()
         {
-            this.Stop();
+            this.StopThread();
         }
 
-        public void Stop()
+        public void StopThread()
         {
             lock(this)
             {
