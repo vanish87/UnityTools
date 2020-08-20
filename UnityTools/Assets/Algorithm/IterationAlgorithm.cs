@@ -160,7 +160,7 @@ namespace UnityTools.Algorithm
         public abstract bool IsSolutionAcceptable(ISolution solution);
         public abstract ISolution Solve(IProblem problem);
 
-        public virtual IterationAlgorithmMode RunMode => this.runMode;
+        public virtual IterationAlgorithmMode RunMode { get => this.runMode; set => this.runMode = value; }
         public virtual IterationSateReady Ready { get => IterationSateReady.Instance; }
         public virtual IterationSateRunning Running { get => IterationSateRunning.Instance; }
         public virtual IterationSateDone Done { get => IterationSateDone.Instance; }
