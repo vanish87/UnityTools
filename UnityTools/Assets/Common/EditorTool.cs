@@ -19,7 +19,7 @@ namespace UnityTools.Debuging.EditorTool
             this.oldMatrix = Gizmos.matrix;
 
             Gizmos.color = color;
-            Gizmos.matrix = mat;
+            Gizmos.matrix *= mat;
         }
         protected override void DisposeManaged()
         {
