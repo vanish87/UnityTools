@@ -39,11 +39,25 @@ namespace UnityTools.Common
             this.thread.Start();
 
             ThreadDebug.Add(this.thread);
+
+            #if UNITY_EDITOR
+            UnityEditor.EditorApplication.playModeStateChanged += this.PlayModeStateChanged;
+            #endif
         }
+        #if UNITY_EDITOR
+        protected void PlayModeStateChanged(UnityEditor.PlayModeStateChange state)
+        {
+            if (state == UnityEditor.PlayModeStateChange.ExitingPlayMode)
+            {
+                this.StopThread(true);
+            }
+        }
+        #endif
 
         ~ObjectStateMachine()
         {
-            this.StopThread();
+            this.StopThread(true);
+            ThreadDebug.Remove(this.thread);
         }
 
         protected override void DisposeManaged()
@@ -51,14 +65,14 @@ namespace UnityTools.Common
             this.StopThread();
         }
 
-        public void StopThread()
+        public void StopThread(bool force = false)
         {
             lock(this)
             {
                 this.state = ThreadState.Stopped;
             }
 
-            ThreadDebug.Remove(this.thread);
+            if (force) this.thread.Abort();
         }
         public void Pause()
         {
@@ -96,30 +110,36 @@ namespace UnityTools.Common
             {
                 current = this.state = ThreadState.Running;
             }
-
-            while (current != ThreadState.Stopped)
+            try
             {
-                if (current == ThreadState.Running)
+                while (current != ThreadState.Stopped)
                 {
-                    if (this.globalState != null)
+                    if (current == ThreadState.Running)
                     {
-                        this.globalState.Excute(this);
+                        if (this.globalState != null)
+                        {
+                            this.globalState.Excute(this);
+                        }
+                        if (this.currentState != null)
+                        {
+                            this.currentState.Excute(this);
+                        }
                     }
-                    if (this.currentState != null)
+
+                    lock (this)
                     {
-                        this.currentState.Excute(this);
+                        current = this.state;
                     }
+
+                    //Debug.Log("running");
                 }
 
-                lock (this)
-                {
-                    current = this.state;
-                }
-
-                //Debug.Log("running");
+                LogTool.Log("Thread Stopped " + this.ToString());
             }
-
-            LogTool.Log("Thread Stopped " + this.ToString());
+            catch (ThreadAbortException abortException)
+            {
+                LogTool.Log("Thread Stopped by Abort " + abortException.Message);
+            }
         }
 
     }

@@ -107,11 +107,6 @@ namespace UnityTools.Algorithm
             }
         }
 
-        protected void OnDisable()
-        {
-            this.simplex.StopThread();
-        }
-
         protected void OnDrawGizmos()
         {
             var simplex = this.simplex?.Vertices;

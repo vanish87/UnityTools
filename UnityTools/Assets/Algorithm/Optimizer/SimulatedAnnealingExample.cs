@@ -101,11 +101,6 @@ namespace UnityTools.Algorithm
                 LogTool.Log("Solution: " + state.CurrentX + " min= " + state.Evaluate(null), LogLevel.Info);
             });
         }
-
-        protected void OnDisable()
-        {
-            this.SA.StopThread();
-        }
-
+        
     }
 }
