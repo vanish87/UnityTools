@@ -16,10 +16,10 @@ namespace UnityTools.Algorithm
 
         public abstract class Problem : IProblem
         {
-            internal protected float temperature;
-            internal protected float k;
-            internal protected float minTemperature;
-            internal protected float alpha;
+            internal protected float temperature = 1;
+            internal protected float k = 1;
+            internal protected float minTemperature = 0.000001f;
+            internal protected float alpha = 0.99f;
 
             public abstract IState Current { get; }
             public abstract IState Next { get; }

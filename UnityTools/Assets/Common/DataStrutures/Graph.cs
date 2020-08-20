@@ -31,7 +31,7 @@ namespace UnityTools.Common
     }
 
     [System.Serializable]
-    public abstract class NewGraph<Node, Edge> : IGraph<Node, Edge> where Node : INode, new() where Edge : IEdge
+    public abstract class Graph<Node, Edge> : IGraph<Node, Edge> where Node : INode, new() where Edge : IEdge
     {
         protected List<Node> nodeList = new List<Node>();
         protected bool isDirectional = false;
@@ -56,12 +56,12 @@ namespace UnityTools.Common
         }
     }
     [System.Serializable]
-    public class NewGraphAdj<Node, Edge> : NewGraph<Node, Edge> where Node : INode, new() where Edge : Segment<Node>, IEdge
+    public class GraphAdj<Node, Edge> : Graph<Node, Edge> where Node : INode, new() where Edge : Segment<Node>, IEdge
     {
         protected Matrix<Edge> matrix = null;
         protected int size = 0;
 
-        public NewGraphAdj(int size, bool isDirectional = false) :base()
+        public GraphAdj(int size, bool isDirectional = false) :base()
         {
             this.isDirectional = isDirectional;
             this.size = size;
@@ -72,8 +72,20 @@ namespace UnityTools.Common
         {
             this.ChekcIndex(from, to);
 
+            if(this.Edges.Contains(edge))
+            {
+                LogTool.Log("Edge From " + edge.Start.Index + " To " + edge.End.Index + " exists nothing to do", LogLevel.Error);
+                return;
+            }
+
+            //LogTool.AssertIsTrue(edge.Start.Index == from);
+            //LogTool.AssertIsTrue(edge.End.Index == to);
+
+            edge.Start  = this.Nodes.Where(n => n.Index == from).First();
+            edge.End    = this.Nodes.Where(n => n.Index == to).First();
+
             this.matrix[from][to] = edge;
-            if(this.isDirectional == false)
+            if (this.isDirectional == false && from != to)
             {
                 var cedge = edge.DeepCopy();
                 cedge.Start = edge.End;
@@ -89,7 +101,7 @@ namespace UnityTools.Common
         public IEnumerable<Node> GetNeighborsNodes(int from)
         {
             this.ChekcIndex(from, 0);
-            return this.matrix[from].Where(n => n != null).Select(e => e.End);
+            return this.matrix[from].Where(n => n != null && n.Start.Index != n.End.Index).Select(e => e.End);
         }
         public IEnumerable<Edge> GetNeighborsEdges(int from)
         {
@@ -139,12 +151,6 @@ namespace UnityTools.Common
             return this.GetNeighborsNodes(from.Index);
         }
 
-        protected void ChekcIndex(int x, int y)
-        {
-            LogTool.LogAssertIsTrue(0 <= x && x < this.matrix.Size.x, "Invalid Index");
-            LogTool.LogAssertIsTrue(0 <= y && y < this.matrix.Size.y, "Invalid Index");
-        }
-
         public override void Clear()
         {
             this.matrix = new Matrix<Edge>(this.size, this.size);
@@ -154,10 +160,16 @@ namespace UnityTools.Common
                 this.AddNode();
             }
         }
+
+        protected void ChekcIndex(int x, int y)
+        {
+            LogTool.LogAssertIsTrue(0 <= x && x < this.matrix.Size.x, "Invalid Index");
+            LogTool.LogAssertIsTrue(0 <= y && y < this.matrix.Size.y, "Invalid Index");
+        }
     }
 
 
-    [System.Serializable]
+    /*[System.Serializable]
     public class Graph<Node, AdjacentEdge> where Node: INode, new()
     {
         protected List<Node> nodes  = null;
@@ -246,6 +258,77 @@ namespace UnityTools.Common
         public void Print()
         {
             this.matrix.Print();
+        }
+    }
+*/
+
+
+    public class GraphTest : Test.ITest
+    {
+        public string Name => this.ToString();
+
+        [System.Serializable]
+        public class Node : INode
+        {
+            protected int index = -1;
+            public int Index { get => this.index; set => this.index = value; }
+        }
+        [System.Serializable]
+
+        public class Edge : Segment<Node>, IEdge
+        {
+            public bool connected;
+        }
+
+        public void RunTest()
+        {
+            var g = new GraphAdj<Node, Edge>(10);
+            var e00 = new Edge() { connected = true };
+            var e01 = new Edge() { connected = true };
+            var e02 = new Edge() { connected = true };
+            var e03 = new Edge() { connected = true };
+            var e04 = new Edge() { connected = true };
+            g.AddEdge(0, 0, e00);
+            g.AddEdge(0, 1, e01);
+            g.AddEdge(0, 2, e02);
+            g.AddEdge(0, 3, e03);
+            g.AddEdge(0, 4, e04);
+            g.AddEdge(2, 5, new Edge() { connected = true });
+
+            LogTool.AssertIsTrue(e00 == g.GetEdge(0, 0));
+            LogTool.AssertIsTrue(e01 == g.GetEdge(0, 1));
+            LogTool.AssertIsTrue(e02 == g.GetEdge(0, 2));
+            LogTool.AssertIsTrue(e03 == g.GetEdge(0, 3));
+            LogTool.AssertIsTrue(g.GetEdge(0, 1) != g.GetEdge(0, 3));
+
+            //this should do nothing but a error message
+            //g.AddEdge(0, 0, e01);
+
+            var nodes = g.Nodes.ToList();
+            var n0 = nodes[0];
+            var neighbor = g.GetNeighborsNodes(n0).ToList();
+            LogTool.AssertIsFalse(neighbor.Contains(n0));
+
+            LogTool.AssertIsTrue(neighbor.Count == 4);
+            LogTool.AssertIsTrue(neighbor.Contains(nodes[1]));
+            LogTool.AssertIsTrue(neighbor.Contains(nodes[2]));
+            LogTool.AssertIsTrue(neighbor.Contains(nodes[3]));
+            LogTool.AssertIsTrue(neighbor.Contains(nodes[4]));
+
+
+
+            var nedges = g.GetNeighborsEdges(n0).ToList();
+
+            LogTool.AssertIsTrue(nedges.Count == 5);
+            LogTool.AssertIsTrue(nedges.Contains(e00));
+            LogTool.AssertIsTrue(nedges.Contains(e01));
+            LogTool.AssertIsTrue(nedges.Contains(e02));
+            LogTool.AssertIsTrue(nedges.Contains(e03));
+            LogTool.AssertIsTrue(nedges.Contains(e04));
+        }
+
+        public void Report()
+        {
         }
     }
 }

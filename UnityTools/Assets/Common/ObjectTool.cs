@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -34,6 +35,16 @@ namespace UnityTools
         public static GameObject[] FindRootObject()
         {
             return System.Array.FindAll(GameObject.FindObjectsOfType<GameObject>(), (item) => item.transform.parent == null);
+        }
+
+        public static IEnumerable<System.Type> FindAllTypes<T>()
+        {
+            var type = typeof(T);
+            var types = System.AppDomain.CurrentDomain.GetAssemblies()
+                .SelectMany(s => s.GetTypes())
+                .Where(p => p.GetInterfaces().Contains(type));
+
+            return types;
         }
 
         public static List<T> FindAllObject<T>()
