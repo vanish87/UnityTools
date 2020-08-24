@@ -25,6 +25,11 @@ namespace UnityTools.Algorithm
             public abstract IState Next { get; }
 
             public abstract void MoveToNext();
+
+            public virtual void Cool()
+            {
+                this.temperature *= this.alpha;
+            }
         }
         public class Solution : ISolution
         {
@@ -57,7 +62,7 @@ namespace UnityTools.Algorithm
             if(this.ShouldUseNext(current, next))
             {
                 p.MoveToNext();
-                p.temperature *= p.alpha;
+                p.Cool();
             }
 
             sol.Current = p.Current;
