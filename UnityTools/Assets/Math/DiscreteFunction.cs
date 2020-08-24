@@ -224,9 +224,9 @@ namespace UnityTools.Math
 
             switch (this.fdType)
             {
-                case FiniteDifferenceType.Forward:  return (next - current) / dh;
+                case FiniteDifferenceType.Forward:  return (next - current) / dh;//dh is correct
                 case FiniteDifferenceType.Central:  return (next - prev) / (2 * dh);
-                case FiniteDifferenceType.Backward: return (current - prev) / dh;
+                case FiniteDifferenceType.Backward: return (current - prev) / dh;//dh is correct
                 default: return default;
             }
         }
