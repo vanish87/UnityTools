@@ -62,7 +62,7 @@ namespace UnityTools.Common
 
         protected override void DisposeManaged()
         {
-            this.StopThread();
+            this.StopThread(true);
         }
 
         public void StopThread(bool force = false)
@@ -134,7 +134,7 @@ namespace UnityTools.Common
                     //Debug.Log("running");
                 }
 
-                LogTool.Log("Thread Stopped " + this.ToString());
+                //LogTool.Log("Thread Stopped " + this.ToString());
             }
             catch (ThreadAbortException abortException)
             {

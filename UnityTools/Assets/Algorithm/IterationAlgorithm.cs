@@ -195,7 +195,7 @@ namespace UnityTools.Algorithm
         {
             this.ChangeState(this.Ready);
         }
-        public void TryToRun()
+        public virtual void TryToRun()
         {
             if (this.currentState == this.Running)
             {
@@ -257,8 +257,6 @@ namespace UnityTools.Algorithm
 
             internal override void Leave(ObjectStateMachine obj)
             {
-                var sim = obj as IterationAlgorithm;
-                sim.endActions?.Invoke(sim.problem, sim.CurrentSolution, sim.dt, sim);
             }
         }
 
@@ -267,7 +265,11 @@ namespace UnityTools.Algorithm
         {
             public static IterationSateDone Instance { get => instance; }
             protected static IterationSateDone instance = new IterationSateDone();
-            internal override void Enter(ObjectStateMachine obj) { }
+            internal override void Enter(ObjectStateMachine obj)
+            {
+                var sim = obj as IterationAlgorithm;
+                sim.endActions?.Invoke(sim.problem, sim.CurrentSolution, sim.dt, sim);
+            }
             internal override void Excute(ObjectStateMachine obj) { }
             internal override void Leave(ObjectStateMachine obj) { }
         }

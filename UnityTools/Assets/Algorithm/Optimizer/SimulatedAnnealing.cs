@@ -14,6 +14,7 @@ namespace UnityTools.Algorithm
 
         }
 
+        [System.Serializable]
         public abstract class Problem : IProblem
         {
             internal protected float temperature = 1;
@@ -26,9 +27,9 @@ namespace UnityTools.Algorithm
 
             public abstract void MoveToNext();
 
-            public virtual void Cool()
+            public virtual void Cool(bool useNext)
             {
-                this.temperature *= this.alpha;
+                if(useNext) this.temperature *= this.alpha;
             }
         }
         public class Solution : ISolution
@@ -59,11 +60,13 @@ namespace UnityTools.Algorithm
             var current = p.Current.Evaluate(p.Current);
             var next = p.Next.Evaluate(p.Next);
 
-            if(this.ShouldUseNext(current, next))
+            var useNext = this.ShouldUseNext(current, next);
+            if (useNext)
             {
                 p.MoveToNext();
-                p.Cool();
             }
+
+            p.Cool(useNext);
 
             sol.Current = p.Current;
 

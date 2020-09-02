@@ -112,7 +112,7 @@ namespace UnityTools.Common
         }       
 
         
-        static public T Read<T>(string filePath, SerializerType type = SerializerType.Binary) where T : new()
+        static public T Read<T>(string filePath, SerializerType type = SerializerType.Binary)
         {
             var ret = default(T);
             if (File.Exists(filePath))
@@ -162,9 +162,7 @@ namespace UnityTools.Common
             }
             else
             {
-                LogTool.Log(filePath + " not found, create new one", LogLevel.Warning, LogChannel.IO);
-                ret = new T();
-                Write(filePath, ret, type);
+                LogTool.Log(filePath + " not found", LogLevel.Warning, LogChannel.IO);
             }
 
             return ret;

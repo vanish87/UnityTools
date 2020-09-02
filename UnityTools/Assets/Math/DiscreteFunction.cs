@@ -18,6 +18,11 @@ namespace UnityTools.Math
             Forward,
             Backward,
         }
+        public enum EvaluateMode
+        {
+            Repeat,
+            Clamp,
+        }
         protected FiniteDifferenceType fdType = FiniteDifferenceType.Central;
         protected List<Tuple<XValue, YValue>> valueMap;
         protected Tuple<XValue, YValue> start;
@@ -154,13 +159,13 @@ namespace UnityTools.Math
         }
 
         public delegate YValue Lerp(YValue from, YValue to, float t);
-        public YValue Evaluate(float t, bool clamp = false, Lerp lerp = null)
+        public YValue Evaluate(float t, EvaluateMode eMode = EvaluateMode.Clamp, Lerp lerp = null)
         {
             dynamic s = this.Start.Item1;
             dynamic e = this.End.Item1;
             dynamic range = e - s;
 
-            t = clamp? math.clamp(t, s, e):t;
+            t = eMode == EvaluateMode.Clamp ? math.clamp(t, s, e) : t;
 
             var index = (t % range) / h;
             var from = Mathf.FloorToInt(index);
