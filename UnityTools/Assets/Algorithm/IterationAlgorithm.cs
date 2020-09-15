@@ -16,7 +16,7 @@ namespace UnityTools.Algorithm
         bool IsSolutionAcceptable(ISolution solution);
     }
     /// <summary>
-    /// It seems not necessary that use IterationAlgorithm as MonoBehaviour
+    /// It seems not necessary that to use IterationAlgorithm as MonoBehaviour
     /// Using Thread version below and checking solution/step algorithm 
     /// in MonoBehaviour's Update would be a better way to do this
     /// </summary>
@@ -42,7 +42,7 @@ namespace UnityTools.Algorithm
 
         public ISolution CurrentSolution => this.currentSolution;
 
-        public void Start(Action<IProblem, ISolution, IDelta, IAlgorithm> startAction)
+        public void OnStart(Action<IProblem, ISolution, IDelta, IAlgorithm> startAction)
         {
             this.startActions -= startAction;
             this.startActions += startAction;
@@ -58,7 +58,7 @@ namespace UnityTools.Algorithm
             this.endActions -= endAction;
             this.endActions += endAction;
         }
-        public void Init(IProblem problem, IDelta dt, IterationAlgorithmMode runMode = IterationAlgorithmMode.FullStep)
+        public virtual void Init(IProblem problem, IDelta dt, IterationAlgorithmMode runMode = IterationAlgorithmMode.FullStep)
         {
             this.problem = problem;
             this.dt = dt;
@@ -164,6 +164,7 @@ namespace UnityTools.Algorithm
         public virtual IterationSateReady Ready { get => IterationSateReady.Instance; }
         public virtual IterationSateRunning Running { get => IterationSateRunning.Instance; }
         public virtual IterationSateDone Done { get => IterationSateDone.Instance; }
+        public virtual IterationSatePause Pause { get => IterationSatePause.Instance; }
 
         public ISolution CurrentSolution => this.currentSolution;
         public void Start(Action<IProblem, ISolution, IDelta, IAlgorithm> startAction)
@@ -218,6 +219,19 @@ namespace UnityTools.Algorithm
         {
             public static IterationSateReady Instance { get => instance; }
             protected static IterationSateReady instance = new IterationSateReady();
+            internal override void Enter(ObjectStateMachine obj) 
+            {
+                var sim = obj as IterationAlgorithm;
+                sim.dt.Reset();
+            }
+            internal override void Excute(ObjectStateMachine obj) { }
+            internal override void Leave(ObjectStateMachine obj) { }
+        }
+        [System.Serializable]
+        public class IterationSatePause : StateBase<ObjectStateMachine>
+        {
+            public static IterationSatePause Instance { get => instance; }
+            protected static IterationSatePause instance = new IterationSatePause();
             internal override void Enter(ObjectStateMachine obj) { }
             internal override void Excute(ObjectStateMachine obj) { }
             internal override void Leave(ObjectStateMachine obj) { }
@@ -232,8 +246,6 @@ namespace UnityTools.Algorithm
             internal override void Enter(ObjectStateMachine obj)
             {
                 var sim = obj as IterationAlgorithm;
-                sim.dt.Reset();
-
                 sim.startActions?.Invoke(sim.problem, sim.CurrentSolution, sim.dt, sim);
             }
             internal override void Excute(ObjectStateMachine obj)
@@ -251,7 +263,7 @@ namespace UnityTools.Algorithm
 
                 if (sim.RunMode == IterationAlgorithmMode.PerStep)
                 {
-                    obj.ChangeState(sim.Ready);
+                    obj.ChangeState(sim.Pause);
                 }
             }
 

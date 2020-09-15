@@ -8,4 +8,10 @@ namespace UnityTools.Algorithm
         {
         }
     }
+
+    [System.Serializable]
+    public abstract class SimulatorMono : IterationAlgorithmMono
+    {
+
+    }
 }

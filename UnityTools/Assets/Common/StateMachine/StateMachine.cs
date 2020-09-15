@@ -11,8 +11,8 @@ namespace UnityTools.Common
     public class ThreadDebug
     {
         protected static List<Thread> currentThread = new List<Thread>();
-        public static void Add(Thread thrad) { currentThread.Add(thrad); }
-        public static void Remove(Thread thrad) { currentThread.Remove(thrad); }
+        public static void Add(Thread thread) { currentThread.Add(thread); }
+        public static void Remove(Thread thread) { currentThread.Remove(thread); }
 
         public static void Print() { foreach(var t in currentThread) { LogTool.Log(t.Name + " is running"); } }
     }
