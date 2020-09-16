@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using UnityTools.Common;
 using UnityTools.Debuging;
 
@@ -14,6 +15,30 @@ namespace UnityTools.Algorithm
         IterationAlgorithmMode RunMode { get; }
         ISolution CurrentSolution { get; }
         bool IsSolutionAcceptable(ISolution solution);
+    }
+
+    public class IterationDelta : IDelta
+    {
+        public float DeltaTime =>this.dt;
+        public float Current=>this.current;
+        protected Stopwatch stopwatch = new Stopwatch();
+        protected float dt = 0;
+        protected float current = 0;
+        
+        public virtual void Reset()
+        {
+            this.stopwatch.Restart();
+            this.dt = 0;
+            this.current = 0;
+        }
+
+        public virtual void Step()
+        {
+            this.stopwatch.Stop();
+            this.dt = this.stopwatch.Elapsed.Milliseconds / 1000f;
+            this.current += this.dt;
+            this.stopwatch.Restart();
+        }
     }
     /// <summary>
     /// It seems not necessary that to use IterationAlgorithm as MonoBehaviour

@@ -70,9 +70,9 @@ namespace UnityTools.Common
     }
 
     [System.Serializable]
-    public class CricleData<T, S> : CricleDataBase<T, S> where T : new()
+    public class CircleData<T, S> : CricleDataBase<T, S> where T : new()
     {
-        public CricleData(int size = 1, S para = default) : base(size, para) { }
+        public CircleData(int size = 1, S para = default) : base(size, para) { }
         protected override T OnCreate(S para)
         {
             return new T();

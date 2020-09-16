@@ -10,7 +10,7 @@ namespace UnityTools.Algorithm
 {
     public class SimulatedAnnealingExample : MonoBehaviour
     {
-        public class HimmelblauState : CricleData<HimmelblauState.Data, int>
+        public class HimmelblauState : CircleData<HimmelblauState.Data, int>
         {
             public class Data : SimulatedAnnealing.IState
             {

@@ -25,14 +25,10 @@ namespace UnityTools.Math
         }
         protected FiniteDifferenceType fdType = FiniteDifferenceType.Central;
         protected List<Tuple<XValue, YValue>> valueMap;
-        protected Tuple<XValue, YValue> start;
-        protected Tuple<XValue, YValue> end;
-        protected XValue h;
-        protected int sampleNum;
 
-        public Tuple<XValue, YValue> Start { get => this.start; }
-        public Tuple<XValue, YValue> End { get => this.end; }
-        public int SampleNum { get => this.sampleNum; }
+        public Tuple<XValue, YValue> Start { get => this.valueMap.Count > 0 ? this.valueMap[0] : null; }
+        public Tuple<XValue, YValue> End { get => this.valueMap.Count > 0 ? this.valueMap[this.valueMap.Count - 1] : null; }
+        public int SampleNum { get => this.valueMap.Count; }
 
         private static readonly List<Type> SupportedTypes =
             new List<Type>() {
@@ -52,11 +48,11 @@ namespace UnityTools.Math
 
             var ret = new AnimationCurve();
             var index = 0;
-            foreach(var d in this.valueMap)
+            foreach (var d in this.valueMap)
             {
                 dynamic time = d.Item1;
                 dynamic value = d.Item2;
-                dynamic dev = this.Devrivate(index);
+                dynamic dev = this.Derivate(index);
                 var key = new Keyframe() { time = time, value = value };
                 key.weightedMode = WeightedMode.None;
                 key.inTangent = key.outTangent = dev;
@@ -81,39 +77,41 @@ namespace UnityTools.Math
         {
             var ret = new Vector<YValue>(this.SampleNum);
             var count = 0;
-            foreach(var y in this.valueMap)
+            foreach (var y in this.valueMap)
             {
                 ret[count++] = y.Item2;
             }
             return ret;
         }
+        public void Append(XValue xValue, YValue yValue)
+        {
+            this.valueMap.Add(new Tuple<XValue, YValue>(xValue, yValue));
+        }
+
         public DiscreteFunction(AnimationCurve from)
         {
             this.valueMap = new List<Tuple<XValue, YValue>>();
-            this.sampleNum = from.keys.Length;
 
             foreach (var key in from.keys)
             {
                 dynamic t = key.time;
                 dynamic v = key.value;
-                this.AddValue(new Tuple<XValue, YValue>(t, v));
+                this.Append(t, v);
             }
-
-            this.start = this.valueMap[0];
-            this.end = this.valueMap[this.valueMap.Count-1];
-
-            this.InitH();
         }
 
         public DiscreteFunction(XValue start, XValue end, Vector<YValue> from)
         {
             this.valueMap = new List<Tuple<XValue, YValue>>();
-            this.start  = new Tuple<XValue, YValue>(start, from[0]);
-            this.end    = new Tuple<XValue, YValue>(end, from[from.Size-1]);
-            this.sampleNum = from.Size;
 
-            this.InitH();
-            this.InitValues(from);
+            dynamic s = start;
+            dynamic e = end;
+            int count = from.Size;
+            var h = (e - s) / count;
+            for (var i = 0; i < count; ++i)
+            {
+                this.Append(s + h * i, from[i]);
+            }
         }
 
         public DiscreteFunction(Tuple<XValue, YValue> start = null, Tuple<XValue, YValue> end = null, int sampleNum = 1)
@@ -124,23 +122,19 @@ namespace UnityTools.Math
             start = start ?? new Tuple<XValue, YValue>(default, default);
             end = end ?? new Tuple<XValue, YValue>(default, default);
 
-            //this.valueMap = new CricleData<List<Tuple<XValue, YValue>>, int>(2);
             this.valueMap = new List<Tuple<XValue, YValue>>();
-            this.start = start;
-            this.end = end;
-            this.sampleNum = sampleNum;
-
-            this.InitH();
-            this.InitValues();
+            this.InitValues(start, end, sampleNum);
         }
         public void ResetValues()
         {
-            this.valueMap.Clear();
-            this.InitValues();
+            for (var i = 0; i < this.valueMap.Count; ++i)
+            {
+                this.valueMap[i] = new Tuple<XValue, YValue>(this.valueMap[i].Item1, default(YValue));
+            }
         }
         public YValue this[int index]
         {
-            get 
+            get
             {
                 var x = math.clamp(index, 0, this.valueMap.Count - 1);
                 return this.valueMap[x].Item2;
@@ -167,82 +161,75 @@ namespace UnityTools.Math
 
             t = eMode == EvaluateMode.Clamp ? math.clamp(t, s, e) : t;
 
-            var index = (t % range) / h;
-            var from = Mathf.FloorToInt(index);
-            var to = Mathf.CeilToInt(index);
+            var x = (t % range);
+            var index = this.GetIndexForXvalue(x);
+            var from = index - 1;
+            var to = index;
             var yfrom = this[from];
             var yto = this[to];
 
             return lerp != null ? lerp(yfrom, yto, index - from) : math.lerp(yfrom, yto, index - from);
         }
-        protected virtual void InitValues(Vector<YValue> y = null)
-        {
-            dynamic s = this.Start.Item1;
-            dynamic dh = this.h;
 
-            this.AddValue(this.Start);
-            for (var i = 1; i < this.sampleNum - 1; ++i)
-            {
-                this.AddValue(new Tuple<XValue, YValue>(s + i * dh, y != null ? y[i] : default(YValue)));
-            }
-            this.AddValue(this.End);
-
-            LogTool.LogAssertIsTrue(this.valueMap.Count == sampleNum, "Sample size inconstant");
-        }
-        protected void InitH()
-        {
-            dynamic s = this.Start.Item1;
-            dynamic e = this.End.Item1;
-            dynamic range = e - s;
-
-            LogTool.LogAssertIsFalse(range == 0, "range is 0");
-
-            this.h = range / this.sampleNum;
-        }
-        protected void AddValue(Tuple<XValue, YValue> value)
-        {
-            if (this.valueMap.Count < this.sampleNum)
-            {
-                this.valueMap.Add(value);
-                //this.valueMap.Next.Add(value);
-            }
-            else
-            {
-                LogTool.Log("Sample num is bigger than " + this.sampleNum, LogLevel.Warning);
-            }
-        }
-
-        public YValue Devrivate(int index)
-        {
-            return this.Devrivate(index, this.h);
-        }
-        public YValue Devrivate2(int index)
-        {
-            return this.Devrivate2(index, this.h);
-        }
-        public YValue Devrivate(int index, XValue h)
+        public YValue Derivate(int index)
         {
             dynamic prev = this[index - 1];
             dynamic next = this[index + 1];
             dynamic current = this[index];
-            dynamic dh = h;
+            dynamic dh = this.GetH(index);
 
             switch (this.fdType)
             {
-                case FiniteDifferenceType.Forward:  return (next - current) / dh;//dh is correct
-                case FiniteDifferenceType.Central:  return (next - prev) / (2 * dh);
+                case FiniteDifferenceType.Forward: return (next - current) / dh;//dh is correct
+                case FiniteDifferenceType.Central: return (next - prev) / (2 * dh);
                 case FiniteDifferenceType.Backward: return (current - prev) / dh;//dh is correct
                 default: return default;
             }
         }
-        public YValue Devrivate2(int index, XValue h)
+        public YValue Derivate2(int index)
         {
             //TODO add FiniteDifferenceType switch for dev2
             dynamic prev = this[index - 1];
             dynamic next = this[index + 1];
             dynamic current = this[index];
-            dynamic dh = h;
+            dynamic dh = this.GetH(index);
             return (prev + next - (2 * current)) / (dh * dh);
+        }
+        protected void InitValues(Tuple<XValue, YValue> start, Tuple<XValue, YValue> end, int count)
+        {
+            dynamic s = start.Item1;
+            dynamic e = end.Item1;
+            dynamic h = (e - s) / count;
+
+            for (var i = 0; i < count; ++i)
+            {
+                this.Append(s + i * h, default(YValue));
+            }
+
+            this.valueMap[0] = start;
+            this.valueMap[count - 1] = end;
+        }
+        protected XValue GetH(int index)
+        {
+            dynamic px = this.GetValueX(index - 1);
+            dynamic nx = this.GetValueX(index + 1);
+            dynamic dh = (nx - px) / 2f;
+
+            return dh;
+        }
+        protected int GetIndexForXvalue(XValue x)
+        {
+            var start = 0;
+            var end = this.valueMap.Count - 1;
+            dynamic xv = x;
+            while (start <= end)
+            {
+                var mid = start + (end - start) / 2;
+                dynamic midv = this.valueMap[mid].Item1;
+                if (midv < x) start = mid + 1;
+                else end = mid - 1;
+            }
+            return start;
         }
     }
 
@@ -255,12 +242,12 @@ namespace UnityTools.Math
         {
 
         }
-        public virtual void RandomValues()
+        public virtual void RandomValues(float start = 0, float end = 1)
         {
             for (var i = 0; i < this.valueMap.Count; ++i)
             {
                 var n = this.valueMap[i].Item1;
-                this.valueMap[i] = new Tuple<X, float>(n, ThreadSafeRandom.NextFloat());
+                this.valueMap[i] = new Tuple<X, float>(n, math.lerp(start, end, ThreadSafeRandom.NextFloat()));
             }
         }
     }
