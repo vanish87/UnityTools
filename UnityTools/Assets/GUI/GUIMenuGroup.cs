@@ -12,9 +12,7 @@ namespace UnityTools.GUITool
         {
             void OnDrawGUI();
             string Title { get; }
-
-            byte[] OnSerialize();
-            void OnDeseialize(byte[] data);
+            KeyCode OpenKey { get; }
         }
 
         [Serializable]
@@ -78,12 +76,10 @@ namespace UnityTools.GUITool
 
         protected void Start()
         {
-            if (this.windowData.Count == 0)
+            foreach(var gui in ObjectTool.FindAllObject<IGUIHandler>())
             {
-                this.windowData.Add(new WindowData() { title = WindowType.Debug.ToString(), key = KeyCode.D });
+                this.windowData.Add(new WindowData() { title = gui.Title, key = gui.OpenKey });
             }
-
-            this.windowData.Add(new WindowData() { title = WindowType.Info.ToString(), key = KeyCode.I });
 
             foreach(var w in this.windowData)
             {
@@ -108,6 +104,7 @@ namespace UnityTools.GUITool
         }
 
         public string Title => WindowType.Info.ToString();
+        public KeyCode OpenKey => KeyCode.I;
         public void OnDrawGUI()
         {
             foreach(var w in this.windowData)
@@ -115,15 +112,6 @@ namespace UnityTools.GUITool
                 GUILayout.Label(w.title + " window uses " + w.key.ToString() + " Key");
             }
         }
-
-        public byte[] OnSerialize()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void OnDeseialize(byte[] data)
-        {
-            throw new NotImplementedException();
-        }
+        
     }
 }

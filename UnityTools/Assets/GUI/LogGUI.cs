@@ -13,6 +13,8 @@ namespace UnityTools.GUITool
 
         public string Title => GUIMenuGroup.WindowType.Log.ToString();
 
+        public KeyCode OpenKey => KeyCode.L;
+
         public class GUIData
         {
             public bool open = false;
@@ -54,17 +56,8 @@ namespace UnityTools.GUITool
 
         protected void Start()
         {
-            this.logSocket.StartRecieve(13210);
+            this.logSocket.StartReceive(13210);
         }
 
-        public byte[] OnSerialize()
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public void OnDeseialize(byte[] data)
-        {
-            throw new System.NotImplementedException();
-        }
     }
 }
