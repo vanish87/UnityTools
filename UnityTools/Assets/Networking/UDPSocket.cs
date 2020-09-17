@@ -203,7 +203,7 @@ namespace UnityTools.Networking
             var byteData = this.OnSerialize(data);
             this.SendByte(epTo, byteData);
         }
-        public virtual void StartRecieve(int port = 0)
+        public virtual void StartReceive(int port = 0)
         {
             this.recieveState.remote = SocketData.Make(port);
             this.recieveState.remote.socket = this.socket;

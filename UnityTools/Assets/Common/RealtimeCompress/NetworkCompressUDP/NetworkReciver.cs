@@ -18,7 +18,7 @@ namespace UnityTools.Common
 
         protected void Start()
         {
-            this.socket.StartRecieve(22345);
+            this.socket.StartReceive(22345);
         }
 
         protected void OnRenderImage(RenderTexture source, RenderTexture destination)
