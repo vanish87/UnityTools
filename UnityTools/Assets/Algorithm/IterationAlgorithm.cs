@@ -189,7 +189,7 @@ namespace UnityTools.Algorithm
         public virtual IterationSateReady Ready { get => IterationSateReady.Instance; }
         public virtual IterationSateRunning Running { get => IterationSateRunning.Instance; }
         public virtual IterationSateDone Done { get => IterationSateDone.Instance; }
-        public virtual IterationSatePause Pause { get => IterationSatePause.Instance; }
+        public virtual IterationSatePause PauseState { get => IterationSatePause.Instance; }
 
         public ISolution CurrentSolution => this.currentSolution;
         public void Start(Action<IProblem, ISolution, IDelta, IAlgorithm> startAction)
@@ -288,7 +288,7 @@ namespace UnityTools.Algorithm
 
                 if (sim.RunMode == IterationAlgorithmMode.PerStep)
                 {
-                    obj.ChangeState(sim.Pause);
+                    obj.ChangeState(sim.PauseState);
                 }
             }
 
