@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityTools.Algorithm;
 using UnityTools.Common;
 using UnityTools.Debuging;
+using UnityTools.Test;
 
 namespace UnityTools.Math
 {
@@ -106,9 +107,10 @@ namespace UnityTools.Math
 
             dynamic s = start;
             dynamic e = end;
-            int count = from.Size;
+            //Note count should less than from size by 1
+            int count = from.Size-1;
             var h = (e - s) / count;
-            for (var i = 0; i < count; ++i)
+            for (var i = 0; i < from.Size; ++i)
             {
                 this.Append(s + h * i, from[i]);
             }
@@ -119,7 +121,7 @@ namespace UnityTools.Math
             this.valueMap = new List<Tuple<XValue, YValue>>();
         }
 
-        public DiscreteFunction(Tuple<XValue, YValue> start, Tuple<XValue, YValue> end, int sampleNum = 1)
+        public DiscreteFunction(Tuple<XValue, YValue> start, Tuple<XValue, YValue> end, int sampleNum = 2)
         {
             LogTool.LogAssertIsTrue(sampleNum > 0, "Sample size should none 0");
             LogTool.LogAssertIsTrue(SupportedTypes.Contains(typeof(XValue)), typeof(XValue) + " for XValue is not supported");
@@ -164,16 +166,18 @@ namespace UnityTools.Math
             dynamic e = this.End.Item1;
             dynamic range = e - s;
 
-            t = eMode == EvaluateMode.Clamp ? math.clamp(t, s, e) : t;
+            var x = eMode == EvaluateMode.Clamp ? math.clamp(t, s, e) : t % range;
 
-            var x = (t % range);
             var index = this.GetIndexForXvalue(x);
             var from = index - 1;
             var to = index;
+            var xfrom = this.GetValueX(from);
+            var xto = this.GetValueX(to);
+            var dt = xto > xfrom ?(x-xfrom) / (xto - xfrom) : 0;
             var yfrom = this[from];
             var yto = this[to];
 
-            return lerp != null ? lerp(yfrom, yto, index - from) : math.lerp(yfrom, yto, index - from);
+            return lerp != null ? lerp(yfrom, yto, dt) : math.lerp(yfrom, yto, dt);
         }
 
         public YValue Derivate(int index)
@@ -202,9 +206,10 @@ namespace UnityTools.Math
         }
         protected void InitValues(Tuple<XValue, YValue> start, Tuple<XValue, YValue> end, int count)
         {
+            LogTool.AssertIsTrue(count > 1);
             dynamic s = start.Item1;
             dynamic e = end.Item1;
-            dynamic h = (e - s) / count;
+            dynamic h = (e - s) / (count - 1);
 
             for (var i = 0; i < count; ++i)
             {
@@ -254,6 +259,40 @@ namespace UnityTools.Math
                 var n = this.valueMap[i].Item1;
                 this.valueMap[i] = new Tuple<X, float>(n, math.lerp(start, end, ThreadSafeRandom.NextFloat()));
             }
+        }
+    }
+
+
+    public class DiscreteFunctionTest : ITest
+    {
+        public string Name => this.ToString();
+
+        public void Report()
+        {
+        }
+
+        public void RunTest()
+        {
+            var interval = new float2(0, 20);
+            var sampleNum = 10;
+            var start = new Tuple<float, float>(0, 10);
+            var end = new Tuple<float, float>(0, 20);
+            var y = new Vector<float>(sampleNum);
+            for (var i = 0; i < sampleNum; ++i)
+            {
+                y[i] = i;
+            }
+            var func = new X2FDiscreteFunction<float>(5, 20, y);
+
+            var t = 4f;
+            var dt = 1;//func.End.Item1-func.Start.Item1)/(sampleNum-5);
+            var ret = "";
+            for(var i = 0; i < sampleNum * 2; ++i)
+            {
+                t += dt;
+                ret += "("+ t + " " + func.Evaluate(t) + ") ";
+            }
+            LogTool.Log(ret);
         }
     }
 }
