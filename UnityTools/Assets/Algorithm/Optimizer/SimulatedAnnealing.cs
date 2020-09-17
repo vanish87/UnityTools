@@ -82,7 +82,7 @@ namespace UnityTools.Algorithm
             {
                 var pro = this.problem as Problem;
                 var p = math.pow(math.E, -(next - current) / (pro.k * pro.temperature));
-                //LogTool.Log("p is " + p);
+                // LogTool.Log("p is " + p);
 
                 if (p > ThreadSafeRandom.NextFloat())
                 {

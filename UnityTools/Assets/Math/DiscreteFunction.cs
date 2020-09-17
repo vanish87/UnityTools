@@ -113,8 +113,13 @@ namespace UnityTools.Math
                 this.Append(s + h * i, from[i]);
             }
         }
+        public DiscreteFunction()
+        {
+            LogTool.LogAssertIsTrue(SupportedTypes.Contains(typeof(XValue)), typeof(XValue) + " for XValue is not supported");
+            this.valueMap = new List<Tuple<XValue, YValue>>();
+        }
 
-        public DiscreteFunction(Tuple<XValue, YValue> start = null, Tuple<XValue, YValue> end = null, int sampleNum = 1)
+        public DiscreteFunction(Tuple<XValue, YValue> start, Tuple<XValue, YValue> end, int sampleNum = 1)
         {
             LogTool.LogAssertIsTrue(sampleNum > 0, "Sample size should none 0");
             LogTool.LogAssertIsTrue(SupportedTypes.Contains(typeof(XValue)), typeof(XValue) + " for XValue is not supported");
@@ -125,11 +130,11 @@ namespace UnityTools.Math
             this.valueMap = new List<Tuple<XValue, YValue>>();
             this.InitValues(start, end, sampleNum);
         }
-        public void ResetValues()
+        public void ResetValues(YValue y = default)
         {
             for (var i = 0; i < this.valueMap.Count; ++i)
             {
-                this.valueMap[i] = new Tuple<XValue, YValue>(this.valueMap[i].Item1, default(YValue));
+                this.valueMap[i] = new Tuple<XValue, YValue>(this.valueMap[i].Item1, y);
             }
         }
         public YValue this[int index]

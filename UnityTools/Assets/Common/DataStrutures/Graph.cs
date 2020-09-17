@@ -201,7 +201,7 @@ namespace UnityTools.Common
 
         public void AddEdge(int from, int to, Edge edge)
         {
-            this.ChekcIndex(from, to);
+            this.CheckIndex(from, to);
 
             if(this.Edges.Contains(edge))
             {
@@ -226,17 +226,17 @@ namespace UnityTools.Common
         }
         public Edge GetEdge(int from, int to)
         {
-            this.ChekcIndex(from, to);
+            this.CheckIndex(from, to);
             return this.matrix[from][to];
         }
         public IEnumerable<Node> GetNeighborsNodes(int from)
         {
-            this.ChekcIndex(from, 0);
+            this.CheckIndex(from, 0);
             return this.matrix[from].Where(n => n != null && n.Start.Index != n.End.Index).Select(e => e.End);
         }
         public IEnumerable<Edge> GetNeighborsEdges(int from)
         {
-            this.ChekcIndex(from, 0);
+            this.CheckIndex(from, 0);
             return this.matrix[from].Where(n => n != null);
         }
 
@@ -288,7 +288,7 @@ namespace UnityTools.Common
             this.matrix = new Matrix<Edge>(this.size, this.size);
         }
 
-        protected void ChekcIndex(int x, int y)
+        protected void CheckIndex(int x, int y)
         {
             LogTool.LogAssertIsTrue(0 <= x && x < this.matrix.Size.x, "Invalid Index");
             LogTool.LogAssertIsTrue(0 <= y && y < this.matrix.Size.y, "Invalid Index");
