@@ -99,7 +99,7 @@ namespace UnityTools.Common
 
         public Vector(int size = 1)
         {
-            if (size <= 0)
+            if (size < 0)
             {
                 LogTool.Log("row/col is less than 0", LogLevel.Error);
                 return;
