@@ -107,6 +107,8 @@ namespace UnityTools.Math
 
             dynamic s = start;
             dynamic e = end;
+            LogTool.LogAssertIsTrue(s <= e, "Only support big end xvalue");
+
             //Note count should less than from size by 1
             int count = from.Size-1;
             var h = (e - s) / count;
@@ -173,7 +175,7 @@ namespace UnityTools.Math
             var to = index;
             var xfrom = this.GetValueX(from);
             var xto = this.GetValueX(to);
-            var dt = xto > xfrom ?(x-xfrom) / (xto - xfrom) : 0;
+            var dt = xto != xfrom ? (x - xfrom) / (xto - xfrom) : 0;
             var yfrom = this[from];
             var yto = this[to];
 
