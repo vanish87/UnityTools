@@ -21,7 +21,7 @@ namespace UnityTools.Test
             var y = new Vector<float>(sampleNum);
             for (var i = 0; i < sampleNum; ++i)
             {
-                y[i] = math.sin(i * 1f / sampleNum * math.PI)*10;
+                y[i] = math.sin((i * 1f / (sampleNum-1)) * math.PI)*10;
             }
             this.test = new X2FDiscreteFunction<float>(5, 20, y);
             this.curve = this.test.ToAnimationCurve();
