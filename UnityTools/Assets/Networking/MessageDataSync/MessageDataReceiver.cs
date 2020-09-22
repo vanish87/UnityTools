@@ -12,7 +12,7 @@ namespace UnityTools.Networking
         void Start()
         {
             this.socket.Bind(data);
-            this.socket.StartRecieve(12346);
+            this.socket.StartReceive(12346);
         }
 
         // Update is called once per frame

@@ -18,7 +18,7 @@ namespace UnityTools.Networking
         // Start is called before the first frame update
         protected void Start()
         {
-            this.socket.StartRecieve(12345);
+            this.socket.StartReceive(12345);
         }
         protected void OnDestroy()
         {

@@ -16,18 +16,26 @@ namespace UnityTools.Common
             Binary,
         }
         /// <summary>
-        /// if target is not exsit, rename source to target,
+        /// if target is not exist, rename source to target,
         /// else replace target file with source file
         /// </summary>
         /// <param name="target"></param>
         /// <param name="source"></param>
         public static void ReplaceOrRename(string target, string source)
         {
-            if (File.Exists(target))
+            try
             {
-                File.Delete(target);
+                if (File.Exists(target))
+                {
+                    File.Delete(target);
+                }
+                File.Move(source, target);
             }
-            File.Move(source, target);
+            catch (Exception e)
+            {
+                LogTool.Log("Error on Replace file " + target, LogLevel.Error);
+                LogTool.Log(e.ToString(), LogLevel.Error);
+            }
         }
         public static string GetTempFileName(string filePath)
         {
@@ -104,7 +112,7 @@ namespace UnityTools.Common
         }       
 
         
-        static public T Read<T>(string filePath, SerializerType type = SerializerType.Binary) where T : new()
+        static public T Read<T>(string filePath, SerializerType type = SerializerType.Binary)
         {
             var ret = default(T);
             if (File.Exists(filePath))
@@ -154,9 +162,7 @@ namespace UnityTools.Common
             }
             else
             {
-                LogTool.Log(filePath + " not found, create new one", LogLevel.Warning, LogChannel.IO);
-                ret = new T();
-                Write(filePath, ret, type);
+                LogTool.Log(filePath + " not found", LogLevel.Warning, LogChannel.IO);
             }
 
             return ret;

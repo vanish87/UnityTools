@@ -8,6 +8,7 @@ using System.Text;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityTools.Common;
+using UnityTools.Debuging;
 
 namespace UnityTools.Networking
 {
@@ -202,7 +203,7 @@ namespace UnityTools.Networking
             var byteData = this.OnSerialize(data);
             this.SendByte(epTo, byteData);
         }
-        public virtual void StartRecieve(int port = 0)
+        public virtual void StartReceive(int port = 0)
         {
             this.recieveState.remote = SocketData.Make(port);
             this.recieveState.remote.socket = this.socket;
@@ -234,6 +235,12 @@ namespace UnityTools.Networking
             Assert.IsTrue(byteData.Length < 64 * 1024, "Data length "+ byteData.Length+ " exceeds max 64k");
             Assert.IsNotNull(epTo.socket);
 
+            if (byteData.Length > 64 * 1024)
+            {
+                LogTool.Log("Data exceeded 64K", LogLevel.Warning);
+                return;
+            }
+
             if (epTo.reachable)
             {
                 try
@@ -242,8 +249,8 @@ namespace UnityTools.Networking
                 }
                 catch (Exception e)
                 {
-                    Debug.Log(epTo.endPoint.ToString());
-                    Debug.Log(e.ToString());
+                    LogTool.Log(epTo.endPoint.ToString());
+                    LogTool.Log(e.ToString());
                 }
                 finally
                 {
@@ -252,7 +259,7 @@ namespace UnityTools.Networking
             }
             else
             {
-                Debug.LogWarning(epTo.endPoint.ToString() + " is unreachable");
+                LogTool.Log(epTo.endPoint.ToString() + " is unreachable", LogLevel.Warning);
             }
         }
         protected void SendCallback(IAsyncResult ar)
@@ -269,25 +276,25 @@ namespace UnityTools.Networking
                         && socketData.endPoint.Address != IPAddress.Broadcast)
                     {
                         this.connections[Connection.Outcoming].Add(socketData);
-                        if (DebugLog) Debug.LogWarningFormat("Add out connection: {0}", socketData.endPoint.ToString());
+                        if (DebugLog) LogTool.LogFormat("Add out connection: {0}", LogLevel.Warning, LogChannel.Network, socketData.endPoint.ToString());
                     }
 
-                    if (DebugLog) Debug.LogFormat("SEND: {0} bytes To {1}", bytes, socketData.endPoint.ToString());
+                    if (DebugLog) LogTool.LogFormat("SEND: {0} bytes To {1}", LogLevel.Dev, LogChannel.Network, bytes, socketData.endPoint.ToString());
 
                     if (DebugLog)
                     {
                         foreach (var c in this.connections)
                         {
-                            Debug.Log("connections count " + c.Key.ToString() +" " + c.Value.Count);
+                            LogTool.Log("connections count " + c.Key.ToString() +" " + c.Value.Count);
                         }
                     }
                 }
             }
             catch (SocketException e)
             {
-                Debug.Log(e.ToString());
-                Debug.Log((e as SocketException).ErrorCode);
-                Debug.Log((e as SocketException).Message);
+                LogTool.Log(e.ToString());
+                LogTool.Log((e as SocketException).ErrorCode.ToString());
+                LogTool.Log((e as SocketException).Message);
             }
         }
         protected void RecieveCallback(IAsyncResult ar)

@@ -15,7 +15,7 @@ namespace UnityTools.Example
 
     public class NoneMonoConfigure : MonoBehaviour
     {
-        [SerializeField] protected NoneMonoConfigureClass configure;
+        //[SerializeField] protected NoneMonoConfigureClass configure;
 
         protected void Start()
         {

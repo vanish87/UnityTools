@@ -7,7 +7,7 @@ using UnityTools.Debuging;
 namespace UnityTools.Common
 {
     [Serializable]
-    public abstract class StateBase<T> where T : new()
+    public abstract class StateBase<T>
     {
         internal abstract void Enter(T obj);
         internal abstract void Excute(T obj);
@@ -19,12 +19,12 @@ namespace UnityTools.Common
         }
     }
     [Serializable]
-    public abstract class StateBaseStatic<T> : StateBase<T> where T : new()
+    public abstract class StateBaseStatic<T> : StateBase<T>
     {
         protected StateBaseStatic() { }
     }
     [Serializable]
-    public abstract class EmptyState<T> : StateBaseStatic<T> where T : new()
+    public abstract class EmptyState<T> : StateBaseStatic<T> 
     {
         internal override void Enter(T obj)
         {

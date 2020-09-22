@@ -3,10 +3,12 @@ using UnityEngine;
 
 namespace UnityTools
 {
+    [Serializable]
     public abstract class Scope : Disposable
     {
 
     }
+    [Serializable]
     public class Disposable : IDisposable
     {
         // Flag: Has Dispose already been called?
