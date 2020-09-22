@@ -17,7 +17,7 @@ namespace UnityTools
         void OnConfigureChange(Config<T> sender, EventArgs args);
     }
 
-    public interface IConfigureSerilize
+    public interface IConfigureSerialize
     {
         FileTool.SerializerType SaveType { get; } 
     }
@@ -30,7 +30,7 @@ namespace UnityTools
     }
     //same as XmlConfig, but is not subclass of mono
     //Note it could be multiple instance but they will save/load to same file
-    public abstract class ConfigNoneMono<T> : IConfigureSerilize where T : class, new()
+    public abstract class ConfigNoneMono<T> : IConfigureSerialize where T : class, new()
     {
         public abstract T Data { get; set; }
         public bool Open { get { return this.open; } set { this.open = value; } }
@@ -131,7 +131,7 @@ namespace UnityTools
         }
     }
 
-    public abstract class ConfigMonoSingleton<T> : SingletonMonoBehaviour<ConfigMonoSingleton<T>>, IConfigureSerilize where T : class, new()
+    public abstract class ConfigMonoSingleton<T> : SingletonMonoBehaviour<ConfigMonoSingleton<T>>, IConfigureSerialize where T : class, new()
     {
         [SerializeField] protected ConfigureSaveMode saveMode = ConfigureSaveMode.UseEditorValue;
         public abstract T Data { get; set; }
@@ -252,7 +252,7 @@ namespace UnityTools
         }
     }
 
-    public abstract class Config<T> : MonoBehaviour, IConfigureSerilize where T : class, new()
+    public abstract class Config<T> : MonoBehaviour, IConfigureSerialize where T : class, new()
     {
         public abstract T Data { get; set; }
         public bool Open { get { return this.open; } set { this.open = value; } }
