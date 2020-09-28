@@ -19,6 +19,7 @@ namespace UnityTools.Algorithm
 
     public class IterationDelta : IDelta
     {
+        public float FixedDeltaTime => 1f / 60;
         public float DeltaTime =>this.dt;
         public float Current=>this.current;
         protected Stopwatch stopwatch = new Stopwatch();
@@ -38,6 +39,12 @@ namespace UnityTools.Algorithm
             this.dt = this.stopwatch.Elapsed.Milliseconds / 1000f;
             this.current += this.dt;
             this.stopwatch.Restart();
+        }
+
+        public void FixStep()
+        {
+            this.dt = this.FixedDeltaTime;
+            this.current += this.dt;
         }
     }
     /// <summary>
@@ -110,7 +117,15 @@ namespace UnityTools.Algorithm
 
         private ISolution SolveInternal()
         {
-            this.dt.Step();
+            if (this.RunMode == IterationAlgorithmMode.FullStep)
+            {
+                this.dt.Step();
+            }
+            else
+            {
+                (this.dt as IterationDelta).FixStep();
+            }
+                    
             return this.Solve(this.problem);
         }
 
@@ -235,7 +250,14 @@ namespace UnityTools.Algorithm
 
         private ISolution SolveInternal()
         {
-            this.dt.Step();
+            if (this.RunMode == IterationAlgorithmMode.FullStep)
+            {
+                this.dt.Step();
+            }
+            else
+            {
+                (this.dt as IterationDelta).FixStep();
+            }
             return this.Solve(this.problem);
         }
 

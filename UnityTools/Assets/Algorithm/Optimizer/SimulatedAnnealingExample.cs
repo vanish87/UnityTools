@@ -4,21 +4,22 @@ using Unity.Mathematics;
 using UnityEngine;
 using UnityTools.Common;
 using UnityTools.Debuging;
+using UnityTools.Debuging.EditorTool;
 using UnityTools.Math;
 
 namespace UnityTools.Algorithm
 {
-    public class SimulatedAnnealingExample : MonoBehaviour
+    public class SimulatedAnnealingExample : MonoBehaviour, IFunctionProvider, Function<Vector<float>, float>
     {
         public class HimmelblauState : CircleData<HimmelblauState.Data, int>
         {
             public class Data : SimulatedAnnealing.IState
             {
-                protected float3 scale = new float3(1, 0.01f, 1);
+                protected float3 scale = new float3(4, 0.01f, 4);
                 protected float2 currentx;
 
                 public float2 CurrentX => this.currentx;
-                public float Evaluate(SimulatedAnnealing.IState state)
+                public float Evaluate(Vector<float> input)
                 {
                     var x = currentx.x * scale.x;
                     var y = currentx.y * scale.z;
@@ -27,14 +28,14 @@ namespace UnityTools.Algorithm
                     var v2 = x + y * y - 7;
                     return (v1 * v1 + v2 * v2) * scale.y;
                 }
-                public SimulatedAnnealing.IState Generate(SimulatedAnnealing.IState x)
+                public Vector<float> Generate(Vector<float> input)
                 {
                     this.currentx = new float2(ThreadSafeRandom.NextFloat(), ThreadSafeRandom.NextFloat());
                     //make random value to cover the range of min
                     //see for detail: https://en.wikipedia.org/wiki/Himmelblau%27s_function
                     this.currentx = (this.currentx - 0.5f) * 2 * 10;
 
-                    return x;
+                    return input;
                 }
             }
             public HimmelblauState() : base(2)
@@ -53,6 +54,16 @@ namespace UnityTools.Algorithm
             public override SimulatedAnnealing.IState Current => this.state.Current;
 
             public override SimulatedAnnealing.IState Next => this.state.Next;
+
+            public float Evaluate(Vector<float> x)
+            {
+                return this.Current.Evaluate(x);
+            }
+
+            public Vector<float> Generate(Vector<float> x)
+            {
+                throw new System.NotImplementedException();
+            }
 
             public override void MoveToNext()
             {
@@ -73,12 +84,14 @@ namespace UnityTools.Algorithm
         protected Problem problem;
         protected SimulatedAnnealing SA;
 
+        public Function<Vector<float>, float> Function => this; 
+
         protected void Start()
         {
             this.problem = new Problem()
             {
                 temperature = 1,
-                minTemperature = 0.0001f,
+                minTemperature = 0.001f,
                 k = 1,
                 alpha = 0.99f
             };
@@ -86,14 +99,14 @@ namespace UnityTools.Algorithm
             this.SA.TryToRun();
 
 
-            /*this.SA.PerStep((p, s, dt, a) =>
-            {
-                var state = (p as Problem).Current as State.Data;
-                var next = (p as Problem).Next as State.Data;
+            // this.SA.PerStep((p, s, dt, a) =>
+            // {
+            //     var state = (p as Problem).Current as HimmelblauState.Data;
+            //     var next = (p as Problem).Next as HimmelblauState.Data;
 
-                LogTool.Log("Current: " + state.currentx + " " + state.Evaluate(null), LogLevel.Info);
-                LogTool.Log("Next: " + next.currentx + " " + next.Evaluate(null), LogLevel.Info);
-            });*/
+            //     LogTool.Log("Current: " + state.CurrentX + " " + state.Evaluate(null), LogLevel.Info);
+            //     LogTool.Log("Next: " + next.CurrentX + " " + next.Evaluate(null), LogLevel.Info);
+            // });
 
             this.SA.End((p, s, dt, a) =>
             {
@@ -101,6 +114,37 @@ namespace UnityTools.Algorithm
                 LogTool.Log("Solution: " + state.CurrentX + " min= " + state.Evaluate(null), LogLevel.Info);
             });
         }
-        
+
+        protected void OnDrawGizmos()
+        {
+            if(this.problem != null)
+            {
+                var x = (this.problem as Problem).Current as HimmelblauState.Data;
+                var y = x.Evaluate(null);
+
+
+                using (new GizmosScope(Color.cyan, Matrix4x4.identity))
+                {
+                    Gizmos.DrawSphere(new float3(x.CurrentX.x, y, x.CurrentX.y), 0.1f);
+                }
+            }
+        }
+
+        public float Evaluate(Vector<float> input)
+        {
+            var scale = new float3(4,0.01f,4);
+            var x = input[0] * scale.x;
+            var y = input[1] * scale.z;
+
+            var v1 = x * x + y - 11;
+            var v2 = x + y * y - 7;
+            return (v1 * v1 + v2 * v2) * scale.y;
+
+        }
+
+        public Vector<float> Generate(Vector<float> x)
+        {
+            return default;
+        }
     }
 }
