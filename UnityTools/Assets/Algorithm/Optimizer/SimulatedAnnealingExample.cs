@@ -15,7 +15,7 @@ namespace UnityTools.Algorithm
         {
             public class Data : SimulatedAnnealing.IState
             {
-                protected float3 scale = new float3(4, 0.01f, 4);
+                protected float3 scale = new float3(1, 0.01f, 1);
                 protected float2 currentx;
 
                 public float2 CurrentX => this.currentx;
@@ -91,7 +91,7 @@ namespace UnityTools.Algorithm
             this.problem = new Problem()
             {
                 temperature = 1,
-                minTemperature = 0.001f,
+                minTemperature = 0.0001f,
                 k = 1,
                 alpha = 0.99f
             };
@@ -125,7 +125,7 @@ namespace UnityTools.Algorithm
 
                 using (new GizmosScope(Color.cyan, Matrix4x4.identity))
                 {
-                    Gizmos.DrawSphere(new float3(x.CurrentX.x, y, x.CurrentX.y), 0.1f);
+                    Gizmos.DrawSphere(new float3(x.CurrentX.x/4, y, x.CurrentX.y/4), 0.1f);
                 }
             }
         }
