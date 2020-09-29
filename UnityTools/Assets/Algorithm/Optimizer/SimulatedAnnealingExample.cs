@@ -121,11 +121,17 @@ namespace UnityTools.Algorithm
             {
                 var x = (this.problem as Problem).Current as HimmelblauState.Data;
                 var y = x.Evaluate(null);
+                var nx = (this.problem as Problem).Next as HimmelblauState.Data;
+                var ny = nx.Evaluate(null);
 
 
                 using (new GizmosScope(Color.cyan, Matrix4x4.identity))
                 {
                     Gizmos.DrawSphere(new float3(x.CurrentX.x/4, y, x.CurrentX.y/4), 0.1f);
+                }
+                using (new GizmosScope(Color.red, Matrix4x4.identity))
+                {
+                    Gizmos.DrawSphere(new float3(nx.CurrentX.x/4, ny, nx.CurrentX.y/4), 0.1f);
                 }
             }
         }
