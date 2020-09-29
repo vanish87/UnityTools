@@ -1,7 +1,5 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
 using UnityTools.Debuging;
 
 namespace UnityTools.Common
@@ -15,6 +13,7 @@ namespace UnityTools.Common
         Node AddNode();
         Edge GetEdge(Node from, Node to);
         void AddEdge(Node from, Node to, Edge edge);
+        void RemoveEdge(Edge edge);
         IEnumerable<Node> GetNeighborsNodes(Node from);
         IEnumerable<Edge> GetNeighborsEdges(Node from);
 
@@ -28,6 +27,25 @@ namespace UnityTools.Common
     public interface IEdge
     {
 
+    }
+
+    public interface IGraphFactory
+    {
+        INode CreateNode();
+        IEdge CreateEdge();
+    }
+
+    public class GraphFactory : IGraphFactory
+    {
+        public IEdge CreateEdge()
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public INode CreateNode()
+        {
+            throw new System.NotImplementedException();
+        }
     }
 
     [System.Serializable]
@@ -53,6 +71,7 @@ namespace UnityTools.Common
         }
         public abstract Edge GetEdge(Node from, Node to);
         public abstract void AddEdge(Node from, Node to, Edge edge);
+        public abstract void RemoveEdge(Edge edge);
         public abstract IEnumerable<Edge> GetNeighborsEdges(Node from);
         public abstract IEnumerable<Node> GetNeighborsNodes(Node from);
 
@@ -188,6 +207,11 @@ namespace UnityTools.Common
             base.Clear();
             this.edgeList.Clear();
         }
+
+        public override void RemoveEdge(Edge edge)
+        {
+            throw new System.NotImplementedException();
+        }
     }
     [System.Serializable]
     public class GraphAdj<Node, Edge> : Graph<Node, Edge> where Node : INode, new() where Edge : Segment<Node>, IEdge
@@ -244,6 +268,20 @@ namespace UnityTools.Common
         {
             this.AddEdge(from.Index, to.Index, edge);
         }
+        public override void RemoveEdge(Edge edge)
+        {
+            var from = edge.Start.Index;
+            var to = edge.End.Index;
+            if (this.isDirectional)
+            {
+                this.matrix[from][to] = null;
+            }
+            else
+            {
+                this.matrix[from][to] = null;
+                this.matrix[to][from] = null;
+            }
+        }
 
         public override Edge GetEdge(Node from, Node to)
         {
@@ -293,6 +331,8 @@ namespace UnityTools.Common
             LogTool.LogAssertIsTrue(0 <= x && x < this.matrix.Size.x, "Invalid Index");
             LogTool.LogAssertIsTrue(0 <= y && y < this.matrix.Size.y, "Invalid Index");
         }
+
+        
     }
 
 
