@@ -1,9 +1,232 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using UnityTools.Debuging;
 
 namespace UnityTools.Common
 {
+    public interface INewGraph<Vertex, Edge> : ISet<Vertex> where Vertex : IVertex where Edge : IEdge
+    {
+        bool IsDirectional { get; }
+        IEdge AddEdge(Vertex v1, Vertex v2);
+        bool Contains(Edge edge);
+        bool Remove(Edge edge);
+    }
+
+    public interface IVertex : IEquatable<IVertex>, ICloneable
+    {
+
+    }
+    public interface IEdge : IEquatable<IEdge>, ICloneable
+    {
+        IVertex Vertex { get; set; }
+        IVertex OtherVertex { get; set; }
+    }
+    public interface IGraphFactory
+    {
+        IVertex CreateVertex();
+        IEdge CreateEdge(IVertex v1, IVertex v2);
+    }
+
+    public class IndexGraphFactory : IGraphFactory
+    {
+        private Queue<int> indexPool = new Queue<int>();
+        private int currentIndex = 0;
+        public IEdge CreateEdge(IVertex v1, IVertex v2)
+        {
+            return new IndexEdge() { Vertex = v1, OtherVertex = v2 };
+        }
+
+        public IVertex CreateVertex()
+        {
+            var newID = this.indexPool.Count == 0 ? this.currentIndex++ : this.indexPool.Dequeue();
+            return new IndexVertex() { index = newID };
+        }
+    }
+
+
+    public class IndexVertex : IVertex
+    {
+        internal int index = -1;
+        public object Clone()
+        {
+            return new IndexVertex() { index = this.index };
+        }
+
+        public bool Equals(IVertex other)
+        {
+            if(other is IndexVertex)
+            {
+                return this.index == (other as IndexVertex).index;
+            }
+            return false;
+        }
+    }
+
+    public class IndexEdge : IEdge
+    {
+
+        public IVertex Vertex { get ;  set ; }
+        public IVertex OtherVertex { get ; set ; }
+
+        public object Clone()
+        {
+            return new IndexEdge() { Vertex = this.Vertex.Clone() as IndexVertex, OtherVertex = this.OtherVertex.Clone() as IndexVertex };
+        }
+
+        public bool Equals(IEdge other)
+        {
+            return 
+            (this.Vertex == other.Vertex && this.OtherVertex == other.OtherVertex) ||
+            (this.Vertex == other.OtherVertex && this.OtherVertex == other.Vertex);
+        }
+   }
+    public class IndexGraph<Vertex, Edge> : NewGraph<Vertex, Edge> where Vertex : IndexVertex where Edge : IEdge
+    {
+        public IndexGraph() : base(new IndexGraphFactory())
+        {
+        }
+
+        public IEdge AddEdge(int i, int j)
+        {
+            var v1 = this.Where(v=>v.index == i).First();
+            var v2 = this.Where(v=>v.index == j).First();
+            if(v1 == null || v2 == null) return default;
+
+            return this.AddEdge(v1, v2);
+        }
+    }
+
+    public class NewGraph<Vertex, Edge> : INewGraph<Vertex, Edge> where Vertex : IVertex where Edge : IEdge
+    {
+        private HashSet<Vertex> vertices = new HashSet<Vertex>();
+        private Dictionary<(Vertex, Vertex), IEdge> edges = new Dictionary<(Vertex, Vertex), IEdge>();
+        private IGraphFactory factory;
+
+        private bool isDirectional = false;
+        public int Count => this.vertices.Count;
+        public bool IsReadOnly => false;
+        public bool IsDirectional => this.isDirectional;
+        public IGraphFactory GraphFactory => this.factory;
+
+        public NewGraph(IGraphFactory factory)
+        {
+            this.factory = factory;
+        }
+
+        public bool Add(Vertex item)
+        {
+            LogTool.AssertNotNull(item);
+            return this.vertices.Add(item);
+        }
+
+        public IEdge AddEdge(Vertex v1, Vertex v2)
+        {
+            LogTool.AssertNotNull(v1);
+            LogTool.AssertNotNull(v2);
+            if(this.edges.ContainsKey((v1,v2))) return this.edges[(v1,v2)];
+            var edge = this.factory.CreateEdge(v1, v2);
+            this.edges.Add((v1,v2), edge);
+            return edge;
+        }
+
+        public void Clear()
+        {
+            this.vertices.Clear();
+            this.edges.Clear();
+        }
+
+        public bool Contains(Vertex item)
+        {
+            return this.vertices.Contains(item);
+        }
+
+        public bool Contains(Edge edge)
+        {
+            return this.edges.Values.Contains(edge);
+        }
+
+        public void CopyTo(Vertex[] array, int arrayIndex)
+        {
+            this.vertices.CopyTo(array, arrayIndex) ;
+        }
+
+        public void ExceptWith(IEnumerable<Vertex> other)
+        {
+            this.vertices.ExceptWith(other);
+        }
+
+        public IEnumerator<Vertex> GetEnumerator()
+        {
+            return this.vertices.GetEnumerator();
+        }
+
+        public void IntersectWith(IEnumerable<Vertex> other)
+        {
+            this.vertices.IntersectWith(other);
+        }
+
+        public bool IsProperSubsetOf(IEnumerable<Vertex> other)
+        {
+            return this.IsProperSubsetOf(other);
+        }
+
+        public bool IsProperSupersetOf(IEnumerable<Vertex> other)
+        {
+            return this.vertices.IsProperSupersetOf(other);
+        }
+
+        public bool IsSubsetOf(IEnumerable<Vertex> other)
+        {
+            return this.vertices.IsSubsetOf(other);
+        }
+
+        public bool IsSupersetOf(IEnumerable<Vertex> other)
+        {
+            return this.vertices.IsSupersetOf(other);
+        }
+
+        public bool Overlaps(IEnumerable<Vertex> other)
+        {
+            return this.vertices.Overlaps(other);
+        }
+
+        public bool Remove(Vertex item)
+        {
+            return this.Remove(item);
+        }
+
+        public bool Remove(Edge edge)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool SetEquals(IEnumerable<Vertex> other)
+        {
+            return this.vertices.SetEquals(other);
+        }
+
+        public void SymmetricExceptWith(IEnumerable<Vertex> other)
+        {
+            this.vertices.SymmetricExceptWith(other);
+        }
+
+        public void UnionWith(IEnumerable<Vertex> other)
+        {
+            this.vertices.UnionWith(other);
+        }
+
+        void ICollection<Vertex>.Add(Vertex item)
+        {
+            this.Add(item);
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return this.GetEnumerator();
+        }
+    }
     public interface IGraph<Node, Edge>
     {
         IEnumerable<Node> Nodes { get; }
@@ -24,29 +247,8 @@ namespace UnityTools.Common
         int Index { get; set; }
     }
 
-    public interface IEdge
-    {
 
-    }
-
-    public interface IGraphFactory
-    {
-        INode CreateNode();
-        IEdge CreateEdge();
-    }
-
-    public class GraphFactory : IGraphFactory
-    {
-        public IEdge CreateEdge()
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public INode CreateNode()
-        {
-            throw new System.NotImplementedException();
-        }
-    }
+    
 
     [System.Serializable]
     public abstract class Graph<Node, Edge> : IGraph<Node, Edge> where Node : INode, new() where Edge : IEdge
@@ -454,6 +656,14 @@ namespace UnityTools.Common
 
             this.TestGraph(g);
             this.TestGraph(gadj);
+        }
+
+
+
+        protected void TestNewGraph(IndexGraph<IndexVertex, IndexEdge> graph)
+        {
+            var e01 = graph.AddEdge(0,1);
+
         }
 
         protected void TestGraph(GraphAdj<Node, Edge> g)
