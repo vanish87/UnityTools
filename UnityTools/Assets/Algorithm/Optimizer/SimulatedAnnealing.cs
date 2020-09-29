@@ -9,7 +9,7 @@ namespace UnityTools.Algorithm
 {    
     public class SimulatedAnnealing : IterationAlgorithm
     {
-        public interface IState : Function<IState, float>
+        public interface IState : Function<Vector<float>, float>
         {
 
         }
@@ -55,10 +55,10 @@ namespace UnityTools.Algorithm
             var sol = new Solution();
             var p = this.problem as Problem;
 
-            p.Next.Generate(p.Next);
+            p.Next.Generate(null);
 
-            var current = p.Current.Evaluate(p.Current);
-            var next = p.Next.Evaluate(p.Next);
+            var current = p.Current.Evaluate(null);
+            var next = p.Next.Evaluate(null);
 
             var useNext = this.ShouldUseNext(current, next);
             if (useNext)

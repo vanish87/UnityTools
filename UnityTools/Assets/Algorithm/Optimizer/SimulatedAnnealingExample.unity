@@ -131,6 +131,7 @@ GameObject:
   m_Component:
   - component: {fileID: 265911444}
   - component: {fileID: 265911445}
+  - component: {fileID: 265911446}
   m_Layer: 0
   m_Name: SimulatedAnnealing
   m_TagString: Untagged
@@ -162,6 +163,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c52acc7319b754241a3a01bb778e2320, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &265911446
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 265911443}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 087e18efcc3af9049b169bc70eea5e6e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1 &322252419
