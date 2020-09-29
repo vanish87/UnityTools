@@ -159,6 +159,11 @@ namespace UnityTools.Debuging
         {
             LogAssertIsFalse(predict, System.Environment.StackTrace, level, channel);
         }
+        public static void AssertNotNull(object obj, LogLevel level = LogLevel.Error, LogChannel channel = LogChannel.Debug)
+        {
+            LogAssertIsTrue(obj != null, System.Environment.StackTrace, level, channel);
+        }
+        
         public static void LogAssertIsTrue(bool predict, string message, LogLevel level = LogLevel.Error, LogChannel channel = LogChannel.Debug)
         {
             if (!predict) Log(message, level, channel);
