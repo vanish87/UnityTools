@@ -9,7 +9,7 @@ namespace UnityTools.Common
     public interface INewGraph<Vertex, Edge> : ISet<Vertex> where Vertex : IVertex where Edge : IEdge
     {
         bool IsDirectional { get; }
-        IEdge AddEdge(Vertex v1, Vertex v2);
+        Edge AddEdge(Vertex v1, Vertex v2);
         bool Contains(Edge edge);
         bool Remove(Edge edge);
     }
@@ -35,7 +35,7 @@ namespace UnityTools.Common
         private int currentIndex = 0;
         public IEdge CreateEdge(IVertex v1, IVertex v2)
         {
-            return new IndexEdge() { Vertex = v1, OtherVertex = v2 };
+            return new Edge() { Vertex = v1, OtherVertex = v2 };
         }
 
         public IVertex CreateVertex()
@@ -64,7 +64,7 @@ namespace UnityTools.Common
         }
     }
 
-    public class IndexEdge : IEdge
+    public class Edge : IEdge
     {
 
         public IVertex Vertex { get ;  set ; }
@@ -72,7 +72,7 @@ namespace UnityTools.Common
 
         public object Clone()
         {
-            return new IndexEdge() { Vertex = this.Vertex.Clone() as IndexVertex, OtherVertex = this.OtherVertex.Clone() as IndexVertex };
+            return new Edge() { Vertex = this.Vertex.Clone() as IVertex, OtherVertex = this.OtherVertex.Clone() as IVertex };
         }
 
         public bool Equals(IEdge other)
@@ -101,7 +101,7 @@ namespace UnityTools.Common
     public class NewGraph<Vertex, Edge> : INewGraph<Vertex, Edge> where Vertex : IVertex where Edge : IEdge
     {
         private HashSet<Vertex> vertices = new HashSet<Vertex>();
-        private Dictionary<(Vertex, Vertex), IEdge> edges = new Dictionary<(Vertex, Vertex), IEdge>();
+        private Dictionary<(Vertex, Vertex), Edge> edges = new Dictionary<(Vertex, Vertex), Edge>();
         private IGraphFactory factory;
 
         private bool isDirectional = false;
@@ -121,12 +121,12 @@ namespace UnityTools.Common
             return this.vertices.Add(item);
         }
 
-        public IEdge AddEdge(Vertex v1, Vertex v2)
+        public Edge AddEdge(Vertex v1, Vertex v2)
         {
             LogTool.AssertNotNull(v1);
             LogTool.AssertNotNull(v2);
             if(this.edges.ContainsKey((v1,v2))) return this.edges[(v1,v2)];
-            var edge = this.factory.CreateEdge(v1, v2);
+            var edge = (Edge)this.factory.CreateEdge(v1, v2);
             this.edges.Add((v1,v2), edge);
             return edge;
         }
@@ -660,8 +660,10 @@ namespace UnityTools.Common
 
 
 
-        protected void TestNewGraph(IndexGraph<IndexVertex, IndexEdge> graph)
+        protected void TestNewGraph(IndexGraph<IndexVertex, Edge> graph)
         {
+            var v0 = graph.GraphFactory.CreateVertex() as IndexVertex;
+            graph.Add(v0);
             var e01 = graph.AddEdge(0,1);
 
         }
