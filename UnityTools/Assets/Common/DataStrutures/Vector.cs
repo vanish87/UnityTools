@@ -97,7 +97,7 @@ namespace UnityTools.Common
             return ret;
         }
 
-        public Vector(int size = 1)
+        public Vector(int size = 0)
         {
             if (size < 0)
             {
@@ -125,6 +125,12 @@ namespace UnityTools.Common
             {
                 this.data[r] = default;
             }
+        }
+        public void Resize(int size)
+        {
+            LogTool.AssertIsTrue(size >= 0);
+
+            this.data = new T[size];
         }
 
         public T this[int index]

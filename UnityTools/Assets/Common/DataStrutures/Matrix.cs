@@ -13,27 +13,25 @@ namespace UnityTools.Common
 
         public Matrix(int row = 0, int col = 0)
         {
-            if (row <= 0 || col <= 0)
-            {
-                LogTool.Log("row/col is less than 0", LogLevel.Error);
-                return;
-            }
-
-            this.data = new Vector<T>[row];
-
-            for (var r = 0; r < row; ++r)
-            {
-                this.data[r] = new Vector<T>(col);
-            }
+            this.Init(row, col);
         }
+
+
         public void Clear()
         {
             if (this.data == null) return;
 
-            foreach(var r in this.data)
+            foreach (var r in this.data)
             {
                 r.Clear();
             }
+        }
+
+        public void Resize(int x, int y)
+        {
+            LogTool.AssertIsTrue(x >= 0 && y >= 0);
+
+            this.Init(x, y);
         }
 
         public T this[int row, int col]
@@ -48,7 +46,7 @@ namespace UnityTools.Common
             set => this.data[row] = value;
         }
 
-        public int2 Size { get =>new int2(this.data.Length, this.data[0].Size); }
+        public int2 Size { get => new int2(this.data.Length, this.data[0].Size); }
         public IEnumerator<T> GetEnumerator()
         {
             foreach (var r in this.data)
@@ -70,7 +68,7 @@ namespace UnityTools.Common
             var str = "\n";
             foreach (var r in this.data)
             {
-                foreach(var c in r)
+                foreach (var c in r)
                 {
                     str += (c == null ? nullString : c.ToString()) + " ";
                 }
@@ -78,6 +76,23 @@ namespace UnityTools.Common
             }
 
             LogTool.Log(str);
+        }
+
+
+        protected void Init(int row, int col)
+        {
+            if (row < 0 || col < 0)
+            {
+                LogTool.Log("row/col is less than 0", LogLevel.Error);
+                return;
+            }
+
+            this.data = new Vector<T>[row];
+
+            for (var r = 0; r < row; ++r)
+            {
+                this.data[r] = new Vector<T>(col);
+            }
         }
     }
 }
