@@ -9,6 +9,7 @@ namespace UnityTools.Common
 {
     public interface INewGraph: ISet<IVertex>
     {
+        IGraphFactory Factory { get; }
         IEdge AddEdge(IVertex v1, IVertex v2, bool isDirectional = false);
         IEdge GetEdge(IVertex v1, IVertex v2);
         bool Contains(IEdge edge);
@@ -17,7 +18,6 @@ namespace UnityTools.Common
         IEnumerable<IEdge> GetNeighborEdges(IVertex from);
         IEnumerable<IVertex> GetNeighborVertices(IVertex from);
 
-        IGraphFactory Factory { get; }
     }
 
     public interface IVertex : IEquatable<IVertex>, ICloneable
@@ -33,6 +33,8 @@ namespace UnityTools.Common
     {
         IVertex CreateVertex();
         IEdge CreateEdge(IVertex v1, IVertex v2, bool isDirectional = false);
+
+        INewGraph CreateGraph();
     }
 
     public class IndexGraphFactory : IGraphFactory
@@ -42,6 +44,11 @@ namespace UnityTools.Common
         public IEdge CreateEdge(IVertex v1, IVertex v2, bool isDirectional = false)
         {
             return new DefaultEdge(isDirectional) { Vertex = v1, OtherVertex = v2 };
+        }
+
+        public INewGraph CreateGraph()
+        {
+            return new NewGraph<IndexVertex, DefaultEdge,IndexGraphFactory>();
         }
 
         public IVertex CreateVertex()
@@ -55,7 +62,7 @@ namespace UnityTools.Common
     public class IndexVertex : IVertex
     {
         internal int index = -1;
-        public object Clone()
+        public virtual object Clone()
         {
             return new IndexVertex() { index = this.index };
         }
@@ -64,7 +71,7 @@ namespace UnityTools.Common
             if(other is IVertex) return this.Equals(other as IVertex);
             return base.Equals(other);
         }
-        public bool Equals(IVertex other)
+        public virtual bool Equals(IVertex other)
         {
             if(other is IndexVertex)
             {
@@ -87,7 +94,7 @@ namespace UnityTools.Common
     [System.Serializable]
     public class DefaultEdge : IEdge
     {
-        private bool isDirectional = false;
+        protected bool isDirectional = false;
 
         public IVertex Vertex { get ;  set ; }
         public IVertex OtherVertex { get ; set ; }
@@ -98,7 +105,7 @@ namespace UnityTools.Common
         {
             this.isDirectional = isDirectional;
         }
-        public object Clone()
+        public virtual object Clone()
         {
             return new DefaultEdge(this.IsDirectional) { Vertex = this.Vertex.Clone() as IVertex, OtherVertex = this.OtherVertex.Clone() as IVertex };
         }
@@ -108,7 +115,7 @@ namespace UnityTools.Common
             return base.Equals(other);
         }
 
-        public bool Equals(IEdge other)
+        public virtual bool Equals(IEdge other)
         {
             if(this.IsDirectional != other.IsDirectional) return false;
 
@@ -196,7 +203,7 @@ namespace UnityTools.Common
     //         this.edges.Resize(num, num);
     //     }
 
-    
+
     //     protected int2 GetIndex(IVertex v1, IVertex v2)
     //     {
     //         var id1 = (v1 as IndexVertex).index;
@@ -206,7 +213,10 @@ namespace UnityTools.Common
     //     }
     // }
 
-    public class NewGraph<Vertex, Edge, GraphFactory> : HashSet<IVertex>, INewGraph where Vertex : IVertex where Edge : IEdge where GraphFactory : IGraphFactory, new()
+    public class NewGraph<Vertex, Edge, GraphFactory> : HashSet<IVertex>, INewGraph
+                                                        where Vertex : IVertex
+                                                        where Edge : IEdge
+                                                        where GraphFactory : IGraphFactory, new()
     {
         private Dictionary<IVertex, List<IEdge>> adjacentList = new Dictionary<IVertex, List<IEdge>>();
         private IGraphFactory factory;
@@ -249,6 +259,7 @@ namespace UnityTools.Common
 
         public IEdge AddEdge(IVertex v1, IVertex v2, bool isDirectional = false)
         {
+            LogTool.AssertIsTrue(this.Contains(v1) && this.Contains(v2));
             var ret = this.GetEdge(v1,v2);
             if(ret != default) return ret;
 
@@ -298,7 +309,7 @@ namespace UnityTools.Common
 
         public IEnumerable<IVertex> GetNeighborVertices(IVertex from)
         {
-            return this.GetNeighborEdges(from).Select(e=>e.Vertex==from?e.OtherVertex:e.Vertex);
+            return this.GetNeighborEdges(from).Select(e=>e.Vertex.Equals(from)?e.OtherVertex:e.Vertex);
         }
     }
     // public interface IGraph<Node, Edge>
