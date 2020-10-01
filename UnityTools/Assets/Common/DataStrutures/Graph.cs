@@ -80,6 +80,7 @@ namespace UnityTools.Common
         }
     }
 
+    [System.Serializable]
     public class DefaultEdge : IEdge
     {
         private bool isDirectional = false;
@@ -100,9 +101,12 @@ namespace UnityTools.Common
 
         public bool Equals(IEdge other)
         {
-            return 
-            (this.Vertex == other.Vertex && this.OtherVertex == other.OtherVertex) ||
-            (this.Vertex == other.OtherVertex && this.OtherVertex == other.Vertex);
+            if(this.IsDirectional != other.IsDirectional) return false;
+
+            if(this.IsDirectional) return (this.Vertex == other.Vertex && this.OtherVertex == other.OtherVertex);
+
+            return (this.Vertex.Equals(other.Vertex) && this.OtherVertex.Equals(other.OtherVertex)) 
+                || (this.Vertex.Equals(other.OtherVertex) && this.OtherVertex.Equals(other.Vertex));
         }
         public override string ToString()
         {
