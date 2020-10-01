@@ -130,7 +130,6 @@ namespace UnityTools.Common
     public class GraphEdgeEnumerator<Edge> : IEnumerator<Edge>
     {
         private List<Edge> adjList;
-        private HashSet<Edge> visited = new HashSet<Edge>();
         private int current = -1;
 
         public object Current => this.adjList[this.current];
@@ -139,34 +138,26 @@ namespace UnityTools.Common
 
         public GraphEdgeEnumerator(Dictionary<IVertex, List<Edge>> adjList)
         {
+            var visited = new HashSet<Edge>();
             foreach(var l in adjList.Values)             
-                foreach(var e in l)this.visited.Add(e);
+                foreach(var e in l)visited.Add(e);
 
-           this.adjList = this.visited.ToList();
+           this.adjList = visited.ToList();
         }
 
         public bool MoveNext()
         {
             this.current++;
-            if(this.current < this.visited.Count)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            return (this.current < this.adjList.Count);
         }
 
         public void Reset()
         {
-            this.visited.Clear();
             this.current = -1;
         }
 
         public void Dispose()
         {
-            this.visited.Clear();
             this.adjList.Clear();
         }
     }
