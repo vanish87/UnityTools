@@ -59,7 +59,11 @@ namespace UnityTools.Common
         {
             return new IndexVertex() { index = this.index };
         }
-
+        public override bool Equals(object other)
+        {
+            if(other is IVertex) return this.Equals(other as IVertex);
+            return base.Equals(other);
+        }
         public bool Equals(IVertex other)
         {
             if(other is IndexVertex)
@@ -98,15 +102,24 @@ namespace UnityTools.Common
         {
             return new DefaultEdge(this.IsDirectional) { Vertex = this.Vertex.Clone() as IVertex, OtherVertex = this.OtherVertex.Clone() as IVertex };
         }
+        public override bool Equals(object other)
+        {
+            if(other is IEdge) return this.Equals(other as IEdge);
+            return base.Equals(other);
+        }
 
         public bool Equals(IEdge other)
         {
             if(this.IsDirectional != other.IsDirectional) return false;
 
-            if(this.IsDirectional) return (this.Vertex == other.Vertex && this.OtherVertex == other.OtherVertex);
+            if(this.IsDirectional) return (this.Vertex.Equals(other.Vertex) && this.OtherVertex.Equals(other.OtherVertex));
 
             return (this.Vertex.Equals(other.Vertex) && this.OtherVertex.Equals(other.OtherVertex)) 
                 || (this.Vertex.Equals(other.OtherVertex) && this.OtherVertex.Equals(other.Vertex));
+        }
+        public override int GetHashCode()
+        {
+            return 0;
         }
         public override string ToString()
         {
@@ -126,17 +139,17 @@ namespace UnityTools.Common
 
         public GraphEdgeEnumerator(Dictionary<IVertex, List<Edge>> adjList)
         {
-            this.adjList = new List<Edge>();
-            foreach(var l in adjList.Values) this.adjList.AddRange(l);
+            foreach(var l in adjList.Values)             
+                foreach(var e in l)this.visited.Add(e);
+
+           this.adjList = this.visited.ToList();
         }
 
         public bool MoveNext()
         {
             this.current++;
-            while(this.current < this.adjList.Count && this.visited.Contains(this.adjList[this.current])) this.current++;
-            if(this.current < this.adjList.Count)
+            if(this.current < this.visited.Count)
             {
-                this.visited.Add(this.adjList[this.current]);
                 return true;
             }
             else
