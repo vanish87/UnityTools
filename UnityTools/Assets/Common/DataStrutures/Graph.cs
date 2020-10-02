@@ -7,9 +7,10 @@ using UnityTools.Debuging;
 
 namespace UnityTools.Common
 {
-    public interface INewGraph: ISet<IVertex>
+    public interface INewGraph : ISet<IVertex>
     {
         IGraphFactory Factory { get; }
+        IVertex AddVertex(IVertex v);
         IEdge AddEdge(IVertex v1, IVertex v2, bool isDirectional = false);
         IEdge GetEdge(IVertex v1, IVertex v2);
         bool Contains(IEdge edge);
@@ -48,7 +49,7 @@ namespace UnityTools.Common
 
         public INewGraph CreateGraph()
         {
-            return new NewGraph<IndexVertex, DefaultEdge,IndexGraphFactory>();
+            return new NewGraph<IndexVertex, DefaultEdge, IndexGraphFactory>();
         }
 
         public IVertex CreateVertex()
@@ -68,12 +69,12 @@ namespace UnityTools.Common
         }
         public override bool Equals(object other)
         {
-            if(other is IVertex) return this.Equals(other as IVertex);
+            if (other is IVertex) return this.Equals(other as IVertex);
             return base.Equals(other);
         }
         public virtual bool Equals(IVertex other)
         {
-            if(other is IndexVertex)
+            if (other is IndexVertex)
             {
                 return this.index == (other as IndexVertex).index;
             }
@@ -96,8 +97,8 @@ namespace UnityTools.Common
     {
         protected bool isDirectional = false;
 
-        public IVertex Vertex { get ;  set ; }
-        public IVertex OtherVertex { get ; set ; }
+        public IVertex Vertex { get; set; }
+        public IVertex OtherVertex { get; set; }
 
         public bool IsDirectional => this.isDirectional;
 
@@ -111,17 +112,17 @@ namespace UnityTools.Common
         }
         public override bool Equals(object other)
         {
-            if(other is IEdge) return this.Equals(other as IEdge);
+            if (other is IEdge) return this.Equals(other as IEdge);
             return base.Equals(other);
         }
 
         public virtual bool Equals(IEdge other)
         {
-            if(this.IsDirectional != other.IsDirectional) return false;
+            if (this.IsDirectional != other.IsDirectional) return false;
 
-            if(this.IsDirectional) return (this.Vertex.Equals(other.Vertex) && this.OtherVertex.Equals(other.OtherVertex));
+            if (this.IsDirectional) return (this.Vertex.Equals(other.Vertex) && this.OtherVertex.Equals(other.OtherVertex));
 
-            return (this.Vertex.Equals(other.Vertex) && this.OtherVertex.Equals(other.OtherVertex)) 
+            return (this.Vertex.Equals(other.Vertex) && this.OtherVertex.Equals(other.OtherVertex))
                 || (this.Vertex.Equals(other.OtherVertex) && this.OtherVertex.Equals(other.Vertex));
         }
         public override int GetHashCode()
@@ -130,9 +131,9 @@ namespace UnityTools.Common
         }
         public override string ToString()
         {
-            return this.Vertex.ToString() + (this.IsDirectional?"->":"<->")+ this.OtherVertex.ToString();
+            return this.Vertex.ToString() + (this.IsDirectional ? "->" : "<->") + this.OtherVertex.ToString();
         }
-   }
+    }
 
     public class GraphEdgeEnumerator<Edge> : IEnumerator<Edge>
     {
@@ -146,10 +147,10 @@ namespace UnityTools.Common
         public GraphEdgeEnumerator(Dictionary<IVertex, List<Edge>> adjList)
         {
             var visited = new HashSet<Edge>();
-            foreach(var l in adjList.Values)             
-                foreach(var e in l)visited.Add(e);
+            foreach (var l in adjList.Values)
+                foreach (var e in l) visited.Add(e);
 
-           this.adjList = visited.ToList();
+            this.adjList = visited.ToList();
         }
 
         public bool MoveNext()
@@ -168,7 +169,7 @@ namespace UnityTools.Common
             this.adjList.Clear();
         }
     }
-    
+
     public class GraphEnum<T> : IEnumerable<T>
     {
         private IEnumerator<T> instance;
@@ -218,13 +219,14 @@ namespace UnityTools.Common
                                                         where Edge : IEdge
                                                         where GraphFactory : IGraphFactory, new()
     {
-        private Dictionary<IVertex, List<IEdge>> adjacentList = new Dictionary<IVertex, List<IEdge>>();
+        private Dictionary<IVertex, HashSet<IVertex>> adjacentList = new Dictionary<IVertex, HashSet<IVertex>>();
+        private Dictionary<(IVertex, IVertex), IEdge> edges = new Dictionary<(IVertex, IVertex), IEdge>();
         private static IGraphFactory factory = new GraphFactory();
 
         public IGraphFactory Factory => factory;
 
         public GraphEnum<Vertex> Vertices => new GraphEnum<Vertex>(this.Cast<Vertex>().GetEnumerator());
-        public GraphEnum<Edge> Edges => new GraphEnum<Edge>(new GraphEnum<IEdge>(new GraphEdgeEnumerator<IEdge>(this.adjacentList)).Cast<Edge>().GetEnumerator());
+        public GraphEnum<Edge> Edges => new GraphEnum<Edge>(this.edges.Values.Cast<Edge>().GetEnumerator());
 
         public NewGraph()
         {
@@ -235,53 +237,72 @@ namespace UnityTools.Common
             // LogTool.LogAssertIsTrue(typeof(GraphFactory).GetMethod("CreateEdge").ReturnType == typeof(Edge), "factory should create edge of type " + typeof(Edge));
         }
 
-        protected void TryAddEdge(IVertex v, IEdge edge)
+        protected void AddToAdjList(IVertex from, IVertex to)
         {
-            if(!this.adjacentList.ContainsKey(v))
+            if (!this.adjacentList.ContainsKey(from))
             {
-                this.adjacentList.Add(v, new List<IEdge>());
+                this.adjacentList.Add(from, new HashSet<IVertex>());
             }
-            if(!this.adjacentList[v].Contains(edge))
-            {
-                this.adjacentList[v].Add(edge);
-            }
-        }
-        protected void TryRemoveEdge(IVertex v, IEdge edge)
-        {
-            if(this.adjacentList.ContainsKey(v))
-            {
-                this.adjacentList[v].Remove(edge);
-            }
-
+            var ret = this.adjacentList[from].Add(to);
+            LogTool.LogAssertIsTrue(ret, "Duplicated edge from " + from + " to " + to);
         }
 
+        protected void AddToEdge(IVertex from, IVertex to, IEdge edge)
+        {
+            var key = (from, to);
+            LogTool.LogAssertIsFalse(this.edges.ContainsKey(key), "Duplicated edge from " + from + " to " + to);
+            
+            this.edges.Add(key, edge);
+        }
+
+        protected void TryToRemoveEdge(IVertex from, IVertex to)
+        {
+            if (this.edges.ContainsKey((from, to))) this.edges.Remove((from, to));
+
+            if (this.adjacentList.ContainsKey(from)) this.adjacentList[from].Remove(to);
+        }
+        public IVertex AddVertex(IVertex v)
+        {
+            if(this.Contains(v)) return this.Vertices.First(n=>n.Equals(v));
+            var ret = this.Add(v);
+            LogTool.AssertIsTrue(ret);
+            return v;
+        }
         public IEdge AddEdge(IVertex v1, IVertex v2, bool isDirectional = false)
         {
             LogTool.AssertIsTrue(this.Contains(v1) && this.Contains(v2));
-            var ret = this.GetEdge(v1,v2);
-            if(ret != default) return ret;
+            var ret = this.GetEdge(v1, v2);
+            if (ret != default)
+            {
+                LogTool.AssertIsTrue((ret.Vertex.Equals(v1) && ret.OtherVertex.Equals(v2)) || (ret.Vertex.Equals(v2) && ret.OtherVertex.Equals(v1)));
+                return ret;
+            }
+
+            if (this.adjacentList.ContainsKey(v1)) LogTool.AssertIsFalse(this.adjacentList[v1].Contains(v2));
+            if(!isDirectional && this.adjacentList.ContainsKey(v2)) LogTool.AssertIsFalse(this.adjacentList[v2].Contains(v1));
 
             ret = this.Factory.CreateEdge(v1, v2, isDirectional);
-            this.TryAddEdge(v1, ret);
-            if(!isDirectional)
-            {
-                this.TryAddEdge(v2, ret);
-            }
+
+            this.AddToAdjList(v1, v2);
+            if (!isDirectional)this.AddToAdjList(v2, v1);
+
+            this.AddToEdge(v1, v2, ret);
             return ret;
         }
 
         public bool Contains(IEdge edge)
         {
-            return this.GetEdge(edge.Vertex, edge.OtherVertex) != default;
+            return this.edges.Values.Contains(edge);
         }
 
         public IEdge GetEdge(IVertex v1, IVertex v2)
         {
-            if(this.adjacentList.ContainsKey(v1))
+            IEdge ret = default;
+            if (this.adjacentList.ContainsKey(v1) && this.adjacentList[v1].Contains(v2))
             {
-                return this.adjacentList[v1].Find(e=>(e.Vertex == v2 && e.OtherVertex == v1) || (e.OtherVertex == v2 && e.Vertex == v1));
+                ret = this.edges.ContainsKey((v1, v2)) ? this.edges[(v1, v2)] : this.edges[(v2, v1)];
             }
-            return default;
+            return ret;
         }
 
         public void Remove(IEdge edge)
@@ -289,26 +310,24 @@ namespace UnityTools.Common
             var v1 = edge.Vertex;
             var v2 = edge.OtherVertex;
 
-            this.TryRemoveEdge(v1, edge);
-            this.TryRemoveEdge(v2, edge);
+            this.TryToRemoveEdge(v1, v2);
+            if (!edge.IsDirectional) this.TryToRemoveEdge(v2, v1);
+
         }
 
         public IEnumerable<IEdge> GetNeighborEdges(IVertex from)
         {
-            if(this.adjacentList.ContainsKey(from))
-            {
-                return this.adjacentList[from];
-            }
-            else
-            {
-                return new List<IEdge>();
-            }
+            return this.GetNeighborVertices(from).Select(to => this.edges[(from, to)]);
         }
 
         public IEnumerable<IVertex> GetNeighborVertices(IVertex from)
         {
-            return this.GetNeighborEdges(from).Select(e=>e.Vertex.Equals(from)?e.OtherVertex:e.Vertex);
+            if (this.adjacentList.ContainsKey(from)) return this.adjacentList[from];
+            
+            return new List<IVertex>();
         }
+
+        
     }
     // public interface IGraph<Node, Edge>
     // {
@@ -331,7 +350,7 @@ namespace UnityTools.Common
     // }
 
 
-    
+
 
     // [System.Serializable]
     // public abstract class Graph<Node, Edge> : IGraph<Node, Edge> where Node : INode, new() where Edge : IEdge
@@ -617,7 +636,7 @@ namespace UnityTools.Common
     //         LogTool.LogAssertIsTrue(0 <= y && y < this.matrix.Size.y, "Invalid Index");
     //     }
 
-        
+
     // }
 
 
@@ -732,11 +751,11 @@ namespace UnityTools.Common
         }
         protected void TestNewGraph(NewGraph<IndexVertex, DefaultEdge, IndexGraphFactory> graph)
         {
-            foreach(var e in Enumerable.Range(0,20))
+            foreach (var e in Enumerable.Range(0, 20))
             {
                 graph.Add(graph.Factory.CreateVertex());
             }
-            var nodes = graph.Vertices.OrderBy(v=>v.index).ToList();
+            var nodes = graph.Vertices.OrderBy(v => v.index).ToList();
             var e01 = graph.AddEdge(nodes[0], nodes[1]);
             var e02 = graph.Factory.CreateEdge(nodes[3], nodes[4]);
 
@@ -752,17 +771,17 @@ namespace UnityTools.Common
 
             LogTool.AssertIsTrue(graph.Contains(e01));
             LogTool.AssertIsFalse(graph.Contains(e02));
-            LogTool.AssertIsTrue(e56 ==graph.GetEdge(nodes[5], nodes[6]));
-            LogTool.AssertIsTrue(e56 ==graph.GetEdge(nodes[6], nodes[5]));
-            LogTool.AssertIsFalse(e56 ==graph.GetEdge(nodes[5], nodes[5]));
+            LogTool.AssertIsTrue(e56 == graph.GetEdge(nodes[5], nodes[6]));
+            LogTool.AssertIsTrue(e56 == graph.GetEdge(nodes[6], nodes[5]));
+            LogTool.AssertIsFalse(e56 == graph.GetEdge(nodes[5], nodes[5]));
 
-            foreach(var e in graph.Edges)
+            foreach (var e in graph.Edges)
             {
                 LogTool.Log(e.ToString());
             }
 
             LogTool.Log("Neighbor 5");
-            foreach(var e in graph.GetNeighborVertices(nodes[5]))
+            foreach (var e in graph.GetNeighborVertices(nodes[5]))
             {
                 LogTool.Log(e.ToString());
             }
