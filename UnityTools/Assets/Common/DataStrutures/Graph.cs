@@ -219,17 +219,15 @@ namespace UnityTools.Common
                                                         where GraphFactory : IGraphFactory, new()
     {
         private Dictionary<IVertex, List<IEdge>> adjacentList = new Dictionary<IVertex, List<IEdge>>();
-        private IGraphFactory factory;
+        private static IGraphFactory factory = new GraphFactory();
 
-        public IGraphFactory Factory => this.factory;
+        public IGraphFactory Factory => factory;
 
         public GraphEnum<Vertex> Vertices => new GraphEnum<Vertex>(this.Cast<Vertex>().GetEnumerator());
         public GraphEnum<Edge> Edges => new GraphEnum<Edge>(new GraphEnum<IEdge>(new GraphEdgeEnumerator<IEdge>(this.adjacentList)).Cast<Edge>().GetEnumerator());
 
         public NewGraph()
         {
-            this.factory = new GraphFactory();
-
             //Todo Check FactoryType with graph type
             // var t = typeof(GraphFactory).GetMethod("CreateVertex").ReturnType;
             // var tt = typeof(Vertex);
