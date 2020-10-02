@@ -38,6 +38,11 @@ namespace UnityTools.Common
         INewGraph CreateGraph();
     }
 
+    public interface IWeightedEdge: IEdge
+    {
+        float Weight { get; }
+    }
+
     public class IndexGraphFactory : IGraphFactory
     {
         private Queue<int> indexPool = new Queue<int>();
@@ -188,32 +193,6 @@ namespace UnityTools.Common
         }
     }
 
-    // public class GraphAdjMatrix<Vertex, Edge, GraphFactory> : NewGraph<Vertex, Edge, GraphFactory> where Vertex : IndexVertex where Edge : IEdge where GraphFactory : IGraphFactory, new()
-    // {
-    //     private Matrix<IEdge> edges = new Matrix<IEdge>();
-    //     public override GraphEnum<Edge> Edges => new GraphEnum<Edge>(this.edges.Cast<Edge>().Where(e=>e!=null).GetEnumerator());
-
-    //     // adj matrix need num of vertices to init matrix
-    //     public void InitVertices(int num)
-    //     {
-    //         var current = this.Count;
-    //         for (var i = 0; i < num - current; ++i)
-    //         {
-    //             this.Add(this.Factory.CreateVertex());
-    //         }
-    //         this.edges.Resize(num, num);
-    //     }
-
-
-    //     protected int2 GetIndex(IVertex v1, IVertex v2)
-    //     {
-    //         var id1 = (v1 as IndexVertex).index;
-    //         var id2 = (v2 as IndexVertex).index;
-
-    //         return this.IsDirectional == false && id1 < id2 ? new int2(id1, id2) : new int2(id2, id1);
-    //     }
-    // }
-
     public class NewGraph<Vertex, Edge, GraphFactory> : HashSet<IVertex>, INewGraph
                                                         where Vertex : IVertex
                                                         where Edge : IEdge
@@ -227,15 +206,6 @@ namespace UnityTools.Common
 
         public GraphEnum<Vertex> Vertices => new GraphEnum<Vertex>(this.Cast<Vertex>().GetEnumerator());
         public GraphEnum<Edge> Edges => new GraphEnum<Edge>(this.edges.Values.Cast<Edge>().GetEnumerator());
-
-        public NewGraph()
-        {
-            //Todo Check FactoryType with graph type
-            // var t = typeof(GraphFactory).GetMethod("CreateVertex").ReturnType;
-            // var tt = typeof(Vertex);
-            // LogTool.LogAssertIsTrue(typeof(GraphFactory).GetMethod("CreateVertex").ReturnType == typeof(Vertex), "factory should create vertex of type " + typeof(Vertex));
-            // LogTool.LogAssertIsTrue(typeof(GraphFactory).GetMethod("CreateEdge").ReturnType == typeof(Edge), "factory should create edge of type " + typeof(Edge));
-        }
 
         protected void AddToAdjList(IVertex from, IVertex to)
         {

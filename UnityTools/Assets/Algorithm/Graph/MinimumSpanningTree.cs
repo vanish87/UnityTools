@@ -60,6 +60,13 @@ namespace UnityTools.Algorithm
             }
             return ret;
         }
+
+        public static INewGraph KruskalMST<GraphFactory>(NewGraph<IVertex, IWeightedEdge, GraphFactory> graph) where GraphFactory : IGraphFactory, new()
+        {
+            var ret = graph.Factory.CreateGraph();
+            var edges = graph.Edges.OrderBy(e => e.Weight);
+            return ret;
+        }
         // public static Tree<Node> SpanningTree<Node, Edge>(IGraph<Node, Edge> graph, TraverseType type = TraverseType.DFS) where Node : new()
         // {
 
