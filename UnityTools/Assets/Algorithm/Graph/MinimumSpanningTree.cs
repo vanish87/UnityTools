@@ -19,7 +19,6 @@ namespace UnityTools.Algorithm
             var ret = graph.Factory.CreateGraph();
             var queue = new Queue<IVertex>();
             var visited = new HashSet<IVertex>();
-            var map = new Dictionary<IVertex, IVertex>();
             queue.Enqueue(graph.First());
 
             while(queue.Count > 0)
@@ -27,44 +26,47 @@ namespace UnityTools.Algorithm
                 var node = queue.Dequeue();
                 visited.Add(node);
 
-                if (map.ContainsKey(node) == false)
-                {
-                    var v1 = node.Clone() as IVertex;
-                    ret.Add(v1);
-                    map.Add(node, v1);
-                }
-
-                var cnode = map[node];
+                var v1 = ret.AddVertex(node.Clone() as IVertex);
 
                 foreach(var next in graph.GetNeighborVertices(node))
                 {
-                    if(visited.Contains(next)) continue;
+                    if (visited.Contains(next)) continue;
 
                     visited.Add(next);
                     queue.Enqueue(next);
 
+                    var v2 = ret.AddVertex(next.Clone() as IVertex);
 
-                    if (map.ContainsKey(next) == false)
-                    {
-                        var v2 = next.Clone() as IVertex;
-                        ret.Add(v2);
-                        map.Add(next, v2);
-                    }
-
-                    var cnext = map[next];
-
-
-                    ret.AddEdge(cnode, cnext);
+                    ret.AddEdge(v1, v2);
 
                 }
             }
             return ret;
         }
 
-        public static INewGraph KruskalMST<GraphFactory>(NewGraph<IVertex, IWeightedEdge, GraphFactory> graph) where GraphFactory : IGraphFactory, new()
+        public static INewGraph KruskalMST(INewGraph graph)
         {
+            LogTool.AssertIsTrue(graph.Edges.First() is IWeightedEdge);
+
             var ret = graph.Factory.CreateGraph();
-            var edges = graph.Edges.OrderBy(e => e.Weight);
+            var edges = graph.Edges.OrderBy(e => (e as IWeightedEdge).Weight);
+            var currentEdges = new List<IEdge>();
+
+            foreach(var e in edges)
+            {
+                currentEdges.Add(e);
+                if(GraphTools.HasCircle(currentEdges))
+                {
+                    currentEdges.RemoveAt(currentEdges.Count-1);
+                }
+                else
+                {
+                    var nv1 = ret.AddVertex(e.Vertex.Clone() as IVertex);
+                    var nv2 = ret.AddVertex(e.OtherVertex.Clone() as IVertex);
+                    ret.AddEdge(nv1, nv2);
+                }
+            }
+
             return ret;
         }
         // public static Tree<Node> SpanningTree<Node, Edge>(IGraph<Node, Edge> graph, TraverseType type = TraverseType.DFS) where Node : new()
