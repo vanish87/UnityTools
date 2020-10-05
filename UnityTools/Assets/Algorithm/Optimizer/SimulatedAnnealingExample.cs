@@ -84,6 +84,10 @@ namespace UnityTools.Algorithm
         protected Problem problem;
         protected SimulatedAnnealing SA;
 
+
+        [SerializeField] protected float temp = 1;
+        [SerializeField] protected IterationAlgorithmMode mode = IterationAlgorithmMode.FullStep;
+
         public Function<Vector<float>, float> Function => this; 
 
         protected void Start()
@@ -95,7 +99,7 @@ namespace UnityTools.Algorithm
                 k = 1,
                 alpha = 0.99f
             };
-            this.SA = new SimulatedAnnealing(this.problem, new Delta());
+            this.SA = new SimulatedAnnealing(this.problem, new Delta(), this.mode);
             this.SA.TryToRun();
 
 
@@ -113,6 +117,17 @@ namespace UnityTools.Algorithm
                 var state = (p as Problem).Current as HimmelblauState.Data;
                 LogTool.Log("Solution: " + state.CurrentX + " min= " + state.Evaluate(null), LogLevel.Info);
             });
+        }
+
+
+        protected void Update()
+        {
+            if(Input.GetKey(KeyCode.Space))
+            {
+                this.SA.TryToRun();
+            }
+
+            this.temp = this.problem.temperature;
         }
 
         protected void OnDrawGizmos()
