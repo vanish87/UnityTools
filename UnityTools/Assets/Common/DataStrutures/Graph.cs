@@ -16,6 +16,9 @@ namespace UnityTools.Common
         bool Contains(IEdge edge);
         void Remove(IEdge edge);
 
+        IEnumerable<IVertex> Vertices { get; }
+        IEnumerable<IEdge> Edges { get; }
+
         IEnumerable<IEdge> GetNeighborEdges(IVertex from);
         IEnumerable<IVertex> GetNeighborVertices(IVertex from);
 
@@ -207,6 +210,10 @@ namespace UnityTools.Common
         public GraphEnum<Vertex> Vertices => new GraphEnum<Vertex>(this.Cast<Vertex>().GetEnumerator());
         public GraphEnum<Edge> Edges => new GraphEnum<Edge>(this.edges.Values.Cast<Edge>().GetEnumerator());
 
+        IEnumerable<IVertex> INewGraph.Vertices => this;
+
+        IEnumerable<IEdge> INewGraph.Edges => this.edges.Values;
+
         protected void AddToAdjList(IVertex from, IVertex to)
         {
             if (!this.adjacentList.ContainsKey(from))
@@ -214,7 +221,7 @@ namespace UnityTools.Common
                 this.adjacentList.Add(from, new HashSet<IVertex>());
             }
             var ret = this.adjacentList[from].Add(to);
-            LogTool.LogAssertIsTrue(ret, "Duplicated edge from " + from + " to " + to);
+            LogTool.LogAssertIsTrue(ret || from.Equals(to), "Duplicated edge from " + from + " to " + to);
         }
 
         protected void AddToEdge(IVertex from, IVertex to, IEdge edge)
