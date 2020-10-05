@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace UnityTools.Common
@@ -13,6 +14,26 @@ namespace UnityTools.Common
 
         public static bool HasCircle(INewGraph graph)
         {
+            var queue = new Queue<IVertex>();
+            var visited = new HashSet<IVertex>();
+            var parent = new Dictionary<IVertex, IVertex>();
+            queue.Enqueue(graph.First());
+            while(queue.Count > 0)
+            {
+                var node = queue.Dequeue();
+                visited.Add(node);
+                foreach(var next in graph.GetNeighborVertices(node))
+                {                        
+                    if(visited.Contains(next)) continue;
+                    queue.Enqueue(next);
+
+                    var px = Find(parent, node);
+                    var py = Find(parent, next);
+                    if(px.Equals(py)) return true;
+
+                    Union(parent, node, next);
+                }
+            }
             return false;
         }
 
