@@ -25,10 +25,13 @@ namespace UnityTools.Algorithm
             var db = b2.Position - b1.Position;
             var dc = b1.Position - a1.Position;
 
-            if(math.dot(dc, math.cross(da,db)) != 0) return false;
+            if (math.dot(dc, math.cross(da, db)) != 0) return false;
 
-            var s = math.dot(math.cross(dc, db), math.cross(da, db)) / math.dot(math.cross(da, db), math.cross(da, db));
-            if(s > 0 && s < 1)
+            var n2 = Norm2(math.cross(da, db));
+
+            var s = math.dot(math.cross(dc, db), math.cross(da, db)) / n2;
+            var t = math.dot(math.cross(dc, da), math.cross(da, db)) / n2;
+            if (s >= 0 && s <= 1 && t >= 0 && t <= 1)
             {
                 return true;
             }
@@ -36,6 +39,43 @@ namespace UnityTools.Algorithm
 
             return false;
 
+        }
+        //Line segment-line segment intersection in 2d space by using the dot product
+        //p1 and p2 belongs to line 1, and p3 and p4 belongs to line 2 
+        public static bool AreLineSegmentsIntersectingDotProduct(Vector3 p1, Vector3 p2, Vector3 p3, Vector3 p4)
+        {
+            bool isIntersecting = false;
+
+            if (IsPointsOnDifferentSides(p1, p2, p3, p4) && IsPointsOnDifferentSides(p3, p4, p1, p2))
+            {
+                isIntersecting = true;
+            }
+
+            return isIntersecting;
+        }
+
+        //Are the points on different sides of a line?
+        private static bool IsPointsOnDifferentSides(Vector3 p1, Vector3 p2, Vector3 p3, Vector3 p4)
+        {
+            bool isOnDifferentSides = false;
+
+            //The direction of the line
+            Vector3 lineDir = p2 - p1;
+
+            //The normal to a line is just flipping x and z and making z negative
+            Vector3 lineNormal = new Vector3(-lineDir.z, lineDir.y, lineDir.x);
+
+            //Now we need to take the dot product between the normal and the points on the other line
+            float dot1 = Vector3.Dot(lineNormal, p3 - p1);
+            float dot2 = Vector3.Dot(lineNormal, p4 - p1);
+
+            //If you multiply them and get a negative value then p3 and p4 are on different sides of the line
+            if (dot1 * dot2 < 0f)
+            {
+                isOnDifferentSides = true;
+            }
+
+            return isOnDifferentSides;
         }
     }
 
@@ -58,8 +98,8 @@ namespace UnityTools.Algorithm
             var p5 = new Point() { Position = new float3(1, 0, 0) };
             var p6 = new Point() { Position = new float3(2, 0, 0) };
 
-            LogTool.AssertIsTrue(GeometryTools.IsLineSegmentIntersection(p1,p2,p3,p4));
-            LogTool.AssertIsFalse(GeometryTools.IsLineSegmentIntersection(p1,p2,p5,p6));
+            LogTool.AssertIsTrue(GeometryTools.IsLineSegmentIntersection(p1, p2, p3, p4));
+            LogTool.AssertIsFalse(GeometryTools.IsLineSegmentIntersection(p1, p2, p5, p6));
         }
     }
 }
