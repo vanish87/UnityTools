@@ -14,12 +14,12 @@ namespace UnityTools.Algorithm
     }
     public class MinimumSpanningTree
     {
-        public static INewGraph Generate(INewGraph graph)
+        public static INewGraph Generate(INewGraph graph, IVertex first = null)
         {
             var ret = graph.Factory.CreateGraph();
             var queue = new Queue<IVertex>();
             var visited = new HashSet<IVertex>();
-            queue.Enqueue(graph.First());
+            queue.Enqueue(first == null ? graph.First() : first);
 
             while(queue.Count > 0)
             {

@@ -63,7 +63,7 @@ namespace UnityTools.Common
         protected IEnumerator SaveToFile()
         {
             yield return 0;
-            var filePath = Path.Combine(Application.streamingAssetsPath, DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss_") + this.fileName);
+            var filePath = System.IO.Path.Combine(Application.streamingAssetsPath, DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss_") + this.fileName);
             //var filePath = Path.Combine(Application.streamingAssetsPath, this.fileName);
             FileTool.Write(filePath, this.data, FileTool.SerializerType.Binary);
         }

@@ -140,7 +140,7 @@ namespace UnityTools.Rendering
                 tex.Apply();
                 byte[] bytes = tex.EncodeToPNG();
                 tex.DestoryObj();
-                File.WriteAllBytes(Path.Combine(Application.streamingAssetsPath, path), bytes);
+                File.WriteAllBytes(System.IO.Path.Combine(Application.streamingAssetsPath, path), bytes);
             }
         }
 

@@ -18,7 +18,7 @@ public class ConfigureTest : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        var path = Path.Combine(Application.streamingAssetsPath, "test.xml");
+        var path = System.IO.Path.Combine(Application.streamingAssetsPath, "test.xml");
         var data = new TestConfiure();
 
         //ConfigureTool.Write(path, data);

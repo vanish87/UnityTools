@@ -42,10 +42,10 @@ namespace UnityTools.Common
         {
             var fileList = new List<string>();
             var assetBasePath = Application.dataPath;
-            var assetDirectory = Path.Combine(assetBasePath, "AssetBundleOutput/SingleAssets");
+            var assetDirectory = System.IO.Path.Combine(assetBasePath, "AssetBundleOutput/SingleAssets");
             foreach (string file in System.IO.Directory.GetFiles(assetDirectory))
             {
-                if (Path.GetExtension(file) == ".asset")
+                if (System.IO.Path.GetExtension(file) == ".asset")
                 {
                     var relativepath = file;
                     if (file.StartsWith(assetBasePath))
