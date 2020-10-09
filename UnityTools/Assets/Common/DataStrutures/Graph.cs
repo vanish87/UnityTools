@@ -15,6 +15,7 @@ namespace UnityTools.Common
         IEdge GetEdge(IVertex v1, IVertex v2);
         bool Contains(IEdge edge);
         void Remove(IEdge edge);
+        new void Remove(IVertex vertex);
 
         IEnumerable<IVertex> Vertices { get; }
         IEnumerable<IEdge> Edges { get; }
@@ -248,6 +249,8 @@ namespace UnityTools.Common
         public IEdge AddEdge(IVertex v1, IVertex v2, bool isDirectional = false)
         {
             LogTool.AssertIsTrue(this.Contains(v1) && this.Contains(v2));
+            if(v1.Equals(v2)) LogTool.Log("Self edge", LogLevel.Warning);
+
             var ret = this.GetEdge(v1, v2);
             if (ret != default)
             {
@@ -282,6 +285,18 @@ namespace UnityTools.Common
             return ret;
         }
 
+        public new void Remove(IVertex vertex)
+        {
+            base.Remove(vertex);
+            LogTool.AssertIsTrue(!this.adjacentList.ContainsKey(vertex) || this.adjacentList[vertex].Count == 0);
+
+            foreach(var e in this.GetNeighborEdges(vertex).ToList())
+            {
+                this.Remove(e);
+            }
+
+        }
+
         public void Remove(IEdge edge)
         {
             var v1 = edge.Vertex;
@@ -290,6 +305,8 @@ namespace UnityTools.Common
             this.TryToRemoveEdge(v1, v2);
             if (!edge.IsDirectional) this.TryToRemoveEdge(v2, v1);
 
+
+            LogTool.AssertIsTrue(this.GetEdge(v1, v2) == default);
         }
 
         public IEnumerable<IEdge> GetNeighborEdges(IVertex from)

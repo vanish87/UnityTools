@@ -81,5 +81,36 @@ namespace UnityTools.Common
             return Find(parent, x).Equals(Find(parent, y));
         }
 
+
+        public static IPath GetPath(INewGraph graph, IVertex from, IVertex to)
+        {
+            var ret = new Path();
+            var visited = new HashSet<IVertex>();
+
+            var found = GetPathDFS(graph, from, to, ret, visited);
+
+            if (found) return ret;
+            return default;
+        }
+
+        private static bool GetPathDFS(INewGraph g, IVertex n, IVertex to, IPath current, HashSet<IVertex> visited)
+        {
+            visited.Add(n);
+            current.Append(n);
+
+            if (n.Equals(to)) return true;
+
+            foreach (var next in g.GetNeighborVertices(n))
+            {
+                if (visited.Contains(next)) continue;
+
+                if(GetPathDFS(g, next, to, current, visited)) return true;
+                current.Remove(next);
+            }
+
+            return false;
+
+        }
+
     }
 }
