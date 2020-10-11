@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityTools.Debuging;
 
@@ -85,6 +86,7 @@ namespace UnityTools.Common
                                                         where GraphFactory : IHalfEdgeFactory, new()
     {
 
+        public GraphEnum<F> Faces => new GraphEnum<F>(this.faces.Cast<F>().GetEnumerator());
         protected HashSet<IHalfEdgeFace> faces = new HashSet<IHalfEdgeFace>();
         public virtual IHalfEdgeFace GetFace(IEdge edge)
         {
@@ -125,18 +127,29 @@ namespace UnityTools.Common
                 LogTool.AssertIsTrue(from.Outgoing != null);
                 LogTool.AssertIsTrue(v21Edge.Vertex == to);
                 LogTool.AssertIsTrue(v21Edge.OtherVertex == from);
-                from.Outgoing.Previous.Next = v12Edge;
-                from.Outgoing.Previous = v21Edge;
-                v21Edge.Next = from.Outgoing;
+                var prev = from.Outgoing.Previous;
+                var next = from.Outgoing.Previous.Next;
+
+                prev.Next = v12Edge;
+                v12Edge.Previous = prev;
+
+                next.Previous = v21Edge;
+                v21Edge.Next = next;
             }
             if(to.Outgoing != NoneHalfEdgeObject.None)
             {
                 LogTool.AssertIsTrue(to.Outgoing != null);
                 LogTool.AssertIsTrue(v12Edge.Vertex == from);
                 LogTool.AssertIsTrue(v12Edge.OtherVertex == to);
-                to.Outgoing.Previous.Next = v21Edge;
-                to.Outgoing.Previous = v12Edge;
-                v12Edge.Next = to.Outgoing;
+
+                var prev = to.Outgoing.Previous;
+                var next = to.Outgoing.Previous.Next;
+
+                prev.Next = v21Edge;
+                v21Edge.Previous = prev;
+
+                next.Previous = v12Edge;
+                v12Edge.Next = next;
             }
 
             from.Outgoing = v12Edge;
@@ -177,7 +190,17 @@ namespace UnityTools.Common
                 var newFace = (this.Factory as IHalfEdgeFactory).CreateFace();
                 newFace.HalfEdge = edge;
                 edge.Face = newFace;
-                this.faces.Add(newFace);
+                var ret = this.faces.Add(newFace);
+                LogTool.AssertIsTrue(ret);
+
+                e = newFace.HalfEdge.Next;
+                var str = " ";
+                while(e != edge)
+                {
+                    str += " "+e.ToString();
+                    e = e.Next;
+                }
+                LogTool.Log("Add face "  + str);
             }
         }
     }
