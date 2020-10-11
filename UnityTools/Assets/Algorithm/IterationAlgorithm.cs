@@ -256,7 +256,7 @@ namespace UnityTools.Algorithm
             }
             else
             {
-                (this.dt as IterationDelta).FixStep();
+                (this.dt as IterationDelta)?.FixStep();
             }
             return this.Solve(this.problem);
         }

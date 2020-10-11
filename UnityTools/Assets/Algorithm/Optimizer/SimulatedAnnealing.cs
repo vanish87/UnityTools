@@ -38,7 +38,8 @@ namespace UnityTools.Algorithm
         }
 
 
-        public SimulatedAnnealing(IProblem problem, IDelta dt) : base(problem, dt)
+        public SimulatedAnnealing(IProblem problem, IDelta dt, IterationAlgorithmMode mode = IterationAlgorithmMode.FullStep)
+                                    : base(problem, dt, mode)
         {
 
         }
