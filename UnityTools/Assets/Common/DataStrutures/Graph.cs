@@ -34,6 +34,10 @@ namespace UnityTools.Common
         IVertex Vertex { get; set; }
         IVertex OtherVertex { get; set; }
     }
+    public interface IFace : IEquatable<IFace>, ICloneable
+    {
+
+    }
     public interface IGraphFactory
     {
         IVertex CreateVertex();
@@ -204,7 +208,7 @@ namespace UnityTools.Common
     {
         private Dictionary<IVertex, HashSet<IVertex>> adjacentList = new Dictionary<IVertex, HashSet<IVertex>>();
         private Dictionary<(IVertex, IVertex), IEdge> edges = new Dictionary<(IVertex, IVertex), IEdge>();
-        private static IGraphFactory factory = new GraphFactory();
+        private IGraphFactory factory = new GraphFactory();
 
         public IGraphFactory Factory => factory;
 
@@ -229,8 +233,13 @@ namespace UnityTools.Common
         {
             var key = (from, to);
             LogTool.LogAssertIsFalse(this.edges.ContainsKey(key), "Duplicated edge from " + from + " to " + to);
-            
+
             this.edges.Add(key, edge);
+        }
+        protected void AddToVertex(IVertex vertex)
+        {
+            var ret = this.Add(vertex);
+            LogTool.AssertIsTrue(ret);
         }
 
         protected void TryToRemoveEdge(IVertex from, IVertex to)
@@ -241,15 +250,14 @@ namespace UnityTools.Common
         }
         public IVertex AddVertex(IVertex v)
         {
-            if(this.Contains(v)) return this.Vertices.First(n=>n.Equals(v));
-            var ret = this.Add(v);
-            LogTool.AssertIsTrue(ret);
+            if (this.Contains(v)) return this.Vertices.First(n => n.Equals(v));
+            this.AddToVertex(v);
             return v;
         }
-        public IEdge AddEdge(IVertex v1, IVertex v2, bool isDirectional = false)
+        public virtual IEdge AddEdge(IVertex v1, IVertex v2, bool isDirectional = false)
         {
             LogTool.AssertIsTrue(this.Contains(v1) && this.Contains(v2));
-            if(v1.Equals(v2)) LogTool.Log("Self edge", LogLevel.Warning);
+            if (v1.Equals(v2)) LogTool.Log("Self edge", LogLevel.Warning);
 
             var ret = this.GetEdge(v1, v2);
             if (ret != default)
@@ -270,7 +278,7 @@ namespace UnityTools.Common
             return ret;
         }
 
-        public bool Contains(IEdge edge)
+        public virtual bool Contains(IEdge edge)
         {
             return this.edges.Values.Contains(edge);
         }
