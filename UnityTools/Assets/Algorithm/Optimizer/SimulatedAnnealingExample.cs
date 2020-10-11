@@ -94,7 +94,7 @@ namespace UnityTools.Algorithm
         {
             this.problem = new Problem()
             {
-                temperature = 1,
+                temperature = 100,
                 minTemperature = 0.0001f,
                 k = 1,
                 alpha = 0.99f
