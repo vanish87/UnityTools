@@ -23,7 +23,7 @@ namespace UnityTools.Networking
     {
         public static void DebugReport(GPUData data)
         {
-            double now = Serilization.ConvertFrom2019();
+            double now = Serialization.ConvertFrom2019();
             double diff = now - data.serverTime;
             Debug.LogFormat("Server time is {0:0.000000}, with delta {1:0.000000}", data.serverTime, data.deltaTime);
             Debug.LogFormat("Client time is {0:0.000000}", now);
@@ -60,7 +60,7 @@ namespace UnityTools.Networking
             while (true)
             {
                 data.deltaTime = Time.deltaTime;
-                data.serverTime = Serilization.ConvertFrom2019();
+                data.serverTime = Serialization.ConvertFrom2019();
                 //this.socket.Send(socket, data);
                 //this.socket.Send(socket1, data);
                 this.socket.Broadcast(data, 12347);

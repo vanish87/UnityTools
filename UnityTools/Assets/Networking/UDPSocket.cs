@@ -176,13 +176,13 @@ namespace UnityTools.Networking
 
         public virtual byte[] OnSerialize(T data)
         {
-            return Serilization.ObjectToByteArray(data);
+            return Serialization.ObjectToByteArray(data);
         }
         
         public virtual T OnDeserialize(byte[] data, int length)
         {
             //Note data may has different size than length
-            return Serilization.ByteArrayToObject<T>(data);
+            return Serialization.ByteArrayToObject<T>(data);
         }
 
         public virtual void Send(SocketData socket, T data)

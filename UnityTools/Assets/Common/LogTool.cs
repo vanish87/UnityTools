@@ -109,14 +109,14 @@ namespace UnityTools.Debuging
 
             public override byte[] OnSerialize(Data data)
             {
-                var raw = Serilization.ObjectToByteArray(data);
+                var raw = Serialization.ObjectToByteArray(data);
                 return CompressTool.Compress(raw); 
             }
 
             public override Data OnDeserialize(byte[] data, int length)
             {
                 var remote = CompressTool.Decompress(data);
-                return Serilization.ByteArrayToObject<Data>(remote);
+                return Serialization.ByteArrayToObject<Data>(remote);
             }
         }
 

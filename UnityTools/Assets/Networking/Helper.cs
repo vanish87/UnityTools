@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace UnityTools.Common
 {
-    public class Serilization
+    public class Serialization
     {
         // Convert an object to a byte array
         public static byte[] ObjectToByteArray<T>(T obj)

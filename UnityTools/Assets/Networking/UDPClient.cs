@@ -19,7 +19,7 @@ namespace UnityTools.Networking
             //this.socket.Send(Time.deltaTime.ToString());
 
             UDPServer.GPUData data;
-            var now = Serilization.ConvertFrom2019();
+            var now = Serialization.ConvertFrom2019();
             //Debug.Log("Frame Start");
 
             var deltaThisFrame = 0.0d;
