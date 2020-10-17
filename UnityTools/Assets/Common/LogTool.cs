@@ -134,6 +134,10 @@ namespace UnityTools.Debuging
 
     public class LogTool
     {
+        public interface ILogUser
+        {
+            void Log(string message);
+        }
         protected static Dictionary<LogLevel, bool> levelList = new Dictionary<LogLevel, bool>();
         protected static LogChannel channels = ~LogChannel.None;
         protected static LogMode modes = LogMode.Console;
@@ -188,6 +192,8 @@ namespace UnityTools.Debuging
                 default: Debug.Log(msg); break;
             }
             LogToolNetwork.Log(msg);
+
+            foreach(var user in ObjectTool.FindAllObject<ILogUser>()) user.Log(message);
         }
         public static void LogFormat(string format, LogLevel level = LogLevel.Verbose, LogChannel channel = LogChannel.Debug, params object[] args)
         {
