@@ -81,7 +81,7 @@ namespace UnityTools.Networking
         private const int bufferSize = 64 * 1024; //64K
         public byte[] buffer = new byte[bufferSize];
     }
-    public class RecieveState : State
+    public class ReceiveState : State
     {
         public SocketData remote = SocketData.Make();
     }
@@ -90,7 +90,7 @@ namespace UnityTools.Networking
     //for testing latency of UDP
     public class UDPSocket<T> : Disposable
     {
-        public RecieveState recieveState = new RecieveState();
+        public ReceiveState receiveState = new ReceiveState();
         public bool DebugLog = false;
 
         public enum Connection
@@ -102,13 +102,13 @@ namespace UnityTools.Networking
         public enum SocketRole
         {
             Sender,
-            Reciever,
+            Receiver,
             Broadcast,
         }
         protected Dictionary<SocketRole, bool> roleState = new Dictionary<SocketRole, bool>()
         {
             {SocketRole.Sender      , false },
-            {SocketRole.Reciever    , false },
+            {SocketRole.Receiver    , false },
             {SocketRole.Broadcast   , false },
         };
         protected Dictionary<Connection, List<SocketData>> connections = new Dictionary<Connection, List<SocketData>>()
@@ -147,25 +147,26 @@ namespace UnityTools.Networking
                             //socket.Connect(IPAddress.Parse(address), port);
                         }
                         break;
-                    case SocketRole.Reciever:
+                    case SocketRole.Receiver:
                         {
                             this.socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.ReuseAddress, true);
                             //this.socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.PacketInformation, true);
                             Assert.IsNotNull(data);
                             this.socket.Bind(data.endPoint);
 
-                            if (DebugLog) Debug.Log("Start Reciever on " + data.endPoint);
+                            if (DebugLog) LogTool.Log("Start Receiver on " + data.endPoint);
                         }
                         break;
                     case SocketRole.Broadcast:
                         {
                             this.socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Broadcast, true);
+                            this.socket.EnableBroadcast = true;
                             //this.socket.Bind(this.socketConfigure.endPoint);
                         }
                         break;
                 }
             }
-            catch(SocketException e) { Debug.Log(data.endPoint.ToString() + " "  + e.ToString()); }
+            catch(SocketException e) { LogTool.Log(data.endPoint.ToString() + " "  + e.ToString()); }
             this.roleState[role] = true;
         }
 
@@ -205,16 +206,16 @@ namespace UnityTools.Networking
         }
         public virtual void StartReceive(int port = 0)
         {
-            this.recieveState.remote = SocketData.Make(port);
-            this.recieveState.remote.socket = this.socket;
+            this.receiveState.remote = SocketData.Make(port);
+            this.receiveState.remote.socket = this.socket;
 
-            this.Setup(SocketRole.Reciever, this.recieveState.remote);
+            this.Setup(SocketRole.Receiver, this.receiveState.remote);
 
-            EndPoint epFrom = this.recieveState.remote.endPoint;
+            EndPoint epFrom = this.receiveState.remote.endPoint;
 
             try
             {
-                this.socket.BeginReceiveFrom(this.recieveState.buffer, 0, this.recieveState.buffer.Length, SocketFlags.None, ref epFrom, this.RecieveCallback, this.recieveState);
+                this.socket.BeginReceiveFrom(this.receiveState.buffer, 0, this.receiveState.buffer.Length, SocketFlags.None, ref epFrom, this.ReceiveCallback, this.receiveState);
             }
             catch (Exception e)
             {
@@ -297,12 +298,12 @@ namespace UnityTools.Networking
                 LogTool.Log((e as SocketException).Message);
             }
         }
-        protected void RecieveCallback(IAsyncResult ar)
+        protected void ReceiveCallback(IAsyncResult ar)
         {
             try
             {
-                var stateFrom = ar.AsyncState as RecieveState;
-                Assert.IsTrue(stateFrom == this.recieveState);
+                var stateFrom = ar.AsyncState as ReceiveState;
+                Assert.IsTrue(stateFrom == this.receiveState);
 
                 EndPoint epFrom = stateFrom.remote.endPoint;
                 int bytesReceived = stateFrom.remote.socket.EndReceiveFrom(ar, ref epFrom);
@@ -320,20 +321,23 @@ namespace UnityTools.Networking
                 if(this.connections[Connection.Incoming].Exists(c => c.endPoint.Address.Equals(ipFrom.Address)) == false)
                 {
                     this.connections[Connection.Incoming].Add(SocketData.Make(ipFrom));
-                    if (DebugLog) Debug.LogWarningFormat("Add in connection: {0}", ipFrom.ToString());
+                    if (DebugLog) LogTool.LogFormat("Add in connection: {0}", LogLevel.Verbose, LogChannel.Network, ipFrom.ToString());
                 }
 
-                epFrom = this.recieveState.remote.endPoint;
-                stateFrom.remote.socket.BeginReceiveFrom(this.recieveState.buffer, 0, this.recieveState.buffer.Length, SocketFlags.None, ref epFrom, this.RecieveCallback, this.recieveState);
+                epFrom = this.receiveState.remote.endPoint;
+                stateFrom.remote.socket.BeginReceiveFrom(this.receiveState.buffer, 0, this.receiveState.buffer.Length, SocketFlags.None, ref epFrom, this.ReceiveCallback, this.receiveState);
             }
             catch (Exception e)
             {
-                Debug.Log(e.ToString());
-                var se = e as SocketException;
-                if (se != null)
+                if(!(e is ObjectDisposedException))
                 {
-                    Debug.Log(se.ErrorCode);
-                    Debug.Log(se.Message);
+                    LogTool.Log(e.ToString());
+                    var se = e as SocketException;
+                    if (se != null)
+                    {
+                        LogTool.Log(se.ErrorCode.ToString());
+                        LogTool.Log(se.Message);
+                    }
                 }
             }
         }

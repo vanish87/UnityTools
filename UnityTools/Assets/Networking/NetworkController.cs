@@ -44,6 +44,8 @@ namespace UnityTools.Networking
             {
                 LogTool.Log("Current pc not found, use default", LogLevel.Warning);
                 currentPC = new PCInfo();
+                currentPC.ipAddress = currentIPs[0];
+                currentPC.role = PCInfo.Role.None;
             }
             if (serverData == null)
             {

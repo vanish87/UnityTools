@@ -12,6 +12,7 @@ namespace UnityTools.Common
     {
         public enum Role
         {
+            None,
             Server,
             Client,
             Development,
@@ -24,7 +25,7 @@ namespace UnityTools.Common
         }
         public string name = "OutputPC";
         public string ipAddress = "127.0.0.1";
-        public Role role = Role.Client;
+        public Role role = Role.None;
         public List<Port> ports = new List<Port>();
 
     }
