@@ -24,8 +24,8 @@ namespace UnityTools.Math
             this.matrial = new DisposableMaterial(new Material(Shader.Find("Diffuse")));
             this.matrial.Data.SetInt("_Cull", (int)UnityEngine.Rendering.CullMode.Off);
 
-            var meshFiter = this.gameObject.FindOrAddTypeInComponentsAndChilden<MeshFilter>();
-            var meshRender = this.gameObject.FindOrAddTypeInComponentsAndChilden<MeshRenderer>();
+            var meshFiter = this.gameObject.FindOrAddTypeInComponentsAndChildren<MeshFilter>();
+            var meshRender = this.gameObject.FindOrAddTypeInComponentsAndChildren<MeshRenderer>();
             meshRender.material = this.matrial;
 
 

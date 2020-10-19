@@ -11,8 +11,8 @@ namespace UnityTools.Networking
         public class NetworkData
         {
             public PCInfo current = new PCInfo();
-            public PCInfo server = new PCInfo();
-            public PCInfo devPC = new PCInfo();
+            public List<PCInfo> servers = new List<PCInfo>();
+            public List<PCInfo> devPCs = new List<PCInfo>();
             public List<PCInfo> client = new List<PCInfo>();
         }
         public interface INetworkUser
@@ -38,30 +38,30 @@ namespace UnityTools.Networking
                     break;
                 }
             }
-            var serverData = pcList.Find(pc => pc.role == PCInfo.Role.Server);
+            var serverData = pcList.FindAll(pc => pc.role == PCInfo.Role.Server);
 
             if (currentPC == null)
             {
-                LogTool.Log("Current pc not found, use default", LogLevel.Warning);
+                LogTool.Log("Current pc not found, use current ip " + currentIPs[0], LogLevel.Warning);
                 currentPC = new PCInfo();
                 currentPC.ipAddress = currentIPs[0];
                 currentPC.role = PCInfo.Role.None;
             }
             if (serverData == null)
             {
-                LogTool.Log("serverData not found, use default", LogLevel.Warning);
-                serverData = new PCInfo() { role = PCInfo.Role.Server };
+                LogTool.Log("serverData not found, add a default one", LogLevel.Warning);
+                serverData = new List<PCInfo>() { new PCInfo() { role = PCInfo.Role.Server } };
             }
             LogTool.LogFormat("setup current pc ip {1} as {0}", LogLevel.Info, LogChannel.Debug | LogChannel.Network, currentPC.role.ToString(), currentPC.ipAddress);
 
             var clientData = pcList.FindAll(pc => pc.role == PCInfo.Role.Client && currentIPs.Contains(pc.ipAddress) == false);
-            var devData = pcList.Find(pc => pc.role == PCInfo.Role.Development);
+            var devData = pcList.FindAll(pc => pc.role == PCInfo.Role.Development);
 
             var data = new NetworkData()
             {
                 current = currentPC,
-                server = serverData,
-                devPC = devData,
+                servers = serverData,
+                devPCs = devData,
                 client = new List<PCInfo>(clientData)
             };
 

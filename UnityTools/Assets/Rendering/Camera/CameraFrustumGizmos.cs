@@ -13,7 +13,7 @@ namespace UnityTools.Rendering
         [SerializeField] protected Camera cam;
         protected void Start()
         {
-            this.cam = this.gameObject.FindOrAddTypeInComponentsAndChilden<Camera>();
+            this.cam = this.gameObject.FindOrAddTypeInComponentsAndChildren<Camera>();
         }
 
         protected void OnDrawGizmosSelected()

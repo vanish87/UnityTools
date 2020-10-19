@@ -19,7 +19,7 @@ namespace UnityTools
                     Object.DestroyImmediate(obj);
             }
         }
-        public static T FindOrAddTypeInComponentsAndChilden<T>(this GameObject obj) where T : Component
+        public static T FindOrAddTypeInComponentsAndChildren<T>(this GameObject obj) where T : Component
         {
             var ret = obj.GetComponentInChildren<T>();
 
