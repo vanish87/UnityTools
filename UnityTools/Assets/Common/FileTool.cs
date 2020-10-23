@@ -115,7 +115,11 @@ namespace UnityTools.Common
         static public T Read<T>(string filePath, SerializerType type = SerializerType.Binary)
         {
             var ret = default(T);
+            #if UNITY_ANDROID && !UNITY_EDITOR
+            if(true)
+            #else
             if (File.Exists(filePath))
+            #endif
             {
                 try
                 {
@@ -124,7 +128,18 @@ namespace UnityTools.Common
                     {
                         case SerializerType.XML:
                             {
+                                #if UNITY_ANDROID && !UNITY_EDITOR
+                                var web = UnityEngine.Networking.UnityWebRequest.Get(filePath);
+                                web.SendWebRequest();
+                                while(!web.isDone);
+                                LogTool.AssertIsFalse(web.isNetworkError);
+                                LogTool.AssertIsFalse(web.isHttpError);
+                                var text = web.downloadHandler.data;
+                                web.Dispose();
+                                using(var fs = new MemoryStream(text))
+                                #else
                                 using (var fs = new StreamReader(filePath, System.Text.Encoding.UTF8))
+                                #endif
                                 {
                                     var serializer = new XmlSerializer(typeof(T));
                                     ret = (T)serializer.Deserialize(fs);

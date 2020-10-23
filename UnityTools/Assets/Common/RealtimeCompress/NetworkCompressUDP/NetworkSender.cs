@@ -34,7 +34,7 @@ namespace UnityTools.Common
 
             var data = readback.GetData<byte>().ToArray();
             var timer = System.Diagnostics.Stopwatch.StartNew();
-            data = CompressTool.Compress(data, CompressTool.CompreeAlgorithm.Zstd); timer.Stop();
+            data = CompressTool.Compress(data, CompressTool.CompressAlgorithm.Zstd); timer.Stop();
             total += timer.ElapsedMilliseconds;
             count++;
             var para = new AsyncGPUDataSerializer.Parameter() { x = readback.width, y = readback.height, compressed = true };

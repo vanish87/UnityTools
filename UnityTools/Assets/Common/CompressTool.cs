@@ -10,17 +10,17 @@ namespace UnityTools.Common
 {
     public class CompressTool
     {
-        public enum CompreeAlgorithm
+        public enum CompressAlgorithm
         {
             Deflate,
             Zstd,
         }
-        public static byte[] Compress(byte[] data, CompreeAlgorithm method = CompreeAlgorithm.Deflate, CompressionLevel level = CompressionLevel.Optimal)
+        public static byte[] Compress(byte[] data, CompressAlgorithm method = CompressAlgorithm.Deflate, CompressionLevel level = CompressionLevel.Optimal)
         {
             MemoryStream output = new MemoryStream();
             switch (method)
             {
-                case CompreeAlgorithm.Deflate:
+                case CompressAlgorithm.Deflate:
                     {
                         using (DeflateStream dstream = new DeflateStream(output, level))
                         {
@@ -28,7 +28,7 @@ namespace UnityTools.Common
                         }
                     }
                     break;
-                case CompreeAlgorithm.Zstd:
+                case CompressAlgorithm.Zstd:
                     {
                         var opt = new CompressionOptions(CompressionOptions.DefaultCompressionLevel);
                         using (var compressor = new Compressor(opt))
@@ -40,13 +40,13 @@ namespace UnityTools.Common
             return output.ToArray();
         }
 
-        public static byte[] Decompress(byte[] data, CompreeAlgorithm method = CompreeAlgorithm.Deflate)
+        public static byte[] Decompress(byte[] data, CompressAlgorithm method = CompressAlgorithm.Deflate)
         {
             MemoryStream input = new MemoryStream(data);
             MemoryStream output = new MemoryStream();
             switch(method)
             {
-                case CompreeAlgorithm.Deflate:
+                case CompressAlgorithm.Deflate:
                     {
                         using (DeflateStream dstream = new DeflateStream(input, CompressionMode.Decompress))
                         {
@@ -54,7 +54,7 @@ namespace UnityTools.Common
                         }
                     }
                     break;
-                case CompreeAlgorithm.Zstd:
+                case CompressAlgorithm.Zstd:
                     {
                         using (var decompressor = new Decompressor())
                         {
