@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Unity.Mathematics;
 using UnityEngine;
-using UnityPaperModel;
 using UnityTools.Common;
 using UnityTools.Debuging;
 
@@ -69,40 +68,40 @@ namespace UnityTools.Algorithm
 
         protected static void UpdateEdgeCost(INewGraph g, IVertex u)
         {
-            u.CostTo = new Cost() { cost = float.MaxValue, to = default };
-            foreach (IVertex v in g.GetNeighborVertices(u as Common.IVertex))
-            {
-                var ret = 0f;
-                var len = math.distance(u.Position, v.Position);
+            // u.CostTo = new Cost() { cost = float.MaxValue, to = default };
+            // foreach (IVertex v in g.GetNeighborVertices(u as Common.IVertex))
+            // {
+            //     var ret = 0f;
+            //     var len = math.distance(u.Position, v.Position);
 
 
-                var sides = new List<DualGraph.Face>();
-                foreach(DualGraph.Face f in (u as VertexGraph.Vertex).Face)
-                {
-                    if(f.ContainsGeometryVertex(v as Common.IVertex))
-                    {
-                        sides.Add(f);
-                    }
-                }
+            //     var sides = new List<DualGraph.Face>();
+            //     foreach(DualGraph.Face f in (u as VertexGraph.Vertex).Face)
+            //     {
+            //         if(f.ContainsGeometryVertex(v as Common.IVertex))
+            //         {
+            //             sides.Add(f);
+            //         }
+            //     }
 
-                foreach(DualGraph.Face f in (u as VertexGraph.Vertex).Face)
-                {
-                    var mincurv = 1f;
-                    foreach(var s in sides)
-                    {
-                        var unormal = f.Normal;
-                        var uvnormal = s.Normal;
-                        var ndot = math.dot(unormal, uvnormal);
-                        mincurv = math.min(mincurv, (1 - ndot) / 2f);
-                    }
-                    ret = math.max(ret, mincurv);
-                    ret = len * ret;
-                }
-                if (ret < u.CostTo.cost)
-                {
-                    u.CostTo = new Cost() { cost = ret, to = v };
-                }
-            }
+            //     foreach(DualGraph.Face f in (u as VertexGraph.Vertex).Face)
+            //     {
+            //         var mincurv = 1f;
+            //         foreach(var s in sides)
+            //         {
+            //             var unormal = f.Normal;
+            //             var uvnormal = s.Normal;
+            //             var ndot = math.dot(unormal, uvnormal);
+            //             mincurv = math.min(mincurv, (1 - ndot) / 2f);
+            //         }
+            //         ret = math.max(ret, mincurv);
+            //         ret = len * ret;
+            //     }
+            //     if (ret < u.CostTo.cost)
+            //     {
+            //         u.CostTo = new Cost() { cost = ret, to = v };
+            //     }
+            // }
         }
 
     }
