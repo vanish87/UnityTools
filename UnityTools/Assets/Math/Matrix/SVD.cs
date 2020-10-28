@@ -102,7 +102,7 @@ namespace UnityTools.Math
                 -s, 0, c);
         }
 
-        public static void GetPolarDecomposition2D(float2x2 A, ref float2x2 R, ref float2x2 S)
+        public static void GetPolarDecomposition2D(float2x2 A, out float2x2 R, out float2x2 S)
         {
             R = float2x2(0, 0, 0, 0);
             S = float2x2(0, 0, 0, 0);
@@ -127,7 +127,7 @@ namespace UnityTools.Math
         }
 
 
-        public static void GetSVD2D(float2x2 A, ref float2x2 U, ref float2 D, ref float2x2 V)
+        public static void GetSVD2D(float2x2 A, out float2x2 U, out float2 D, out float2x2 V)
         {
             U = float2x2(0, 0, 0, 0);
             D = float2(0, 0);
@@ -136,7 +136,7 @@ namespace UnityTools.Math
             float2x2 R = float2x2(0, 0, 0, 0);
             float2x2 S = float2x2(0, 0, 0, 0);
 
-            GetPolarDecomposition2D(A, ref R, ref S);
+            GetPolarDecomposition2D(A, out R, out S);
 
             float c = 1f;
             float s = 0f;
@@ -353,7 +353,7 @@ namespace UnityTools.Math
             float2x2 U2 = float2x2(0, 0, 0, 0);
             float2 D2 = float2(0, 0);
             float2x2 V2 = float2x2(0, 0, 0, 0);
-            GetSVD2D(A2, ref U2, ref D2, ref V2);
+            GetSVD2D(A2, out U2, out D2, out V2);
 
             float3x3 u3 = G3_12_Direct(U2[0][0], U2[1][0]);
             float3x3 v3 = G3_12_Direct(V2[0][0], V2[1][0]);
@@ -377,7 +377,7 @@ namespace UnityTools.Math
             float2x2 U2 = float2x2(0, 0, 0, 0);
             float2 D2 = float2(0, 0);
             float2x2 V2 = float2x2(0, 0, 0, 0);
-            GetSVD2D(A2, ref U2, ref D2, ref V2);
+            GetSVD2D(A2, out U2, out D2, out V2);
 
             float3x3 u3 = G3_23_Direct(U2[0][0], U2[1][0]);
             float3x3 v3 = G3_23_Direct(V2[0][0], V2[1][0]);
@@ -446,7 +446,7 @@ namespace UnityTools.Math
         }
 
 
-        public static void GetSVD3D(in float3x3 A, out float3x3 U, out float3 D, out float3x3 V)
+        public static void GetSVD3D(float3x3 A, out float3x3 U, out float3 D, out float3x3 V)
         {
             U = float3x3(1, 0, 0,
                          0, 1, 0,
@@ -528,7 +528,7 @@ namespace UnityTools.Math
             var d = new float2();
             var V = new float2x2();
 
-            SVD.GetSVD2D(input, ref U, ref d, ref V);
+            SVD.GetSVD2D(input, out U, out d, out V);
             var Vt = math.transpose(V);
 
             var D = float2x2(d.x, 0, 0, d.y);
@@ -587,7 +587,7 @@ namespace UnityTools.Math
 
             var R = new float2x2();
             var S = new float2x2();
-            SVD.GetPolarDecomposition2D(input, ref R, ref S);
+            SVD.GetPolarDecomposition2D(input, out R, out S);
             LogTool.Log((input - mul(R, S)).ToString());
             // LogTool.AssertIsTrue(math.length(delta) < 0.0001f);
         }
