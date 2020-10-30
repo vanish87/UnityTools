@@ -185,7 +185,7 @@ namespace UnityTools.Math
 
             float c = A[1][0];
             float s = A[2][0];
-            if (abs(A[1][0]) > EPSILON)
+            if (abs(A[0][1]) > EPSILON)
             {
                 c = A[0][0] * A[1][0] + A[0][1] * A[1][1];
                 s = A[0][0] * A[2][0] + A[0][1] * A[2][1];
@@ -448,6 +448,7 @@ namespace UnityTools.Math
 
         public static void GetSVD3D(float3x3 A, out float3x3 U, out float3 D, out float3x3 V)
         {
+            UnityEngine.Assertions.Assert.IsTrue(false, "Not tested");
             U = float3x3(1, 0, 0,
                          0, 1, 0,
                          0, 0, 1);
