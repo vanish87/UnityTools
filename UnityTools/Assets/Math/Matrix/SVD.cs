@@ -2,7 +2,6 @@
 namespace UnityTools.Math
 {
     using Unity.Mathematics;
-    using UnityEngine;
     using UnityTools.Debuging;
     using static Unity.Mathematics.math;
     public class SVD
@@ -10,9 +9,9 @@ namespace UnityTools.Math
 
         //NOTE
         //WARNING
-        //unity float2x2[0][1] will return col0 row 1 value
+        //unity float2x2[0][1] will return col0 row1 value
         //which is different than hlsl float2x2[0][1] will return row0 col1 value
-        private const float EPSILON = float.Epsilon;
+        private const float EPSILON = 1.19209e-07f;
 
         private static float2x2 G2(float c, float s)
         {
@@ -138,8 +137,8 @@ namespace UnityTools.Math
 
             GetPolarDecomposition2D(A, out R, out S);
 
-            float c = 1f;
-            float s = 0f;
+            float c = 1;
+            float s = 0;
 
             if (abs(S[1][0]) < EPSILON)
             {
@@ -152,11 +151,11 @@ namespace UnityTools.Math
                 float w = sqrt(taw * taw + S[1][0] * S[1][0]);
                 float t = taw > 0 ? S[1][0] / (taw + w) : S[1][0] / (taw - w);
 
-                c = rsqrt(t * t + 1f);
+                c = rsqrt(t * t + 1);
                 s = -t * c;
 
-                D[0] = c * c * S[0][0] - 2f * c * s * S[1][0] + s * s * S[1][1];
-                D[1] = s * s * S[0][0] + 2f * c * s * S[1][0] + c * c * S[1][1];
+                D[0] = c * c * S[0][0] - 2 * c * s * S[1][0] + s * s * S[1][1];
+                D[1] = s * s * S[0][0] + 2 * c * s * S[1][0] + c * c * S[1][1];
 
             }
 
@@ -243,35 +242,36 @@ namespace UnityTools.Math
 
         private static void FlipSign(int index, ref float3x3 mat, ref float3 sigma)
         {
-            mat[index] = -mat[index];
+            mat[index][0]= -mat[index][0];
+            mat[index][1] = -mat[index][1];
+            mat[index][2] = -mat[index][2];
             sigma[index] = -sigma[index];
         }
 
         private static void FlipSignColumn(ref float3x3 mat, int col)
         {
-            mat[col] = -mat[col];
+            mat[col][0] = -mat[col][0];
+            mat[col][1] = -mat[col][1];
+            mat[col][2] = -mat[col][2];
         }
 
-        private static void SwapFloat(ref float3 v, int a, int b)
+        private static void Swap(ref float3 a, int from, int to)
         {
-            float temp = v[a];
-            v[a] = v[b];
-            v[b] = temp;
-        }
-
-
-        private static void Swap(ref float3 a, ref float3 b)
-        {
-            float3 temp = a;
-            a = b;
-            b = temp;
+            float temp = a[from];
+            a[from] = a[to];
+            a[to] = temp;
         }
 
         private static void SwapColumn(ref float3x3 a, int col_a, int col_b)
         {
-            float3 temp = a[col_a];
-            a[col_a] = a[col_b];
-            a[col_b] = temp;
+            float3 temp = float3(a[col_a][0], a[col_a][1], a[col_a][2]);
+            a[col_a][0] = a[col_b][0];
+            a[col_a][1] = a[col_b][1];
+            a[col_a][2] = a[col_b][2];
+
+            a[col_b][0] = temp[0];
+            a[col_b][1] = temp[1];
+            a[col_b][2] = temp[2];
         }
 
         private static void SortWithTopLeftSub(ref float3x3 U, ref float3 sigma, ref float3x3 V)
@@ -290,13 +290,13 @@ namespace UnityTools.Math
                 FlipSign(1, ref U, ref sigma);
                 FlipSign(2, ref U, ref sigma);
             }
-            SwapFloat(ref sigma, 1, 2);
+            Swap(ref sigma, 1, 2);
             SwapColumn(ref U, 1, 2);
             SwapColumn(ref V, 1, 2);
 
             if (sigma[1] > sigma[0])
             {
-                SwapFloat(ref sigma, 0, 1);
+                Swap(ref sigma, 0, 1);
                 SwapColumn(ref U, 0, 1);
                 SwapColumn(ref V, 0, 1);
             }
@@ -318,13 +318,13 @@ namespace UnityTools.Math
                 }
                 return;
             }
-            SwapFloat(ref sigma, 0, 1);
+            Swap(ref sigma,0, 1);
             SwapColumn(ref U, 0, 1);
             SwapColumn(ref V, 0, 1);
 
             if (abs(sigma[1]) < abs(sigma[2]))
             {
-                SwapFloat(ref sigma, 1, 2);
+                Swap(ref sigma, 1, 2); ;
                 SwapColumn(ref U, 1, 2);
                 SwapColumn(ref V, 1, 2);
             }
@@ -446,9 +446,9 @@ namespace UnityTools.Math
         }
 
 
+
         public static void GetSVD3D(float3x3 A, out float3x3 U, out float3 D, out float3x3 V)
         {
-            UnityEngine.Assertions.Assert.IsTrue(false, "Not tested");
             U = float3x3(1, 0, 0,
                          0, 1, 0,
                          0, 0, 1);
@@ -540,14 +540,14 @@ namespace UnityTools.Math
             var U3 = new float3x3();
             var d3 = new float3();
             var V3 = new float3x3();
-            
+
             SVD.GetSVD3D(input3x3, out U3, out d3, out V3);
             var Vt3 = math.transpose(V3);
             var D3 = float3x3(d3[0], 0, 0,
                               0, d3[1], 0,
                               0, 0, d3[2]);
             var output3 = mul(mul(U3, D3), Vt3);
-            var delta3 = input3x3-output3;
+            var delta3 = input3x3 - output3;
             LogTool.Log(delta3.ToString());
 
             // var test = new float2x2(1,2,3,4);
