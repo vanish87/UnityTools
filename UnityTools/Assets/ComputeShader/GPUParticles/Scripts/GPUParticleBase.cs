@@ -59,7 +59,7 @@ namespace UnityTools.ComputeShaderTool
     /// Defined outside of GPUParticleBase to make it Serializable for Unity inspector
     /// </summary>
     [Serializable]
-    public class GPUParticleCBufferParameterContainer : ComputeShaderParameterFileContainer
+    public class GPUParticleCBufferParameterContainer : ComputeShaderParameterContainer
     {
         /// <summary>
         /// The desired number of particles, the particle buffer count may bigger than this 

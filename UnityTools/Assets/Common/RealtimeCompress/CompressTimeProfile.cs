@@ -21,7 +21,7 @@ namespace UnityTools.Common
         {
             yield return null;
 
-            var filePath = Path.Combine(Application.streamingAssetsPath, this.fileNmae);
+            var filePath = System.IO.Path.Combine(Application.streamingAssetsPath, this.fileNmae);
             this.dataList = FileTool.Read<Queue<AsyncGPUDataSerializer.FileData>>(filePath, FileTool.SerializerType.Binary).ToList();
         }
 

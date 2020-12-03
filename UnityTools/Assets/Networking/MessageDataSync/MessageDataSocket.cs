@@ -9,7 +9,7 @@ using UnityTools.Common;
 namespace UnityTools.Networking
 {
     [Serializable]
-    public class Datatex : MessageDataSocket.MessageData
+    public class Datatex : MessageDataSocket.IMessageData
     {
         [SerializeField]int test;
 
@@ -17,16 +17,16 @@ namespace UnityTools.Networking
 
         public string HashString => typeof(Datatex).ToString();
 
-        public void OnDeseialize(byte[] data)
+        public void OnDeserialize(byte[] data)
         {
-            var d = Serilization.ByteArrayToObject<Datatex>(data);
+            var d = Serialization.ByteArrayToObject<Datatex>(data);
             this.test = d.test;
             this.testString = d.testString;
         }
 
         public byte[] OnSerialize()
         {
-            return Serilization.ObjectToByteArray(this);
+            return Serialization.ObjectToByteArray(this);
         }
     }
     public class MessageDataSocket : UDPSocket<List<MessageDataSocket.InternalData>>
@@ -50,7 +50,7 @@ namespace UnityTools.Networking
             return sBuilder.ToString();
         }
         
-        protected Dictionary<string, MessageData> data = new Dictionary<string, MessageData>();
+        protected Dictionary<string, IMessageData> data = new Dictionary<string, IMessageData>();
         protected List<InternalData> sendData = new List<InternalData>();
         [Serializable]
         public class InternalData
@@ -58,17 +58,17 @@ namespace UnityTools.Networking
             public string hash;
             public byte[] data;
         }
-        public interface MessageData
+        public interface IMessageData
         {
             string HashString { get; }
             byte[] OnSerialize();
-            void OnDeseialize(byte[] data);
+            void OnDeserialize(byte[] data);
         }
         public void CleanUp()
         {
             this.data.Clear();
         }
-        public void Bind(MessageData message, string hashID = null, bool overwrite = false)
+        public void Bind(IMessageData message, string hashID = null, bool overwrite = false)
         {
             var hash = GetHash(hashID != null ? hashID : message.HashString);
 
@@ -98,7 +98,7 @@ namespace UnityTools.Networking
             {
                 if (this.data.ContainsKey(d.hash))
                 {
-                    this.data[d.hash].OnDeseialize(d.data);
+                    this.data[d.hash].OnDeserialize(d.data);
                 }
             }
         }

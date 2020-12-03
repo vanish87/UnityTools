@@ -38,7 +38,7 @@ namespace UnityTools.Common
                 if (this.socket.fileQueue.TryDequeue(out d))
                 {
                     var timer = System.Diagnostics.Stopwatch.StartNew();
-                    var data = CompressTool.Decompress(d.data, CompressTool.CompreeAlgorithm.Zstd);
+                    var data = CompressTool.Decompress(d.data, CompressTool.CompressAlgorithm.Zstd);
                     timer.Stop();
                     total += timer.ElapsedMilliseconds;
                     count++;

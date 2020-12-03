@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityTools.Common;
+using UnityTools.Networking;
 
 namespace UnityTools.Debuging
 {
@@ -17,14 +18,10 @@ namespace UnityTools.Debuging
         public override LogConfigureData Data { get => this.data; set=>this.data = value; }
 
         [Serializable]
-        public class LogPC : PCInfo
-        {
-            public short logPort = 13210;
-        }
-        [Serializable]
         public class LogConfigureData
         {
-            public LogPC logPC = new LogPC();
+            public short logPort = 13210;
+            public List<PCInfo> logPCs = new List<PCInfo>();
             public LogChannel channel;
             public List<LevelData> levels = new List<LevelData>();
         }
@@ -61,7 +58,7 @@ namespace UnityTools.Debuging
 
         public void SetupLog()
         {
-            LogToolNetwork.LogToolNetworkSocket.SetupNetwork(this.Data.logPC);
+            LogToolNetwork.LogToolNetworkSocket.SetupNetwork(this.Data.logPCs, this.Data.logPort);
         }
         protected override void Start()
         {

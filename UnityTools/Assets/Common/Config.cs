@@ -34,7 +34,7 @@ namespace UnityTools
     {
         public abstract T Data { get; set; }
         public bool Open { get { return this.open; } set { this.open = value; } }
-        protected virtual string filePath { get { return Path.Combine(Application.persistentDataPath, "config_" + SceneManager.GetActiveScene().name + ".xml"); } }
+        protected virtual string filePath { get { return System.IO.Path.Combine(Application.persistentDataPath, "config_" + SceneManager.GetActiveScene().name + ".xml"); } }
 
         protected bool inited = false;
 
@@ -136,7 +136,7 @@ namespace UnityTools
         [SerializeField] protected ConfigureSaveMode saveMode = ConfigureSaveMode.UseEditorValue;
         public abstract T Data { get; set; }
         public bool Open { get { return this.open; } set { this.open = value; } }
-        protected virtual string filePath { get { return Path.Combine(Application.persistentDataPath, "config_" + SceneManager.GetActiveScene().name + ".xml"); } }
+        protected virtual string filePath { get { return System.IO.Path.Combine(Application.persistentDataPath, "config_" + SceneManager.GetActiveScene().name + ".xml"); } }
 
         protected bool inited = false;
 
@@ -256,7 +256,7 @@ namespace UnityTools
     {
         public abstract T Data { get; set; }
         public bool Open { get { return this.open; } set { this.open = value; } }
-        protected virtual string filePath { get { return Path.Combine(Application.persistentDataPath, "config_" + SceneManager.GetActiveScene().name + ".xml"); } }
+        protected virtual string filePath { get { return System.IO.Path.Combine(Application.persistentDataPath, "config_" + SceneManager.GetActiveScene().name + ".xml"); } }
         [SerializeField] protected ConfigureSaveMode saveMode = ConfigureSaveMode.UseEditorValue;
 
         protected bool inited = false;

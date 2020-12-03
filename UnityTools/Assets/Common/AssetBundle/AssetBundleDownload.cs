@@ -227,7 +227,7 @@ namespace UnityTools.Common
         private void SetupCache()
         {
             string folderName = "SnycedAssetBundle";
-            var path = Path.Combine(Application.persistentDataPath, folderName);
+            var path = System.IO.Path.Combine(Application.persistentDataPath, folderName);
             if (Directory.Exists(path) == false)
             {
                 Directory.CreateDirectory(path);

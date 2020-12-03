@@ -46,7 +46,8 @@ namespace UnityTools.Debuging
                 internal protected Queue<string> queue = new Queue<string>();
             }
             protected static Data localData = new Data();
-            protected static SocketData server = SocketData.Make("127.0.0.1", 13210);
+            protected static List<SocketData> servers = new List<SocketData>();
+            protected static short defaultPort = 13210;
             protected static LogToolNetworkSocket logSocket = new LogToolNetworkSocket();
 
             protected static Dictionary<string, Data> serverData = new Dictionary<string, Data>();
@@ -81,7 +82,11 @@ namespace UnityTools.Debuging
 
             internal protected static void Send()
             {
-                logSocket.Send(server, localData);
+                if(servers.Count == 0) servers.Add(SocketData.Make("127.0.0.1", defaultPort));
+                foreach(var s in servers)
+                {
+                    logSocket.Send(s, localData);
+                }
             }
 
             public override void OnMessage(SocketData socket, Data remoteData)
@@ -101,22 +106,29 @@ namespace UnityTools.Debuging
                     serverData.Add(remoteIP, remoteData);
                 }
             }
-            public static void SetupNetwork(LogConfigure.LogPC logPC)
+            public static void SetupNetwork(List<PCInfo> pcs, short port)
             {
-                server = SocketData.Make(logPC.ipAddress, logPC.logPort);
-                LogTool.Log("Send log to " + server.endPoint.ToString(), LogLevel.Verbose, LogChannel.Network | LogChannel.Debug);
+                foreach(var pc in pcs)
+                {
+                    var socket = SocketData.Make(pc.ipAddress, port);
+                    if(Tool.IsReachable(socket.endPoint))
+                    {
+                        servers.Add(socket);
+                        LogTool.Log("Send log to " + socket.endPoint.ToString(), LogLevel.Verbose, LogChannel.Network | LogChannel.Debug);
+                    }
+                }
             }
 
             public override byte[] OnSerialize(Data data)
             {
-                var raw = Serilization.ObjectToByteArray(data);
+                var raw = Serialization.ObjectToByteArray(data);
                 return CompressTool.Compress(raw); 
             }
 
             public override Data OnDeserialize(byte[] data, int length)
             {
                 var remote = CompressTool.Decompress(data);
-                return Serilization.ByteArrayToObject<Data>(remote);
+                return Serialization.ByteArrayToObject<Data>(remote);
             }
         }
 
@@ -132,8 +144,12 @@ namespace UnityTools.Debuging
         }
     }
 
-    public class LogTool
+    public class LogTool: UnityEngine.ILogHandler
     {
+        public interface ILogUser
+        {
+            void Log(string message);
+        }
         protected static Dictionary<LogLevel, bool> levelList = new Dictionary<LogLevel, bool>();
         protected static LogChannel channels = ~LogChannel.None;
         protected static LogMode modes = LogMode.Console;
@@ -188,6 +204,8 @@ namespace UnityTools.Debuging
                 default: Debug.Log(msg); break;
             }
             LogToolNetwork.Log(msg);
+
+            foreach(var user in ObjectTool.FindAllObject<ILogUser>()) user.Log(message);
         }
         public static void LogFormat(string format, LogLevel level = LogLevel.Verbose, LogChannel channel = LogChannel.Debug, params object[] args)
         {
@@ -231,6 +249,16 @@ namespace UnityTools.Debuging
         {
             var message = string.Format(format, args);
             return FormatMessage(message, level, channel);
+        }
+
+        public void LogFormat(LogType logType, UnityEngine.Object context, string format, params object[] args)
+        {
+            
+        }
+
+        public void LogException(Exception exception, UnityEngine.Object context)
+        {
+            throw new NotImplementedException();
         }
     }
 }

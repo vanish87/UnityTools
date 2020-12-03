@@ -15,7 +15,7 @@ namespace UnityTools.Networking
         public override byte[] OnSerialize(ImageFile.FileData data)
         {
             var rawData = data.ToByteArray();
-            var newData = CompressTool.Compress(rawData, CompressTool.CompreeAlgorithm.Zstd);
+            var newData = CompressTool.Compress(rawData, CompressTool.CompressAlgorithm.Zstd);
             UnityEngine.Debug.LogFormat("Raw data size {0} KB, Compressed data size {1}", 
                 rawData.Length/1024, newData.Length > 1024?newData.Length/1024+"KB": newData.Length + "B");
             return newData;
@@ -24,7 +24,7 @@ namespace UnityTools.Networking
         public override ImageFile.FileData OnDeserialize(byte[] data, int length)
         {
             var dataValid = data.SubArray(0, length);
-            var newData = CompressTool.Decompress(dataValid, CompressTool.CompreeAlgorithm.Zstd);
+            var newData = CompressTool.Decompress(dataValid, CompressTool.CompressAlgorithm.Zstd);
             return ImageFile.FileData.Parser.ParseFrom(newData);
         }
     }
