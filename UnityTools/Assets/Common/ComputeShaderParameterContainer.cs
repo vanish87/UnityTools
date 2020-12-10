@@ -55,7 +55,7 @@ namespace UnityTools.ComputeShaderTool
 
         protected string computeShaderName;
         protected Dictionary<string, List<string>> computerShaderVariables = new Dictionary<string, List<string>>();
-        protected Dictionary<string, ComputeShaderParameterBase> computeShaderParameter = new Dictionary<string, ComputeShaderParameterBase>();
+        protected Dictionary<string, IComputeShaderParameter> computeShaderParameter = new Dictionary<string, IComputeShaderParameter>();
 
         public ComputeShaderParameterParser(string filePath)
         {

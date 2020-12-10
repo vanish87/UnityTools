@@ -1,81 +1,32 @@
-﻿
-//#define USE_PREFS
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.Serialization;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Xml;
-using System.Xml.Schema;
-using System.Xml.Serialization;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityTools.Debuging;
 
-#if USE_PREFS
-using PrefsGUI;
-#endif
-
 namespace UnityTools.ComputeShaderTool
 {
-    public class ComputeShaderParameterFileContainer : ComputeShaderParameterContainer
+    [AttributeUsage(AttributeTargets.Field)]
+    public class NoneGPUAttribute:Attribute
     {
-        public ComputeShaderParameterFileContainer() : base() { }
-        public ComputeShaderParameterFileContainer(string fileName, ComputeShader cs): base(cs)
+
+    }
+    [AttributeUsage(AttributeTargets.Field)]
+    public class ShaderNameAttribute:Attribute
+    {
+        internal string csName;
+        public ShaderNameAttribute(string name)
         {
-
-        }
-
-        public void LoadFile(string fileName)
-        {
-            var shaderBasePath = Application.streamingAssetsPath;
-            var outputPath = shaderBasePath;
-
-            var fi = new FileInfo(Path.Combine(outputPath, fileName));
-            using (var binaryFile = fi.OpenRead())
-            {
-                var serializer = new BinaryFormatter();
-                var newValues = (List<ComputeShaderParameterBase>)serializer.Deserialize(binaryFile);
-                var candidate = this.VarList.Where(v => v.IsSerializable() == true).ToList();
-
-                Assert.IsTrue(newValues.Count == candidate.Count);
-                for(var i = 0; i < candidate.Count; ++i)
-                {
-                    candidate[i].UpdateValue(newValues[i]);
-                }
-            }
-
-            this.Bind(this.currentCS);
-        }
-
-        public void SaveFile(string fileName)
-        {
-            var shaderBasePath = Application.streamingAssetsPath;
-            var outputPath = shaderBasePath;
-
-            if (!Directory.Exists(outputPath))
-            {
-                Directory.CreateDirectory(outputPath);
-            }
-
-            var candidates = this.VarList.Where(v => v.IsSerializable() == true).ToList();
-
-            var fi = new FileInfo(Path.Combine(outputPath, fileName));
-            using (var binaryFile = fi.Create())
-            {
-                var serializer = new BinaryFormatter();
-                serializer.Serialize(binaryFile, candidates);
-                binaryFile.Flush();
-            }
+            this.csName = name;
         }
 
     }
     public abstract class ComputeShaderParameterContainer
     {
-        protected List<ComputeShaderParameterBase> VarList
+        protected List<IComputeShaderParameter> VarList
         {
             get
             {
@@ -83,35 +34,15 @@ namespace UnityTools.ComputeShaderTool
                 return this.variableList;
             }
         }
-        protected List<ComputeShaderParameterBase> variableList = null;
-        protected ComputeShader currentCS = null;
+        [System.NonSerialized]
+        protected List<IComputeShaderParameter> variableList = null;
 
+        private Dictionary<FieldInfo, IComputeShaderParameter> noneCSVariables = new Dictionary<FieldInfo, IComputeShaderParameter>();
+
+        [System.NonSerialized]
         public const bool DebugOutput = true;
         
-        public ComputeShaderParameterContainer(ComputeShader cs)
-        {
-            this.Bind(cs);
-        }
-        public ComputeShaderParameterContainer() { }
-
-        public void Bind(ComputeShader cs)
-        {
-            Assert.IsNotNull(cs);
-            this.currentCS = cs;
-
-            foreach (var p in this.VarList)
-            {
-                if (p == null)
-                {
-                    Debug.LogWarningFormat("variable is null, are you using a non-SerializeField private variable?\nUnity will not create a instance for this");
-                }
-                else
-                {
-                    p.Bind(this.currentCS);
-                }
-            }
-        }
-        public void UpdateGPU(string kernal = null)
+        public void UpdateGPU(ComputeShader cs, string kernel = null)
         {
             foreach (var p in this.VarList)
             {
@@ -121,9 +52,16 @@ namespace UnityTools.ComputeShaderTool
                 }
                 else
                 {
-                    p.SetToGPU(kernal);
+                    p.SetToGPU(cs, kernel);
                 }
             }
+
+            foreach(var np in this.noneCSVariables)
+            {
+                this.UpdateNoneCSParameterValue(np);
+                np.Value.SetToGPU(cs, kernel);
+            }
+            
         }
         public virtual void OnGUI()
         {
@@ -137,7 +75,7 @@ namespace UnityTools.ComputeShaderTool
         {
             var bufferList = this.VarList.Where(b => b is ComputeShaderParameterBuffer && (b as ComputeShaderParameterBuffer).Value != null);
 
-            bufferList?.ToList().ForEach(b =>
+            bufferList.ToList().ForEach(b =>
             {
                 var buffer = (b as ComputeShaderParameterBuffer);
                 //TODO Release called multiple time, is it safe?
@@ -149,7 +87,7 @@ namespace UnityTools.ComputeShaderTool
         {
             var bufferList = this.VarList.Where(b => b is ComputeShaderParameterTexture && (b as ComputeShaderParameterTexture).Value != null);
 
-            bufferList?.ToList().ForEach(b =>
+            bufferList.ToList().ForEach(b =>
             {
                 var buffer = (b as ComputeShaderParameterTexture);
                 buffer.Value?.DestoryObj();
@@ -171,53 +109,99 @@ namespace UnityTools.ComputeShaderTool
 
             this.variableList = this.GetType()
                      .GetFields(bindingFlags)
-                     .Where(field => field.FieldType.IsSubclassOf(typeof(ComputeShaderParameterBase)))
-                     .Select(field => field.GetValue(this) as ComputeShaderParameterBase)
+                     .Where(field 
+                        => field.FieldType.IsSubclassOf(typeof(IComputeShaderParameter))
+                        && !Attribute.IsDefined(field, typeof(NoneGPUAttribute)))
+                     .Select(field => field.GetValue(this) as IComputeShaderParameter)
                      .ToList();
 
+
+            var noneCSParamter = this.GetType()
+                     .GetFields(bindingFlags)
+                     .Where(field => !field.FieldType.IsSubclassOf(typeof(IComputeShaderParameter))
+                        && !Attribute.IsDefined(field, typeof(NoneGPUAttribute)))
+                     .ToList();
+
+
+            foreach(var p in noneCSParamter)
+            {
+                var csp = this.CreateParameter(p);
+                if(csp == default) continue;
+
+                this.noneCSVariables.Add(p, csp);
+            }
+
+
+
             Assert.IsTrue(this.variableList != null);
+        }
+
+        protected IComputeShaderParameter CreateParameter(FieldInfo info)
+        {
+            var name = info.Name;
+            if(Attribute.IsDefined(info, typeof(ShaderNameAttribute)))
+            {
+                var attrib = Attribute.GetCustomAttribute(info, typeof(ShaderNameAttribute)) as ShaderNameAttribute;
+                name = attrib.csName;
+            }
+            if (info.FieldType == typeof(int)) return new ComputeShaderParameterInt(name, (int)info.GetValue(this));
+            if (info.FieldType == typeof(float)) return new ComputeShaderParameterFloat(name, (float)info.GetValue(this));
+            if (info.FieldType == typeof(Vector2)) return new ComputeShaderParameterVector(name, (Vector2)info.GetValue(this));
+            if (info.FieldType == typeof(Vector3)) return new ComputeShaderParameterVector(name, (Vector3)info.GetValue(this));
+            if (info.FieldType == typeof(Vector4)) return new ComputeShaderParameterVector(name, (Vector4)info.GetValue(this));
+            if (info.FieldType == typeof(Color)) return new ComputeShaderParameterColor(name, (Color)info.GetValue(this));
+
+            return default;
+            
+        }
+
+        protected void UpdateNoneCSParameterValue(KeyValuePair<FieldInfo, IComputeShaderParameter> np)
+        {
+            var info = np.Key;
+
+            if (info.FieldType == typeof(int)) (np.Value as ComputeShaderParameterInt).Value = (int)info.GetValue(this);
+            if (info.FieldType == typeof(float)) (np.Value as ComputeShaderParameterFloat).Value = (float)info.GetValue(this);
+            if (info.FieldType == typeof(Vector2)) (np.Value as ComputeShaderParameterVector).Value = (Vector2)info.GetValue(this);
+            if (info.FieldType == typeof(Vector3)) (np.Value as ComputeShaderParameterVector).Value = (Vector3)info.GetValue(this);
+            if (info.FieldType == typeof(Vector4)) (np.Value as ComputeShaderParameterVector).Value = (Vector4)info.GetValue(this);
+            if (info.FieldType == typeof(Color)) (np.Value as ComputeShaderParameterColor).Value = (Color)info.GetValue(this);
         }
 
 
     }
 
-    [Serializable]
-    public abstract class ComputeShaderParameterBase 
+    public  interface IComputeShaderParameter 
     {
         /// <summary>
         /// Set data to GPU, provide kernal name for textures and buffer parameters
         /// </summary>
-        /// <param name="kernal"></param>
-        public abstract void SetToGPU(string kernal = null);
+        /// <param name="kernel"></param>
+        void SetToGPU(ComputeShader cs, string kernel = null);
         /// <summary>
         /// Draw GUI, mainly used by PrefsXXX
         /// </summary>
-        public abstract void OnGUI();
+        void OnGUI();
         /// <summary>
         /// Bind ComputeShader to this parameter to update
         /// </summary>
         /// <param name="cs"></param>
         /// <returns></returns>
-        public abstract bool Bind(ComputeShader cs);
 
-        public abstract void UpdateValue(ComputeShaderParameterBase other);
-        public virtual bool IsSerializable() { return true; }
+        void UpdateValue(IComputeShaderParameter other);
 
         /// <summary>
         /// Internal function for call SetXXX API of Unity
         /// </summary>
-        /// <param name="kernal"></param>
-        protected abstract void Set(string kernal = null);
+        /// <param name="kernel"></param>
+        void Set(ComputeShader cs, string kernel = null);
 
         /*internal abstract void OnSerialize(Stream stream, IFormatter formater);
         internal abstract void OnDeserialize(Stream stream, IFormatter formater);*/
 
     }
     [Serializable]
-    public abstract class ComputeShaderParameter<T> : ComputeShaderParameterBase, ISerializable, IXmlSerializable
+    public abstract class ComputeShaderParameter<T> : IComputeShaderParameter
     {
-        protected ComputeShader shader = null;
-        
         protected string VariableName
         {
             get { return this.variableName; }
@@ -235,19 +219,8 @@ namespace UnityTools.ComputeShaderTool
         protected int propertyID = -1;
         [SerializeField] protected T data;
 
-        #region ISerializable
-        public ComputeShaderParameter(SerializationInfo info, StreamingContext context)
-        {
-            this.VariableName = (string)info.GetValue("variableName", typeof(string));
-            data = (T)info.GetValue("data", typeof(T));
-        }
-        public virtual void GetObjectData(SerializationInfo info, StreamingContext context)
-        {
-            info.AddValue("variableName", this.VariableName);
-            info.AddValue("data", data);
-        }
         //only update value that has been Serialized above
-        public override void UpdateValue(ComputeShaderParameterBase other)
+        public void UpdateValue(IComputeShaderParameter other)
         {
             var newValue = other as ComputeShaderParameter<T>;
             if (newValue != null)
@@ -261,60 +234,11 @@ namespace UnityTools.ComputeShaderTool
             }
         }
 
-        #endregion
 
-        #region IXmlSerializable
-        public XmlSchema GetSchema()
+        protected virtual bool IsShaderValid(ComputeShader cs, string kernel = null)
         {
-            throw new NotImplementedException();
-            /*return null;*/
-        }
-
-        public void ReadXml(XmlReader reader)
-        {
-            throw new NotImplementedException();
-            /*while (reader.Read())
-            {
-                // Only detect start elements.
-                if (reader.IsStartElement())
-                {
-                    // Get element name and switch on it.
-                    switch (reader.Name)
-                    {
-
-                    }
-
-                    Debug.Log(reader.Name);
-                }
-            }*/
-        }
-
-        public void WriteXml(XmlWriter writer)
-        {
-            throw new NotImplementedException();
-           /* writer.WriteStartElement("MyList");
-            {
-                writer.WriteElementString("ListItem", this.data.ToString());
-            }
-            writer.WriteEndElement();*/
-        }
-        /*internal override void OnSerialize(Stream stream, IFormatter formater)
-        {
-            formater.Serialize(stream, this);
-        }
-
-        internal override void OnDeserialize(Stream stream, IFormatter formater)
-        {
-            var obj = (ComputeShaderParameter<T>)formater.Deserialize(stream);
-            this.VariableName = obj.VariableName;
-            this.data = obj.data;
-        }*/
-        #endregion
-
-        protected virtual bool IsShaderValid(string kernal = null)
-        {
-            //only ComputeShaderKernalParameter use kernal string
-            return this.shader != null && this.VariableName != null;
+            //only ComputeShaderKernalParameter use kernel string
+            return cs != null && this.VariableName != null;
         }
 
         public ComputeShaderParameter(string name, T defaultValue = default(T))
@@ -328,10 +252,9 @@ namespace UnityTools.ComputeShaderTool
             this.VariableName = name;
             this.data = defaultValue;
         }
-        public ComputeShaderParameter(ComputeShader shader, string name)
+        public ComputeShaderParameter(string name)
         {
             this.VariableName = name;
-            this.Bind(shader);
         }
 
         public static implicit operator T(ComputeShaderParameter<T> value)
@@ -345,19 +268,11 @@ namespace UnityTools.ComputeShaderTool
             set { this.data = value;}
         }
 
-        public override bool Bind(ComputeShader cs)
+        public void SetToGPU(ComputeShader cs, string kernel = null)
         {
-            Assert.IsNotNull(cs);
-
-            this.shader = cs;
-            return true;
-        }
-
-        public override void SetToGPU(string kernal = null)
-        {
-            if (this.IsShaderValid(kernal) && this.data != null)
+            if (this.IsShaderValid(cs, kernel) && this.data != null)
             {
-                this.Set(kernal);
+                this.Set(cs, kernel);
             }
             else
             {
@@ -372,7 +287,9 @@ namespace UnityTools.ComputeShaderTool
             }
         }
 
-        public override void OnGUI()
+        public abstract void Set(ComputeShader cs, string kernel = null);
+
+        public void OnGUI()
         {
             #if USE_PREFS
             var prefs = this.data as PrefsParam;
@@ -385,34 +302,29 @@ namespace UnityTools.ComputeShaderTool
 
     }
     [Serializable]
-    public abstract class ComputeShaderKernalParameter<T> : ComputeShaderParameter<T>
+    public abstract class ComputeShaderKernelParameter<T> : ComputeShaderParameter<T>
     {
-        protected Dictionary<string, int> kernal = new Dictionary<string, int>();
-        public ComputeShaderKernalParameter(string name, T defaultValue) : base(name, defaultValue) { }
-        public ComputeShaderKernalParameter(ComputeShader cs, string kernal, string varName) : base(cs, varName)
+        protected Dictionary<string, int> kernel = new Dictionary<string, int>();
+        public ComputeShaderKernelParameter(string name, T defaultValue) : base(name, defaultValue) { }
+        protected override bool IsShaderValid(ComputeShader cs, string kernel = null)
         {
-            this.IsShaderValid(kernal);
-        }
-
-        protected override bool IsShaderValid(string kernal = null)
-        {
-            Assert.IsNotNull(kernal);
-            if (kernal == null)
+            Assert.IsNotNull(kernel);
+            if (kernel == null)
             {
-                Debug.LogErrorFormat("You are setting a variable that requires kernal name, try to supply name string in UpdateGPU(string kernal)");
+                Debug.LogErrorFormat("You are setting a variable that requires kernel name, try to supply name string in UpdateGPU(string kernel)");
                 return false;
             }
-            if (this.kernal.ContainsKey(kernal))
+            if (this.kernel.ContainsKey(kernel))
             {
-                return base.IsShaderValid();
+                return base.IsShaderValid(cs, kernel);
             }
             else
             {
-                var ker = this.shader.FindKernel(kernal);
+                var ker = cs.FindKernel(kernel);
                 Assert.IsTrue(ker >= 0);
                 if (ker >= 0)
                 {
-                    this.kernal.Add(kernal, ker);
+                    this.kernel.Add(kernel, ker);
                     return true;
                 }
                 else
@@ -427,15 +339,15 @@ namespace UnityTools.ComputeShaderTool
     {
         public ComputeShaderParameterInt(string name, int defaultValue = default) : base(name, defaultValue) { }
 
-        protected override void Set(string kernal = null)
+        public override void Set(ComputeShader cs, string kernel = null)
         {
             if (this.propertyID != -1)
             {
-                this.shader.SetInt(this.propertyID, this.data);
+                cs.SetInt(this.propertyID, this.data);
             }
             else
             {
-                this.shader.SetInt(this.VariableName, this.data);
+                cs.SetInt(this.VariableName, this.data);
             }
         }
     }
@@ -445,17 +357,15 @@ namespace UnityTools.ComputeShaderTool
     {
         public ComputeShaderParameterFloat(string name, float defaultValue = default) : base(name, defaultValue) { }
 
-        public ComputeShaderParameterFloat(SerializationInfo info, StreamingContext context) : base(info, context) { }
-
-        protected override void Set(string kernal = null)
+        public override void Set(ComputeShader cs, string kernel = null)
         {
             if (this.propertyID != -1)
             {
-                this.shader.SetFloat(this.propertyID, this.data);
+                cs.SetFloat(this.propertyID, this.data);
             }
             else
             {
-                this.shader.SetFloat(this.VariableName, this.data);
+                cs.SetFloat(this.VariableName, this.data);
             }
         }
     }
@@ -464,17 +374,16 @@ namespace UnityTools.ComputeShaderTool
     public class ComputeShaderParameterFloats : ComputeShaderParameter<float[]>
     {
         public ComputeShaderParameterFloats(string name, float[] defaultValue = default) : base(name, defaultValue) { }
-        public ComputeShaderParameterFloats(ComputeShader cs, string name) : base(cs, name) { }
 
-        protected override void Set(string kernal = null)
+        public override void Set(ComputeShader cs, string kernel = null)
         {
             if (this.propertyID != -1)
             {
-                this.shader.SetFloats(this.propertyID, this.data);
+                cs.SetFloats(this.propertyID, this.data);
             }
             else
             {
-                this.shader.SetFloats(this.VariableName, this.data);
+                cs.SetFloats(this.VariableName, this.data);
             }
                 
         }
@@ -484,85 +393,51 @@ namespace UnityTools.ComputeShaderTool
     public class ComputeShaderParameterVector : ComputeShaderParameter<Vector4>
     {
         public ComputeShaderParameterVector(string name, Vector4 defaultValue = default) : base(name, defaultValue) { }
-        public ComputeShaderParameterVector(ComputeShader cs, string name) : base(cs, name) { }
-        public ComputeShaderParameterVector(SerializationInfo info, StreamingContext context) : base("NotValid")
-        {
-            variableName = (string)info.GetValue("variableName", typeof(string));
-            data.x = (float)info.GetValue("x", typeof(float));
-            data.y = (float)info.GetValue("y", typeof(float));
-            data.z = (float)info.GetValue("z", typeof(float));
-            data.w = (float)info.GetValue("w", typeof(float));
-        }
-        public override void GetObjectData(SerializationInfo info, StreamingContext context)
-        {
-            info.AddValue("variableName", variableName);
-            info.AddValue("x", data.x);
-            info.AddValue("y", data.y);
-            info.AddValue("z", data.z);
-            info.AddValue("w", data.w);
-        }
 
-        protected override void Set(string kernal = null)
+        public override void Set(ComputeShader cs, string kernel = null)
         {
             if (this.propertyID != -1)
             {
-                this.shader.SetVector(this.propertyID, this.data);
+                cs.SetVector(this.propertyID, this.data);
             }
             else
             {
-                this.shader.SetVector(this.VariableName, this.data);
+                cs.SetVector(this.VariableName, this.data);
             }
         }
     }
     [Serializable]
     public class ComputeShaderParameterVectorArray : ComputeShaderParameter<Vector4[]>
     {
+
         public ComputeShaderParameterVectorArray(string name, Vector4[] defaultValue = default) : base(name, defaultValue) { }
-        public ComputeShaderParameterVectorArray(ComputeShader cs, string name) : base(cs, name) { }
-
-        public override bool IsSerializable() { return false; }
-
-        protected override void Set(string kernal = null)
+        public override void Set(ComputeShader cs, string kernel = null)
         {
             if (this.propertyID != -1)
             {
-                this.shader.SetVectorArray(this.propertyID, this.data);
+                cs.SetVectorArray(this.propertyID, this.data);
             }
             else
             {
-                this.shader.SetVectorArray(this.VariableName, this.data);
+                cs.SetVectorArray(this.VariableName, this.data);
             }
         }
+
     }
     [Serializable]
     public class ComputeShaderParameterColor : ComputeShaderParameter<Color>
     {
         public ComputeShaderParameterColor(string name, Color defaultValue = default) : base(name, defaultValue) { }
-        public ComputeShaderParameterColor(SerializationInfo info, StreamingContext context) : base("NotValid")
-        {
-            variableName = (string)info.GetValue("variableName", typeof(string));
-            data.r = (float)info.GetValue("r", typeof(float));
-            data.g = (float)info.GetValue("g", typeof(float));
-            data.b = (float)info.GetValue("b", typeof(float));
-            data.a = (float)info.GetValue("a", typeof(float));
-        }
-        public override void GetObjectData(SerializationInfo info, StreamingContext context)
-        {
-            info.AddValue("variableName", variableName);
-            info.AddValue("r", data.r);
-            info.AddValue("g", data.g);
-            info.AddValue("b", data.b);
-            info.AddValue("a", data.a);
-        }
-        protected override void Set(string kernal = null)
+
+        public override void Set(ComputeShader cs, string kernel = null)
         {
             if (this.propertyID != -1)
             {
-                this.shader.SetVector(this.propertyID, this.data);
+                cs.SetVector(this.propertyID, this.data);
             }
             else
             {
-                this.shader.SetVector(this.VariableName, this.data);
+                cs.SetVector(this.VariableName, this.data);
             }
         }
     }
@@ -572,16 +447,15 @@ namespace UnityTools.ComputeShaderTool
     {
         public ComputeShaderParameterMatrix(string name, Matrix4x4 defaultValue = default) : base(name, defaultValue) { }
 
-        public override bool IsSerializable() { return false; }
-        protected override void Set(string kernal = null)
+        public override void Set(ComputeShader cs, string kernel = null)
         {
             if (this.propertyID != -1)
             {
-                this.shader.SetMatrix(this.propertyID, this.data);
+                cs.SetMatrix(this.propertyID, this.data);
             }
             else
             {
-                this.shader.SetMatrix(this.VariableName, this.data);
+                cs.SetMatrix(this.VariableName, this.data);
             }
         }
     }
@@ -590,22 +464,21 @@ namespace UnityTools.ComputeShaderTool
     /// This only Set buffer to GPU, it does not manage this Texture resource
     /// </summary>
     [Serializable]
-    public class ComputeShaderParameterTexture : ComputeShaderKernalParameter<Texture>
+    public class ComputeShaderParameterTexture : ComputeShaderKernelParameter<Texture>
     {
         public ComputeShaderParameterTexture(string name, Texture defaultValue = default) : base(name, defaultValue) { }
 
-        public override bool IsSerializable() { return false; }
-        protected override void Set(string kernal = null)
+        public override void Set(ComputeShader cs, string kernel = null)
         {
-            if (this.kernal.ContainsKey(kernal) && this.data != null)
+            if (this.kernel.ContainsKey(kernel) && this.data != null)
             {
                 if (this.propertyID != -1)
                 {
-                    this.shader.SetTexture(this.kernal[kernal], this.propertyID, this.data);
+                    cs.SetTexture(this.kernel[kernel], this.propertyID, this.data);
                 }
                 else
                 {
-                    this.shader.SetTexture(this.kernal[kernal], this.VariableName, this.data);
+                    cs.SetTexture(this.kernel[kernel], this.VariableName, this.data);
                 }
             }
             else
@@ -616,7 +489,7 @@ namespace UnityTools.ComputeShaderTool
                 }
                 else
                 {
-                    Debug.LogWarningFormat("Can not found {0} in shader {1} with var name {2} instance: {3}", kernal, this.shader.name, this.VariableName, this.data);
+                    Debug.LogWarningFormat("Can not found {0} in shader {1} with var name {2} instance: {3}", kernel, cs.name, this.VariableName, this.data);
                 }
             }
         }
@@ -625,8 +498,9 @@ namespace UnityTools.ComputeShaderTool
     /// This only Set buffer to GPU, it does not manage this buffer resource
     /// </summary>
     [Serializable]
-    public class ComputeShaderParameterBuffer : ComputeShaderKernalParameter<ComputeBuffer>
+    public class ComputeShaderParameterBuffer : ComputeShaderKernelParameter<ComputeBuffer>
     {
+
         static public void SwapBuffer(ComputeShaderParameterBuffer a, ComputeShaderParameterBuffer b)
         {
             var temp = a.Value;
@@ -634,9 +508,6 @@ namespace UnityTools.ComputeShaderTool
             b.Value = temp;
         }
         public ComputeShaderParameterBuffer(string name, ComputeBuffer defaultValue = default) : base(name, defaultValue) { }
-        public ComputeShaderParameterBuffer(ComputeShader cs, string kernal, string varName) : base(cs, kernal, varName) { }
-
-        public override bool IsSerializable() { return false; }
         public void Release()
         {
             if (this.data != null)
@@ -646,17 +517,17 @@ namespace UnityTools.ComputeShaderTool
             }
         }
 
-        protected override void Set(string kernal = null)
+        public override void Set(ComputeShader cs, string kernel = null)
         {
-            if (this.kernal.ContainsKey(kernal) && this.data != null)
+            if (this.kernel.ContainsKey(kernel) && this.data != null)
             {
                 if (this.propertyID != -1)
                 {
-                    this.shader.SetBuffer(this.kernal[kernal], this.propertyID, this.data);
+                    cs.SetBuffer(this.kernel[kernel], this.propertyID, this.data);
                 }
                 else
                 {
-                    this.shader.SetBuffer(this.kernal[kernal], this.VariableName, this.data);
+                    cs.SetBuffer(this.kernel[kernel], this.VariableName, this.data);
                 }
             }
             else
@@ -667,103 +538,11 @@ namespace UnityTools.ComputeShaderTool
                 }
                 else
                 {
-                    Debug.LogWarningFormat("Can not found {0} in shader {1} with var name {2} instance: {3}", kernal, this.shader.name, this.VariableName, this.data);
+                    Debug.LogWarningFormat("Can not found {0} in shader {1} with var name {2} instance: {3}", kernel, cs.name, this.VariableName, this.data);
                 }
             }
         }
+
     }
 
-#if USE_PREFS
-    [Serializable]
-    public class ComputeShaderParameterPrefsInt : ComputeShaderParameter<PrefsInt>
-    {
-        public ComputeShaderParameterPrefsInt(string name, int defaultValue = default) : base(name)
-        {
-            data = new PrefsInt(name, defaultValue);
-        }
-        //public ComputeShaderParameterPrefsInt(ComputeShader cs, string name) : base(cs, name) { }
-    
-        public override bool IsSerializable() { return false; }
-        protected override void Set(string kernal = null)
-        {
-            if (this.propertyID != -1)
-            {
-                this.shader.SetInt(this.propertyID, this.data);
-            }
-            else
-            {
-                this.shader.SetInt(this.VariableName, this.data);
-            }
-        }
-    }
-    [Serializable]
-    public class ComputeShaderParameterPrefsFloat : ComputeShaderParameter<PrefsFloat>
-    {
-        public ComputeShaderParameterPrefsFloat(string name, float defaultValue = default) : base(name)
-        {
-            data = new PrefsFloat(name, defaultValue);
-        }
-        //public ComputeShaderParameterPrefsFloat(ComputeShader cs, string name) : base(cs, name) { }
-        /*public ComputeShaderParameterFloat(ComputeShader cs, string name, ref float target) : base(cs, name, ref target) { }*/
-    
-        public override bool IsSerializable() { return false; }
-        protected override void Set(string kernal = null)
-        {
-            if (this.propertyID != -1)
-            {
-                this.shader.SetFloat(this.propertyID, this.data);
-            }
-            else
-            {
-                this.shader.SetFloat(this.VariableName, this.data);
-            }
-        }
-    }
-    [Serializable]
-    public class ComputeShaderParameterPrefsVector : ComputeShaderParameter<PrefsVector4>
-    {
-        public ComputeShaderParameterPrefsVector(string name, Vector4 defaultValue = default) : base(name)
-        {
-            data = new PrefsVector4(name, defaultValue);
-        }
-        //public ComputeShaderParameterPrefsFloat(ComputeShader cs, string name) : base(cs, name) { }
-        /*public ComputeShaderParameterFloat(ComputeShader cs, string name, ref float target) : base(cs, name, ref target) { }*/
-    
-        public override bool IsSerializable() { return false; }
-        protected override void Set(string kernal = null)
-        {
-            if (this.propertyID != -1)
-            {
-                this.shader.SetVector(this.propertyID, this.data);
-            }
-            else
-            {
-                this.shader.SetVector(this.VariableName, this.data);
-            }
-        }
-    }
-    [Serializable]
-    public class ComputeShaderParameterPrefsColor : ComputeShaderParameter<PrefsColor>
-    {
-        public ComputeShaderParameterPrefsColor(string name, Color defaultValue = default) : base(name)
-        {
-            data = new PrefsColor(name, defaultValue);
-        }
-        //public ComputeShaderParameterPrefsFloat(ComputeShader cs, string name) : base(cs, name) { }
-        /*public ComputeShaderParameterFloat(ComputeShader cs, string name, ref float target) : base(cs, name, ref target) { }*/
-    
-        public override bool IsSerializable() { return false; }
-        protected override void Set(string kernal = null)
-        {
-            if (this.propertyID != -1)
-            {
-                this.shader.SetVector(this.propertyID, this.data);
-            }
-            else
-            {
-                this.shader.SetVector(this.VariableName, this.data);
-            }
-        }
-    }
-#endif
 }

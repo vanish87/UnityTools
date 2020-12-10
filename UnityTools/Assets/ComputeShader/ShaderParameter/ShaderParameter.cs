@@ -16,7 +16,6 @@ namespace UnityTools.ComputeShaderTool
         {
             //floatTest = 
 
-            floatTest.Bind(cs);
 
             var test = new ComputeShaderParameterFloat("_Test");
 
@@ -30,6 +29,7 @@ namespace UnityTools.ComputeShaderTool
         // Update is called once per frame
         void Update()
         {
+            this.floatTest.SetToGPU(cs);
 
         }
     }

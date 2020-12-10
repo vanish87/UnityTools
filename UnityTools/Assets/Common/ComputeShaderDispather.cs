@@ -3,20 +3,21 @@ using System.Collections.Generic;
 using UnityEngine.Assertions;
 using UnityEngine;
 using System;
+using Unity.Mathematics;
 
 namespace UnityTools.ComputeShaderTool
 {
     public class ComputeShaderDispatcher
     {
-        public class KernalInfo
+        public class KernelInfo
         {
-            public int kernal = -1;
-            public Vector3Int kernalDimesion = Vector3Int.zero;
+            public int kernel = -1;
+            public uint3 kernelDimesion = 0;
             public List<ComputeShaderParameterContainer> parameters = new List<ComputeShaderParameterContainer>();
         }
 
         protected ComputeShader cs = null;
-        protected Dictionary<string, KernalInfo> kernal = new Dictionary<string, KernalInfo>();
+        protected Dictionary<string, KernelInfo> kernel = new Dictionary<string, KernelInfo>();
 
         public ComputeShaderDispatcher(ComputeShader cs)
         {
@@ -26,78 +27,76 @@ namespace UnityTools.ComputeShaderTool
         {
             Assert.IsNotNull(cs);
             this.cs = cs;
-            this.kernal.Clear();
+            this.kernel.Clear();
         }
         public void ClearParameters()
         {
-            foreach(var k in this.kernal)
+            foreach(var k in this.kernel)
             {
                 k.Value.parameters.Clear();
             }
         }
-        public void AddParameter(string kernal, ComputeShaderParameterContainer parameter)
+        public void AddParameter(string kernel, ComputeShaderParameterContainer parameter)
         {
-            if (this.kernal.ContainsKey(kernal))
+            if (this.kernel.ContainsKey(kernel))
             {
-                if (this.kernal[kernal].parameters.Contains(parameter) == false)
+                if (this.kernel[kernel].parameters.Contains(parameter) == false)
                 {
-                    this.kernal[kernal].parameters.Add(parameter);
+                    this.kernel[kernel].parameters.Add(parameter);
                 }
             }
             else
             {
-                this.AddNewKernalInfo(kernal);
-                this.kernal[kernal].parameters.Add(parameter);
+                this.AddNewKernelInfo(kernel);
+                this.kernel[kernel].parameters.Add(parameter);
             }
-
-            parameter.Bind(this.cs);
         }
-        public void Dispatch(string kernal, int X = 1, int Y = 1, int Z = 1)
+        public void Dispatch(string kernel, int X = 1, int Y = 1, int Z = 1)
         {
-            Assert.IsNotNull(kernal);
+            Assert.IsNotNull(kernel);
             Assert.IsNotNull(this.cs);
-            if(this.kernal.ContainsKey(kernal) == false)
+            if(this.kernel.ContainsKey(kernel) == false)
             {
-                this.AddNewKernalInfo(kernal);
+                this.AddNewKernelInfo(kernel);
             }
 
-            var kernalInfo = this.kernal[kernal];
-            var threadNum = kernalInfo.kernalDimesion;
+            var kernelInfo = this.kernel[kernel];
+            var threadNum = kernelInfo.kernelDimesion;
 
-            this.UpdateParameter(kernal);
-            this.cs.Dispatch(kernalInfo.kernal, this.GetDispatchSize(X, threadNum.x), this.GetDispatchSize(Y, threadNum.y), this.GetDispatchSize(Z, threadNum.z));
+            this.UpdateParameter(kernel);
+            this.cs.Dispatch(kernelInfo.kernel, this.GetDispatchSize(X, threadNum.x), this.GetDispatchSize(Y, threadNum.y), this.GetDispatchSize(Z, threadNum.z));
         }
 
-        protected void AddNewKernalInfo(string kernal)
+        protected void AddNewKernelInfo(string kernel)
         {
-            var kernalId = this.cs.FindKernel(kernal);
-            Assert.IsTrue(kernalId >= 0);
+            var kernelId = this.cs.FindKernel(kernel);
+            Assert.IsTrue(kernelId >= 0);
 
             uint x = 0, y = 0, z = 0;
-            this.cs.GetKernelThreadGroupSizes(kernalId, out x, out y, out z);
-            this.kernal.Add(kernal, new KernalInfo()
+            this.cs.GetKernelThreadGroupSizes(kernelId, out x, out y, out z);
+            this.kernel.Add(kernel, new KernelInfo()
             {
-                kernal = kernalId,
-                kernalDimesion = new Vector3Int((int)x, (int)y, (int)z),
+                kernel = kernelId,
+                kernelDimesion = new uint3(x, y, z),
                 parameters = new List<ComputeShaderParameterContainer>(),
             });
         }
-        protected void UpdateParameter(string kernal)
+        protected void UpdateParameter(string kernel)
         {
-            if(this.kernal.ContainsKey(kernal))
+            if(this.kernel.ContainsKey(kernel))
             {
-                foreach(var p in this.kernal[kernal].parameters)
+                foreach(var p in this.kernel[kernel].parameters)
                 {
-                    p.UpdateGPU(kernal);
+                    p.UpdateGPU(this.cs, kernel);
                 }
             }
         }
-        protected int GetDispatchSize(int desired, int threadNum)
+        protected int GetDispatchSize(int desired, uint threadNum)
         {
             Assert.IsTrue(desired > 0);
             Assert.IsTrue(threadNum > 0);
 
-            return (desired + threadNum - 1) / threadNum;
+            return (int)((desired + threadNum - 1) / threadNum);
         }
     }
 }

@@ -10,6 +10,8 @@ namespace UnityTools.Common.Example
 
         public int Order => (int)SystemLauncher.LauncherOrder.Network;
 
+        public Launcher<SystemLauncher.Data>.LauncherState CurrentState { get; set; }
+
         public void OnLaunchEvent(SystemLauncher.Data data, Launcher<SystemLauncher.Data>.LaunchEvent levent)
         {
             switch(levent)
