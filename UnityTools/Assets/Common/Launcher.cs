@@ -69,6 +69,15 @@ namespace UnityTools.Common
             //higher order of user executes after than lower order user
             //see LauncherOrder for default setting
             int Order { get; }
+            LauncherState CurrentState { get; set; }
+        }
+
+        public enum LauncherState
+        {
+            Undefined,
+            Inited,
+            DeInited,
+
         }
 
         public enum LauncherOrder
@@ -124,6 +133,7 @@ namespace UnityTools.Common
             {
                 LogTool.Log("Init order " + u.Order + " " + u.ToString());
                 u.OnLaunchEvent(this.data, LaunchEvent.Init);
+                u.CurrentState = LauncherState.Inited;
             }
         }
         protected virtual void OnDisable()
@@ -131,6 +141,7 @@ namespace UnityTools.Common
             foreach (var u in this.userList)
             {
                 u.OnLaunchEvent(this.data, LaunchEvent.DeInit);
+                u.CurrentState = LauncherState.DeInited;
             }
             this.CleanUp();
         }
