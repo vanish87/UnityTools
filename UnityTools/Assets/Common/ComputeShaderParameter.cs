@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityTools.Debuging;
@@ -10,12 +11,12 @@ using UnityTools.Debuging;
 namespace UnityTools.ComputeShaderTool
 {
     [AttributeUsage(AttributeTargets.Field)]
-    public class NoneGPUAttribute:Attribute
+    public class NoneGPUAttribute : Attribute
     {
 
     }
     [AttributeUsage(AttributeTargets.Field)]
-    public class ShaderNameAttribute:Attribute
+    public class ShaderNameAttribute : Attribute
     {
         internal string csName;
         public ShaderNameAttribute(string name)
@@ -41,7 +42,7 @@ namespace UnityTools.ComputeShaderTool
 
         [System.NonSerialized]
         public const bool DebugOutput = true;
-        
+
         public void UpdateGPU(ComputeShader cs, string kernel = null)
         {
             foreach (var p in this.VarList)
@@ -56,12 +57,12 @@ namespace UnityTools.ComputeShaderTool
                 }
             }
 
-            foreach(var np in this.noneCSVariables)
+            foreach (var np in this.noneCSVariables)
             {
                 this.UpdateNoneCSParameterValue(np);
                 np.Value.SetToGPU(cs, kernel);
             }
-            
+
         }
         public virtual void OnGUI()
         {
@@ -109,7 +110,7 @@ namespace UnityTools.ComputeShaderTool
 
             this.variableList = this.GetType()
                      .GetFields(bindingFlags)
-                     .Where(field 
+                     .Where(field
                         => field.FieldType.IsSubclassOf(typeof(IComputeShaderParameter))
                         && !Attribute.IsDefined(field, typeof(NoneGPUAttribute)))
                      .Select(field => field.GetValue(this) as IComputeShaderParameter)
@@ -123,10 +124,10 @@ namespace UnityTools.ComputeShaderTool
                      .ToList();
 
 
-            foreach(var p in noneCSParamter)
+            foreach (var p in noneCSParamter)
             {
                 var csp = this.CreateParameter(p);
-                if(csp == default) continue;
+                if (csp == default) continue;
 
                 this.noneCSVariables.Add(p, csp);
             }
@@ -139,7 +140,7 @@ namespace UnityTools.ComputeShaderTool
         protected IComputeShaderParameter CreateParameter(FieldInfo info)
         {
             var name = info.Name;
-            if(Attribute.IsDefined(info, typeof(ShaderNameAttribute)))
+            if (Attribute.IsDefined(info, typeof(ShaderNameAttribute)))
             {
                 var attrib = Attribute.GetCustomAttribute(info, typeof(ShaderNameAttribute)) as ShaderNameAttribute;
                 name = attrib.csName;
@@ -152,7 +153,7 @@ namespace UnityTools.ComputeShaderTool
             if (info.FieldType == typeof(Color)) return new ComputeShaderParameterColor(name, (Color)info.GetValue(this));
 
             return default;
-            
+
         }
 
         protected void UpdateNoneCSParameterValue(KeyValuePair<FieldInfo, IComputeShaderParameter> np)
@@ -170,7 +171,7 @@ namespace UnityTools.ComputeShaderTool
 
     }
 
-    public  interface IComputeShaderParameter 
+    public interface IComputeShaderParameter
     {
         /// <summary>
         /// Set data to GPU, provide kernal name for textures and buffer parameters
@@ -265,7 +266,7 @@ namespace UnityTools.ComputeShaderTool
         public virtual T Value
         {
             get { return this.data; }
-            set { this.data = value;}
+            set { this.data = value; }
         }
 
         public void SetToGPU(ComputeShader cs, string kernel = null)
@@ -291,13 +292,13 @@ namespace UnityTools.ComputeShaderTool
 
         public void OnGUI()
         {
-            #if USE_PREFS
+#if USE_PREFS
             var prefs = this.data as PrefsParam;
             if (prefs != null)
             {
                 prefs.OnGUI();
             }
-            #endif
+#endif
         }
 
     }
@@ -385,7 +386,7 @@ namespace UnityTools.ComputeShaderTool
             {
                 cs.SetFloats(this.VariableName, this.data);
             }
-                
+
         }
     }
 
@@ -497,7 +498,6 @@ namespace UnityTools.ComputeShaderTool
     /// <summary>
     /// This only Set buffer to GPU, it does not manage this buffer resource
     /// </summary>
-    [Serializable]
     public class ComputeShaderParameterBuffer : ComputeShaderKernelParameter<ComputeBuffer>
     {
 
@@ -508,7 +508,7 @@ namespace UnityTools.ComputeShaderTool
             b.Value = temp;
         }
         public ComputeShaderParameterBuffer(string name, ComputeBuffer defaultValue = default) : base(name, defaultValue) { }
-        public void Release()
+        public virtual void Release()
         {
             if (this.data != null)
             {
@@ -541,6 +541,49 @@ namespace UnityTools.ComputeShaderTool
                     Debug.LogWarningFormat("Can not found {0} in shader {1} with var name {2} instance: {3}", kernel, cs.name, this.VariableName, this.data);
                 }
             }
+        }
+
+
+    }
+
+    public class ComputeShaderParameterBuffer<T> : ComputeShaderParameterBuffer
+    {
+        public override ComputeBuffer Value { get => base.Value; set => LogTool.LogAssertIsTrue(false, "Use InitBuffer to setup buffer"); }
+
+        public T[] CPUData => this.cpuData;
+        public int Size { get; private set; }
+
+        protected T[] cpuData = null;
+
+        public ComputeShaderParameterBuffer(string name, ComputeBuffer defaultValue = default) : base(name, defaultValue) { }
+        public ComputeShaderParameterBuffer(string name, int size,bool cpu = false, ComputeBuffer defaultValue = null) : base(name, defaultValue)
+        {
+            this.InitBuffer(size, cpu);
+        }
+        public void InitBuffer(int size, bool cpu = false)
+        {
+            this.Size = size;
+            LogTool.AssertIsTrue(size > 0);
+            if(this.data != null)
+            {
+                LogTool.Log("ComputeBuffer is not null", LogLevel.Warning);
+                this.Release();
+            }
+            this.data = new ComputeBuffer(size, Marshal.SizeOf<T>());
+
+            if(cpu) this.cpuData = new T[size];
+        }
+
+        public override void Release()
+        {
+            base.Release();
+            this.cpuData = null;
+        }
+
+        public override void Set(ComputeShader computeShader, string kernel)
+        {
+            if (this.CPUData != null) this.data.SetData(this.CPUData);
+            base.Set(computeShader, kernel);
         }
 
     }

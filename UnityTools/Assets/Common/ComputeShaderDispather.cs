@@ -4,6 +4,7 @@ using UnityEngine.Assertions;
 using UnityEngine;
 using System;
 using Unity.Mathematics;
+using UnityTools.Debuging;
 
 namespace UnityTools.ComputeShaderTool
 {
@@ -38,6 +39,7 @@ namespace UnityTools.ComputeShaderTool
         }
         public void AddParameter(string kernel, ComputeShaderParameterContainer parameter)
         {
+            LogTool.AssertNotNull(parameter);
             if (this.kernel.ContainsKey(kernel))
             {
                 if (this.kernel[kernel].parameters.Contains(parameter) == false)
