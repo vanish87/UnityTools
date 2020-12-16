@@ -7,6 +7,36 @@ using UnityTools.Networking;
 
 namespace UnityTools.Debuging
 {
+    #if UNITY_EDITOR
+    public class LogConfigureBuildEvent : UnityEditor.Build.IPreprocessBuildWithReport
+    {
+        public int callbackOrder => 0;
+
+        public void OnPreprocessBuild(UnityEditor.Build.Reporting.BuildReport report)
+        {
+            var currentIPs = Tool.GetLocalIPAddress();
+            foreach(var c in ObjectTool.FindAllObject<LogConfigure>())
+            {
+                if(c.Data.remoteLogPC.Find(pc=>currentIPs.Contains(pc.ipAddress)) != null) continue;
+                var port = new PCInfo.Port() { name = "remoteLog", port = c.Data.remoteLogPort};
+                foreach(var pc in currentIPs)
+                {
+                    c.Data.remoteLogPC.Add(new PCInfo() 
+                    { 
+                        name = SystemInfo.deviceName, 
+                        ipAddress = pc, 
+                        ports = new List<PCInfo.Port>(){port}, 
+                        role = PCInfo.Role.Development
+                    });
+
+                    LogTool.Log("Add dev pc into log configure " + pc.ToString(), LogLevel.Verbose, LogChannel.Debug);
+                }
+                c.Save();
+            }
+        }
+    }
+
+    #endif
     #if USE_EDITOR_EXC
     [ExecuteInEditMode]
     #endif
@@ -20,8 +50,8 @@ namespace UnityTools.Debuging
         [Serializable]
         public class LogConfigureData
         {
-            public short logPort = 13210;
-            public List<PCInfo> logPCs = new List<PCInfo>();
+            public short remoteLogPort = 13210;
+            public List<PCInfo> remoteLogPC = new List<PCInfo>();
             public LogChannel channel;
             public List<LevelData> levels = new List<LevelData>();
         }
@@ -58,7 +88,7 @@ namespace UnityTools.Debuging
 
         public void SetupLog()
         {
-            LogToolNetwork.LogToolNetworkSocket.SetupNetwork(this.Data.logPCs, this.Data.logPort);
+            LogToolNetwork.LogToolNetworkSocket.SetupNetwork(this.Data.remoteLogPC, this.Data.remoteLogPort);
         }
         protected override void Start()
         {

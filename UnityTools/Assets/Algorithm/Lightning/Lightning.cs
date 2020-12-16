@@ -162,7 +162,7 @@ namespace UnityTools.Algorithm
             float rand = UnityEngine.Random.Range(0, sum[sum.Length-1]);
 
             int left = 0;
-            int right = sum.Length - 1;
+            int right = sum.Length;
             while (left < right)
             {
                 int mid = left + (right - left) / 2;

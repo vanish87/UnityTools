@@ -131,7 +131,7 @@ namespace UnityTools.Common
             this.userList = this.userList.OrderBy(ul => ul.Order).ToList();
             foreach (var u in this.userList)
             {
-                LogTool.Log("Init order " + u.Order + " " + u.ToString());
+                LogTool.Log("Init order " + u.Order + " " + u.ToString(), LogLevel.Dev);
                 u.OnLaunchEvent(this.data, LaunchEvent.Init);
                 u.CurrentState = LauncherState.Inited;
             }
