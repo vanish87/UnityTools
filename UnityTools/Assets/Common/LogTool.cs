@@ -205,7 +205,7 @@ namespace UnityTools.Debuging
             }
             LogToolNetwork.Log(msg);
 
-            foreach(var user in ObjectTool.FindAllObject<ILogUser>()) user.Log(message);
+            // foreach(var user in ObjectTool.FindAllObject<ILogUser>()) user.Log(message);
         }
         public static void LogFormat(string format, LogLevel level = LogLevel.Verbose, LogChannel channel = LogChannel.Debug, params object[] args)
         {

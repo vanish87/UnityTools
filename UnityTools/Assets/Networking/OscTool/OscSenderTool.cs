@@ -18,7 +18,7 @@ namespace UnityTools.Networking
         [SerializeField] protected short port = 7777;
         protected OscJack.OscClient client;
 
-        protected virtual void Start()
+        protected virtual void OnEnable()
         {
             this.OnInit();
         }
