@@ -582,8 +582,16 @@ namespace UnityTools.ComputeShaderTool
 
         public override void Set(ComputeShader computeShader, string kernel)
         {
-            if (this.CPUData != null) this.data.SetData(this.CPUData);
+            this.UpdateToGPU();
             base.Set(computeShader, kernel);
+        }
+
+        public void UpdateToGPU()
+        {
+            if(this.CPUData != null)
+            {
+                this.data.SetData(this.CPUData);
+            }
         }
 
     }
