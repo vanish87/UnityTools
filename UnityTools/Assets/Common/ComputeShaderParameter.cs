@@ -468,7 +468,14 @@ namespace UnityTools.ComputeShaderTool
     public class ComputeShaderParameterTexture : ComputeShaderKernelParameter<Texture>
     {
         public ComputeShaderParameterTexture(string name, Texture defaultValue = default) : base(name, defaultValue) { }
-
+        public virtual void Release()
+        {
+            if (this.data != null)
+            {
+                this.data.DestoryObj();
+                this.data = null;
+            }
+        }
         public override void Set(ComputeShader cs, string kernel = null)
         {
             if (this.kernel.ContainsKey(kernel) && this.data != null)
