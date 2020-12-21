@@ -15,7 +15,7 @@ namespace UnityTools.Rendering
             DepthOnly = 0,
             NormalOnly,
             DepthNormalEncoded,
-            DepthNomalSeparated,
+            DepthNormalSeparated,
         }
 
         public enum NormalSpace
@@ -30,7 +30,7 @@ namespace UnityTools.Rendering
             { OutputMode.DepthOnly          , DepthTextureMode.Depth},
             { OutputMode.NormalOnly         , DepthTextureMode.DepthNormals},
             { OutputMode.DepthNormalEncoded , DepthTextureMode.DepthNormals},
-            { OutputMode.DepthNomalSeparated, DepthTextureMode.DepthNormals},
+            { OutputMode.DepthNormalSeparated, DepthTextureMode.DepthNormals},
         };
 
         protected Dictionary<OutputMode, RenderTextureFormat> OutputModeToRenderTextureFormat = new Dictionary<OutputMode, RenderTextureFormat>()
@@ -91,14 +91,14 @@ namespace UnityTools.Rendering
             if (this.outputMode == OutputMode.DepthOnly) this.normalSpace = NormalSpace.None;
         }
 
-        protected void OnEnable()
+        protected virtual void OnEnable()
         {
             this.mat = this.mat ?? new DisposableMaterial(this.renderToDepth);
             this.renderCamera = this.renderCamera ?? this.GetComponent<Camera>();
 
             this.OnSettingChanged();
         }
-        protected void OnDisable()
+        protected virtual void OnDisable()
         {
             if (this.renderCamera != null) this.renderCamera.targetTexture = null;
 
@@ -146,7 +146,7 @@ namespace UnityTools.Rendering
                         Graphics.Blit(source, this.depthTexture, this.mat, this.OutputModeToPass[this.outputMode]);
                     }
                     break;
-                case OutputMode.DepthNomalSeparated:
+                case OutputMode.DepthNormalSeparated:
                     {
                         this.CheckTexture(source, nameof(this.depthTexture), this.OutputModeToRenderTextureFormat[OutputMode.DepthOnly], ref this.depthTexture);
                         this.CheckTexture(source, nameof(this.normalTexture), this.OutputModeToRenderTextureFormat[OutputMode.NormalOnly], ref this.normalTexture);
