@@ -17,11 +17,11 @@ namespace UnityTools.Debuging
             var currentIPs = Tool.GetLocalIPAddress();
             foreach(var c in ObjectTool.FindAllObject<LogConfigure>())
             {
-                if(c.Data.remoteLogPC.Find(pc=>currentIPs.Contains(pc.ipAddress)) != null) continue;
-                var port = new PCInfo.Port() { name = "remoteLog", port = c.Data.remoteLogPort};
+                if(c.D.remoteLogPC.Find(pc=>currentIPs.Contains(pc.ipAddress)) != null) continue;
+                var port = new PCInfo.Port() { name = "remoteLog", port = c.D.remoteLogPort};
                 foreach(var pc in currentIPs)
                 {
-                    c.Data.remoteLogPC.Add(new PCInfo() 
+                    c.D.remoteLogPC.Add(new PCInfo() 
                     { 
                         name = SystemInfo.deviceName, 
                         ipAddress = pc, 
@@ -45,7 +45,7 @@ namespace UnityTools.Debuging
         [SerializeField] protected string fileName = "LogConfigureData.xml";
         [SerializeField] protected LogConfigureData data;
         protected override string filePath { get { return System.IO.Path.Combine(Application.streamingAssetsPath, this.fileName); } }
-        public override LogConfigureData Data { get => this.data; set=>this.data = value; }
+        public override LogConfigureData D { get => this.data; set=>this.data = value; }
 
         [Serializable]
         public class LogConfigureData
@@ -65,19 +65,19 @@ namespace UnityTools.Debuging
         {
             this.Initialize();
 
-            if (this.Data.levels.Count == 0)
+            if (this.D.levels.Count == 0)
             {
                 LogTool.Log("No log level found, Add all log Channels by default", LogLevel.Warning);
                 foreach (LogLevel log in Enum.GetValues(typeof(LogLevel)))
                 {
-                    this.Data.levels.Add(new LevelData() { level = log, enabled = true });
+                    this.D.levels.Add(new LevelData() { level = log, enabled = true });
                 }
             }
 
 
             foreach (LogLevel log in Enum.GetValues(typeof(LogLevel)))
             {
-                if (this.Data.levels.FindAll(c => c.level == log).Count != 1)
+                if (this.D.levels.FindAll(c => c.level == log).Count != 1)
                 {
                     LogTool.Log("Missing/Duplicate log level configure " + log.ToString(), LogLevel.Warning);
                 }
@@ -88,7 +88,7 @@ namespace UnityTools.Debuging
 
         public void SetupLog()
         {
-            LogToolNetwork.LogToolNetworkSocket.SetupNetwork(this.Data.remoteLogPC, this.Data.remoteLogPort);
+            LogToolNetwork.LogToolNetworkSocket.SetupNetwork(this.D.remoteLogPC, this.D.remoteLogPort);
         }
         protected override void Start()
         {
@@ -98,12 +98,12 @@ namespace UnityTools.Debuging
 
         protected void UpdateLog()
         {
-            foreach (var log in this.Data.levels)
+            foreach (var log in this.D.levels)
             {
                 LogTool.Enable(log.level, log.enabled);
             }
             
-            LogTool.Enable(this.Data.channel);
+            LogTool.Enable(this.D.channel);
         }
 
         protected override void Update()

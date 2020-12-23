@@ -17,7 +17,7 @@ namespace UnityTools.Networking
                 public PCInfo remote;
             }
             [SerializeField] protected RemoteData data;
-            public override RemoteData Data { get => this.data; set => this.data = value; }
+            public override RemoteData D { get => this.data; set => this.data = value; }
 
             protected override string filePath => System.IO.Path.Combine(Application.streamingAssetsPath, this.ToString() + ".xml");
         }
@@ -28,8 +28,8 @@ namespace UnityTools.Networking
         {
             this.configure = new RemoteConfigure();
             this.configure.LoadAndNotify();
-            this.ip = this.configure.Data.remote.ipAddress;
-            this.port = this.configure.Data.remote.ports[0].port;
+            this.ip = this.configure.D.remote.ipAddress;
+            this.port = this.configure.D.remote.ports[0].port;
             base.OnEnable();
         }
         protected void Update()

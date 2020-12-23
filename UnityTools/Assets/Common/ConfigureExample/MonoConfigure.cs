@@ -17,7 +17,7 @@ namespace UnityTools.Example
     public class MonoConfigure : Config<ConfigureData>
     {
         [SerializeField] protected ConfigureData data;
-        public override ConfigureData Data { get => this.data; set => this.data = value; }
+        public override ConfigureData D { get => this.data; set => this.data = value; }
         protected override string filePath { get { return System.IO.Path.Combine(Application.streamingAssetsPath, "config_mono.xml"); } }
 
         protected override void OnDrawGUI()

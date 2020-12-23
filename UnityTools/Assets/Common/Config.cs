@@ -32,7 +32,14 @@ namespace UnityTools
     //Note it could be multiple instance but they will save/load to same file
     public abstract class ConfigNoneMono<T> : IConfigureSerialize where T : class, new()
     {
-        public abstract T Data { get; set; }
+        private readonly Dictionary<FileTool.SerializerType, string> typeToExtension = new Dictionary<FileTool.SerializerType, string>()
+        {
+            {FileTool.SerializerType.XML, ".xml"},
+            {FileTool.SerializerType.Json, ".json"},
+            {FileTool.SerializerType.Binary, ".bin"},
+
+        };
+        public abstract T D { get; set; }
         public bool Open { get { return this.open; } set { this.open = value; } }
         protected virtual string filePath { get { return System.IO.Path.Combine(Application.persistentDataPath, "config_" + SceneManager.GetActiveScene().name + ".xml"); } }
 
@@ -113,11 +120,15 @@ namespace UnityTools
         }
         public virtual void Save()
         {
-            FileTool.Write(this.filePath, this.Data, this.saveType);
+            var path = this.filePath;
+            if(!path.Contains(typeToExtension[this.saveType])) path += typeToExtension[this.saveType];
+            FileTool.Write(path, this.D, this.saveType);
         }
         protected virtual void Load()
         {
-            this.Data = FileTool.Read<T>(this.filePath, this.saveType);
+            var path = this.filePath;
+            if(!path.Contains(typeToExtension[this.saveType])) path += typeToExtension[this.saveType];
+            this.D = FileTool.Read<T>(path, this.saveType);
         }
         public virtual void LoadAndNotify()
         {
@@ -133,8 +144,15 @@ namespace UnityTools
 
     public abstract class ConfigMonoSingleton<T> : SingletonMonoBehaviour<ConfigMonoSingleton<T>>, IConfigureSerialize where T : class, new()
     {
+        private readonly Dictionary<FileTool.SerializerType, string> typeToExtension = new Dictionary<FileTool.SerializerType, string>()
+        {
+            {FileTool.SerializerType.XML, ".xml"},
+            {FileTool.SerializerType.Json, ".json"},
+            {FileTool.SerializerType.Binary, ".bin"},
+
+        };
         [SerializeField] protected ConfigureSaveMode saveMode = ConfigureSaveMode.UseEditorValue;
-        public abstract T Data { get; set; }
+        public abstract T D { get; set; }
         public bool Open { get { return this.open; } set { this.open = value; } }
         protected virtual string filePath { get { return System.IO.Path.Combine(Application.persistentDataPath, "config_" + SceneManager.GetActiveScene().name + ".xml"); } }
 
@@ -230,14 +248,17 @@ namespace UnityTools
             }
         }
 
-
         public virtual void Save()
         {
-            FileTool.Write(this.filePath, this.Data, this.saveType);
+            var path = this.filePath;
+            if(!path.Contains(typeToExtension[this.saveType])) path += typeToExtension[this.saveType];
+            FileTool.Write(path, this.D, this.saveType);
         }
         protected virtual void Load()
         {
-            this.Data = FileTool.Read<T>(this.filePath, this.saveType);
+            var path = this.filePath;
+            if(!path.Contains(typeToExtension[this.saveType])) path += typeToExtension[this.saveType];
+            this.D = FileTool.Read<T>(path, this.saveType);
         }
 
         public virtual void LoadAndNotify()
@@ -254,9 +275,16 @@ namespace UnityTools
 
     public abstract class Config<T> : MonoBehaviour, IConfigureSerialize where T : class, new()
     {
-        public abstract T Data { get; set; }
+        private readonly Dictionary<FileTool.SerializerType, string> typeToExtension = new Dictionary<FileTool.SerializerType, string>()
+        {
+            {FileTool.SerializerType.XML, ".xml"},
+            {FileTool.SerializerType.Json, ".json"},
+            {FileTool.SerializerType.Binary, ".bin"},
+
+        };
+        public abstract T D { get; set; }
         public bool Open { get { return this.open; } set { this.open = value; } }
-        protected virtual string filePath { get { return System.IO.Path.Combine(Application.persistentDataPath, "config_" + SceneManager.GetActiveScene().name + ".xml"); } }
+        protected virtual string filePath { get { return System.IO.Path.Combine(Application.persistentDataPath, "config_" + SceneManager.GetActiveScene().name + typeToExtension[this.saveType]); } }
         [SerializeField] protected ConfigureSaveMode saveMode = ConfigureSaveMode.UseEditorValue;
 
         protected bool inited = false;
@@ -355,11 +383,15 @@ namespace UnityTools
 
         public virtual void Save()
         {
-            FileTool.Write(this.filePath, this.Data, this.saveType);
+            var path = this.filePath;
+            if(!path.Contains(typeToExtension[this.saveType])) path += typeToExtension[this.saveType];
+            FileTool.Write(path, this.D, this.saveType);
         }
         protected virtual void Load()
         {
-            this.Data = FileTool.Read<T>(this.filePath, this.saveType);
+            var path = this.filePath;
+            if(!path.Contains(typeToExtension[this.saveType])) path += typeToExtension[this.saveType];
+            this.D = FileTool.Read<T>(path, this.saveType);
         }
 
         public virtual void LoadAndNotify()
@@ -377,6 +409,7 @@ namespace UnityTools
     public class ConfigureGUI
     {
         static Dictionary<int, string> stringTable = new Dictionary<int, string>();
+        static Dictionary<int, object> defaultTable = new Dictionary<int, object>();
         public class ColorScope : IDisposable
         {
             Color _color;
@@ -414,13 +447,16 @@ namespace UnityTools
         {
             value = GUILayout.HorizontalSlider(value, min, max, GUILayout.MinWidth(70));
         }
-        static public void OnGUI<T>(ref T value, string displayName = null)
+        static public void OnGUI<T>(ref T value, [System.Runtime.CompilerServices.CallerMemberName] string displayName = null)
         {
+            var dhash = displayName.GetHashCode();
+            if (!defaultTable.ContainsKey(dhash)) defaultTable.Add(dhash, value);
+
             var op = new[] { GUILayout.MinWidth(70f) };
             using (var h = new GUILayout.HorizontalScope())
             {
-                GUILayout.Label(displayName == null ? nameof(value) : displayName);
-                var hash = value.GetHashCode();
+                GUILayout.Label(displayName);
+                var hash = (displayName + value.ToString()).GetHashCode();
                 var target = value.ToString();
                 var hasUnparsedStr = stringTable.ContainsKey(hash);
                 if (hasUnparsedStr)
@@ -451,6 +487,14 @@ namespace UnityTools
                         stringTable[hash] = ret;
                     }
                 }
+
+
+                if(GUILayout.Button("Default"))
+                {
+                    value = (T)defaultTable[dhash];
+                    if (hasUnparsedStr) stringTable.Remove(hash);
+                }
+
             }
         }
         static public void OnGUI(ref bool toggle, string displayName = null)

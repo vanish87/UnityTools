@@ -18,7 +18,7 @@ namespace UnityTools.Common.Example
             {
                 case SystemLauncher.LaunchEvent.Init:
                     {
-                        var networkData = this.GetNetworkData(data.pcConfigure.Data.pcList);
+                        var networkData = this.GetNetworkData(data.pcConfigure.D.pcList);
                         this.NotifyUser(networkData);
                     }
                     break;

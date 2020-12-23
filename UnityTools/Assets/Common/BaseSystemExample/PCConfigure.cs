@@ -18,7 +18,7 @@ namespace UnityTools.Common.Example
     {
         [SerializeField] protected string fileName = "PCConfigure.xml";
         [SerializeField] protected PCConfigureData data;
-        public override PCConfigureData Data { get => this.data; set => this.data = value; }
+        public override PCConfigureData D { get => this.data; set => this.data = value; }
 
 
         protected override string filePath { get { return System.IO.Path.Combine(Application.streamingAssetsPath, this.fileName); } }
