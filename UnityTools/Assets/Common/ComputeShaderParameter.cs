@@ -35,13 +35,17 @@ namespace UnityTools.ComputeShaderTool
                 return this.variableList;
             }
         }
-        [System.NonSerialized]
         protected List<IComputeShaderParameter> variableList = null;
 
         private Dictionary<FieldInfo, IComputeShaderParameter> noneCSVariables = new Dictionary<FieldInfo, IComputeShaderParameter>();
 
-        [System.NonSerialized]
-        public const bool DebugOutput = true;
+        protected const bool DebugOutput = true;
+        protected bool inited = false;
+
+        public ComputeShaderParameterContainer()
+        {
+            this.InitVariableList();
+        }
 
         public void UpdateGPU(ComputeShader cs, string kernel = null)
         {
@@ -67,6 +71,10 @@ namespace UnityTools.ComputeShaderTool
         public virtual void OnGUI()
         {
             foreach (var p in this.VarList)
+            {
+                p.OnGUI();
+            }
+            foreach (var p in this.noneCSVariables.Values)
             {
                 p.OnGUI();
             }
@@ -101,9 +109,9 @@ namespace UnityTools.ComputeShaderTool
         /// </summary>
         protected void InitVariableList()
         {
-            if (this.variableList != null) return;
+            if (this.inited) return;
 
-            Assert.IsTrue(this.variableList == null);
+            LogTool.AssertIsTrue(this.variableList == null);
             var bindingFlags = BindingFlags.Instance |
                               BindingFlags.NonPublic |
                               BindingFlags.Public;
@@ -131,10 +139,9 @@ namespace UnityTools.ComputeShaderTool
 
                 this.noneCSVariables.Add(p, csp);
             }
-
-
-
-            Assert.IsTrue(this.variableList != null);
+            LogTool.AssertIsTrue(this.variableList != null);
+            
+            this.inited = true;
         }
 
         protected IComputeShaderParameter CreateParameter(FieldInfo info)
@@ -244,7 +251,7 @@ namespace UnityTools.ComputeShaderTool
 
         public ComputeShaderParameter(string name, T defaultValue = default(T))
         {
-            Assert.IsFalse(string.IsNullOrEmpty(name));
+            LogTool.AssertIsFalse(string.IsNullOrEmpty(name));
             if (string.IsNullOrEmpty(name))
             {
                 Debug.LogWarningFormat("Name is null");
@@ -292,13 +299,15 @@ namespace UnityTools.ComputeShaderTool
 
         public void OnGUI()
         {
-#if USE_PREFS
+            #if USE_PREFS
             var prefs = this.data as PrefsParam;
             if (prefs != null)
             {
                 prefs.OnGUI();
             }
-#endif
+            #else
+            ConfigureGUI.OnGUI(ref this.data, this.VariableName);
+            #endif
         }
 
     }
@@ -563,7 +572,7 @@ namespace UnityTools.ComputeShaderTool
         protected T[] cpuData = null;
 
         public ComputeShaderParameterBuffer(string name, ComputeBuffer defaultValue = default) : base(name, defaultValue) { }
-        public ComputeShaderParameterBuffer(string name, int size,bool cpu = false, ComputeBuffer defaultValue = null) : base(name, defaultValue)
+        public ComputeShaderParameterBuffer(string name, int size, bool cpu = false, ComputeBuffer defaultValue = null) : base(name, defaultValue)
         {
             this.InitBuffer(size, cpu);
         }
