@@ -44,7 +44,7 @@ namespace UnityTools.Algorithm
         [SerializeField, Range(0,10)] protected int ita = 1;
         [SerializeField] protected int iteration = 100;
         [SerializeField] protected int2 textureSize = new int2(256, 256);
-        [SerializeField] protected CricleRT electricalPotentialGrid;
+        [SerializeField] protected CircleRT electricalPotentialGrid;
         [SerializeField] protected ComputeShader cs;
         [SerializeField] protected ComputeShaderDispatcher dispatcher;
         [SerializeField] protected LightningCSContainer parameter = new LightningCSContainer();
@@ -54,7 +54,7 @@ namespace UnityTools.Algorithm
             var desc = new RenderTextureDescriptor(this.textureSize.x, this.textureSize.y, RenderTextureFormat.RFloat, 0, 0);
             desc.enableRandomWrite = true;
             desc.sRGB = false;
-            this.electricalPotentialGrid = new CricleRT(2, desc);
+            this.electricalPotentialGrid = new CircleRT(2, desc);
 
             this.dispatcher = new ComputeShaderDispatcher(this.cs);
             this.dispatcher.AddParameter("Init", this.parameter);
