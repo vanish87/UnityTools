@@ -574,6 +574,18 @@ namespace UnityTools
                 OnGUI(ref vector.w, "w");
             }
         }
+        static public void OnGUI(ref Color color, string displayName = null)
+        {
+            var op = new[] { GUILayout.MinWidth(70f) };
+            using (var h = new GUILayout.HorizontalScope())
+            {
+                GUILayout.Label(displayName == null ? typeof(Color).ToString() : displayName);
+                OnGUI(ref color.r, "r");
+                OnGUI(ref color.g, "g");
+                OnGUI(ref color.b, "b");
+                OnGUI(ref color.a, "a");
+            }
+        }
         static public void OnGUISlider(ref Vector4 vector, Vector4 min, Vector4 max, string displayName = null)
         {
             var op = new[] { GUILayout.MinWidth(70f) };
