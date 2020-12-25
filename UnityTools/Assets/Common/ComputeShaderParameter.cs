@@ -74,9 +74,11 @@ namespace UnityTools.ComputeShaderTool
             {
                 p.OnGUI();
             }
-            foreach (var p in this.noneCSVariables.Values)
+            foreach (var p in this.noneCSVariables)
             {
-                p.OnGUI();
+                this.UpdateNoneCSParameterValue(p);
+                p.Value.OnGUI();
+                this.UpdateNoneCSParameterFieldValue(p);
             }
         }
 
@@ -157,12 +159,13 @@ namespace UnityTools.ComputeShaderTool
             if (info.FieldType == typeof(Vector2)) return new ComputeShaderParameterVector(name, (Vector2)info.GetValue(this));
             if (info.FieldType == typeof(Vector3)) return new ComputeShaderParameterVector(name, (Vector3)info.GetValue(this));
             if (info.FieldType == typeof(Vector4)) return new ComputeShaderParameterVector(name, (Vector4)info.GetValue(this));
-            if (info.FieldType == typeof(Color)) return new ComputeShaderParameterColor(name, (Color)info.GetValue(this));
+            //if (info.FieldType == typeof(Color)) return new ComputeShaderParameterColor(name, (Color)info.GetValue(this));
 
             return default;
 
         }
 
+        //Original field value -> ComputeShaderParameter Value
         protected void UpdateNoneCSParameterValue(KeyValuePair<FieldInfo, IComputeShaderParameter> np)
         {
             var info = np.Key;
@@ -172,7 +175,30 @@ namespace UnityTools.ComputeShaderTool
             if (info.FieldType == typeof(Vector2)) (np.Value as ComputeShaderParameterVector).Value = (Vector2)info.GetValue(this);
             if (info.FieldType == typeof(Vector3)) (np.Value as ComputeShaderParameterVector).Value = (Vector3)info.GetValue(this);
             if (info.FieldType == typeof(Vector4)) (np.Value as ComputeShaderParameterVector).Value = (Vector4)info.GetValue(this);
-            if (info.FieldType == typeof(Color)) (np.Value as ComputeShaderParameterColor).Value = (Color)info.GetValue(this);
+            //if (info.FieldType == typeof(Color)) (np.Value as ComputeShaderParameterColor).Value = (Color)info.GetValue(this);
+        }
+
+        //Inverse of above
+        //ComputeShaderParameter Value -> Original field value 
+        protected void UpdateNoneCSParameterFieldValue(KeyValuePair<FieldInfo, IComputeShaderParameter> np)
+        {
+            var info = np.Key;
+
+            if (info.FieldType == typeof(int)) info.SetValue(this, (np.Value as ComputeShaderParameterInt).Value );
+            if (info.FieldType == typeof(float)) info.SetValue(this, (np.Value as ComputeShaderParameterFloat).Value );
+            if (info.FieldType == typeof(Vector2))
+            {
+                var v = (np.Value as ComputeShaderParameterVector).Value;
+                info.SetValue(this, new Vector2(v.x, v.y));
+            }
+            if (info.FieldType == typeof(Vector3)) 
+            {
+                var v = (np.Value as ComputeShaderParameterVector).Value;
+                info.SetValue(this, new Vector3(v.x, v.y, v.z));
+            }
+
+            if (info.FieldType == typeof(Vector4)) info.SetValue(this, (np.Value as ComputeShaderParameterVector).Value );
+            //if (info.FieldType == typeof(Color)) info.SetValue(this, (np.Value as ComputeShaderParameterColor).Value );
         }
 
 
@@ -297,7 +323,7 @@ namespace UnityTools.ComputeShaderTool
 
         public abstract void Set(ComputeShader cs, string kernel = null);
 
-        public void OnGUI()
+        public virtual void OnGUI()
         {
             #if USE_PREFS
             var prefs = this.data as PrefsParam;
@@ -415,6 +441,11 @@ namespace UnityTools.ComputeShaderTool
                 cs.SetVector(this.VariableName, this.data);
             }
         }
+
+        public override void OnGUI()
+        {
+            ConfigureGUI.OnGUI(ref this.data, this.VariableName);
+        }
     }
     [Serializable]
     public class ComputeShaderParameterVectorArray : ComputeShaderParameter<Vector4[]>
@@ -449,6 +480,10 @@ namespace UnityTools.ComputeShaderTool
             {
                 cs.SetVector(this.VariableName, this.data);
             }
+        }
+        public override void OnGUI()
+        {
+            ConfigureGUI.OnGUI(ref this.data, this.VariableName);
         }
     }
 
