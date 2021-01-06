@@ -47,6 +47,13 @@ namespace UnityTools.Animation
             }
             internal override void Excute(T obj)
             {
+                double inf = this.timer + Time.deltaTime;
+                if(inf >= float.MaxValue) 
+                {
+                    LogTool.Log("Timer float over flow", LogLevel.Warning);
+                    this.timer = 0;
+                }
+
                 this.timer += Time.deltaTime;
 
                 var delta = (this.scaleTime > 0 ? 1 / this.scaleTime : 1) * Time.deltaTime;
@@ -81,18 +88,63 @@ namespace UnityTools.Animation
         [Serializable]
         public class TimelineSequence : TimelineSate<Timeline>
         {
-            [SerializeField] internal protected string name;
-            [SerializeField] internal protected float duration;
+            public enum Mode
+            {
+                Countdown,
+                Timer,
+                Infinite
+            }
+            [SerializeField] protected string name;
+            [SerializeField] protected float duration;
+            [SerializeField] protected Mode mode = Mode.Infinite;
+
+            public TimelineSequence(string name, Mode mode, float duration = 0)
+            {
+                this.name = name;
+                this.mode = mode;
+                this.duration = duration;
+                if(this.mode == Mode.Countdown) this.timer = duration;
+            }
             internal override void Enter(Timeline obj)
             {
                 base.Enter(obj);
             }
             internal override void Excute(Timeline obj)
             {
-                base.Excute(obj);
-                if (this.timer > this.duration)
+                switch(this.mode)
                 {
-                    obj.MoveToNext();
+                    case Mode.Timer:
+                    {
+                        base.Excute(obj);
+                        if (this.timer > this.duration)
+                        {
+                            obj.MoveToNext();
+                        }
+                    }
+                    break;
+                    case Mode.Countdown:
+                    {
+                        this.timer -= Time.deltaTime;
+
+                        var delta = (this.scaleTime > 0 ? 1 / this.scaleTime : 1) * Time.deltaTime;
+                        this.scale += delta;
+
+                        this.scale = Mathf.Clamp(this.scale, 0, 1);
+
+                        this.excuteActions?.Invoke(obj, this, this.timer);
+                        if (this.timer < 0)
+                        {
+                            obj.MoveToNext();
+                        }
+                    }
+                    break;
+                    case Mode.Infinite:
+                    default:
+                    {
+                        base.Excute(obj);
+                        break;
+                    }
+
                 }
             }
             internal override void Leave(Timeline obj)
@@ -117,6 +169,10 @@ namespace UnityTools.Animation
         [Serializable]
         public class TimelineRestartSequence : TimelineSequence
         {
+            public TimelineRestartSequence(string name = "Restart") : base(name, Mode.Timer)
+            {
+            }
+
             internal override void Enter(Timeline obj)
             {
                 base.Enter(obj);
