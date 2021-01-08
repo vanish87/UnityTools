@@ -447,6 +447,10 @@ namespace UnityTools
         {
             value = GUILayout.HorizontalSlider(value, min, max, GUILayout.MinWidth(70));
         }
+        static public void OnGUIInternal<T>(ref T value, string displayName, string variableHash)
+        {
+            OnGUI(ref value, variableHash + displayName);
+        }
         static public void OnGUI<T>(ref T value, [System.Runtime.CompilerServices.CallerMemberName] string displayName = null)
         {
             var dhash = displayName.GetHashCode();
@@ -580,10 +584,10 @@ namespace UnityTools
             using (var h = new GUILayout.HorizontalScope())
             {
                 GUILayout.Label(displayName == null ? typeof(Color).ToString() : displayName);
-                OnGUI(ref color.r, "r");
-                OnGUI(ref color.g, "g");
-                OnGUI(ref color.b, "b");
-                OnGUI(ref color.a, "a");
+                OnGUIInternal(ref color.r, displayName, "r");
+                OnGUIInternal(ref color.g, displayName, "g");
+                OnGUIInternal(ref color.b, displayName, "b");
+                OnGUIInternal(ref color.a, displayName, "a");
             }
         }
         static public void OnGUISlider(ref Vector4 vector, Vector4 min, Vector4 max, string displayName = null)
