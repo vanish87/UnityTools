@@ -318,6 +318,18 @@ namespace UnityTools
 
         }
 
+        protected virtual void OnSaveLoadGUI()
+        {
+            if(GUILayout.Button("Save"))
+            {
+                this.Save();
+            }
+            if(GUILayout.Button("Load"))
+            {
+                this.LoadAndNotify();
+            }
+        }
+
         //handler will be registered on enabled
         //so at here call notify to call all handlers
         protected virtual void Start()
