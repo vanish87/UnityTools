@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace UnityTools.Common
 {
-    public interface IEventHandler
+    public interface IEventSender
     {
         void RegisterOnMessage(EventHandler handler);
         void UnregisterOnMessage(EventHandler handler);
@@ -16,7 +16,7 @@ namespace UnityTools.Common
 
     }
 
-    public class MonoEvent : MonoBehaviour, IEventHandler
+    public class MonoEvent : MonoBehaviour, IEventSender
     {
         private event EventHandler OnEventMessage;
         protected void OnMessage(object sender, EventArgs args) { this.OnEventMessage?.Invoke(sender, args); }
