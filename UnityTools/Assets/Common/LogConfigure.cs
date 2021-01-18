@@ -45,7 +45,7 @@ namespace UnityTools.Debuging
         [SerializeField] protected string fileName = "LogConfigureData.xml";
         [SerializeField] protected LogConfigureData data;
         protected override string filePath { get { return System.IO.Path.Combine(Application.streamingAssetsPath, this.fileName); } }
-        public override LogConfigureData D { get => this.data; set=>this.data = value; }
+        public override LogConfigureData D { get => this.data; internal set=>this.data = value; }
 
         [Serializable]
         public class LogConfigureData

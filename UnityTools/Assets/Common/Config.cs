@@ -282,7 +282,7 @@ namespace UnityTools
             {FileTool.SerializerType.Binary, ".bin"},
 
         };
-        public abstract T D { get; set; }
+        public abstract T D { get; internal set; }
         public bool Open { get { return this.open; } set { this.open = value; } }
         protected virtual string filePath { get { return System.IO.Path.Combine(Application.persistentDataPath, "config_" + SceneManager.GetActiveScene().name + typeToExtension[this.saveType]); } }
         [SerializeField] protected ConfigureSaveMode saveMode = ConfigureSaveMode.UseEditorValue;
@@ -420,8 +420,13 @@ namespace UnityTools
 
     public class ConfigureGUI
     {
-        static Dictionary<int, string> stringTable = new Dictionary<int, string>();
-        static Dictionary<int, object> defaultTable = new Dictionary<int, object>();
+
+        public class LastParseInfo
+        {
+            public object lastAvailableValue;
+            public string lastString;
+        }
+        static Dictionary<object, LastParseInfo> lastAvailableValue = new Dictionary<object, LastParseInfo>();
         public class ColorScope : IDisposable
         {
             Color _color;
@@ -463,21 +468,17 @@ namespace UnityTools
         {
             OnGUI(ref value, variableHash + displayName);
         }
-        static public void OnGUI<T>(ref T value, [System.Runtime.CompilerServices.CallerMemberName] string displayName = null)
+        static public void OnGUI<T>(ref T value, string displayName = null)
         {
-            var dhash = displayName.GetHashCode();
-            if (!defaultTable.ContainsKey(dhash)) defaultTable.Add(dhash, value);
-
             var op = new[] { GUILayout.MinWidth(70f) };
             using (var h = new GUILayout.HorizontalScope())
             {
-                GUILayout.Label(displayName);
-                var hash = (displayName + value.ToString()).GetHashCode();
+                GUILayout.Label(displayName==null?typeof(T).ToString():displayName);
                 var target = value.ToString();
-                var hasUnparsedStr = stringTable.ContainsKey(hash);
+                var hasUnparsedStr = lastAvailableValue.ContainsKey(value);
                 if (hasUnparsedStr)
                 {
-                    target = stringTable[hash];
+                    target = lastAvailableValue[value].lastString;
                 }
                 var color = hasUnparsedStr ? Color.red : GUI.color;
 
@@ -496,21 +497,18 @@ namespace UnityTools
                     if (canParse)
                     {
                         value = newValue;
-                        if (hasUnparsedStr) stringTable.Remove(hash);
+                        if (hasUnparsedStr) lastAvailableValue.Remove(value);
                     }
                     else
                     {
-                        stringTable[hash] = ret;
+                        lastAvailableValue[value] = new LastParseInfo(){lastAvailableValue = value, lastString = ret};
                     }
                 }
-
-
-                if(GUILayout.Button("Default"))
+                if (hasUnparsedStr && GUILayout.Button("Reset"))
                 {
-                    value = (T)defaultTable[dhash];
-                    if (hasUnparsedStr) stringTable.Remove(hash);
+                    value = (T)lastAvailableValue[value].lastAvailableValue;
+                    if (hasUnparsedStr) lastAvailableValue.Remove(value);
                 }
-
             }
         }
         static public void OnGUI(ref bool toggle, string displayName = null)

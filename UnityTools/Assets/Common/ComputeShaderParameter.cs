@@ -127,14 +127,14 @@ namespace UnityTools.ComputeShaderTool
                      .ToList();
 
 
-            var noneCSParamter = this.GetType()
+            var noneCSParameter = this.GetType()
                      .GetFields(bindingFlags)
                      .Where(field => !field.FieldType.IsSubclassOf(typeof(IComputeShaderParameter))
                         && !Attribute.IsDefined(field, typeof(NoneGPUAttribute)))
                      .ToList();
 
 
-            foreach (var p in noneCSParamter)
+            foreach (var p in noneCSParameter)
             {
                 var csp = this.CreateParameter(p);
                 if (csp == default) continue;
@@ -154,6 +154,7 @@ namespace UnityTools.ComputeShaderTool
                 var attrib = Attribute.GetCustomAttribute(info, typeof(ShaderNameAttribute)) as ShaderNameAttribute;
                 name = attrib.csName;
             }
+            if (info.FieldType == typeof(bool)) return new ComputeShaderParameterBool(name, (bool)info.GetValue(this));
             if (info.FieldType == typeof(int)) return new ComputeShaderParameterInt(name, (int)info.GetValue(this));
             if (info.FieldType == typeof(float)) return new ComputeShaderParameterFloat(name, (float)info.GetValue(this));
             if (info.FieldType == typeof(Vector2)) return new ComputeShaderParameterVector(name, (Vector2)info.GetValue(this));
@@ -170,6 +171,7 @@ namespace UnityTools.ComputeShaderTool
         {
             var info = np.Key;
 
+            if (info.FieldType == typeof(bool)) (np.Value as ComputeShaderParameterBool).Value = (bool)info.GetValue(this);
             if (info.FieldType == typeof(int)) (np.Value as ComputeShaderParameterInt).Value = (int)info.GetValue(this);
             if (info.FieldType == typeof(float)) (np.Value as ComputeShaderParameterFloat).Value = (float)info.GetValue(this);
             if (info.FieldType == typeof(Vector2)) (np.Value as ComputeShaderParameterVector).Value = (Vector2)info.GetValue(this);
@@ -184,6 +186,7 @@ namespace UnityTools.ComputeShaderTool
         {
             var info = np.Key;
 
+            if (info.FieldType == typeof(bool)) info.SetValue(this, (np.Value as ComputeShaderParameterBool).Value );
             if (info.FieldType == typeof(int)) info.SetValue(this, (np.Value as ComputeShaderParameterInt).Value );
             if (info.FieldType == typeof(float)) info.SetValue(this, (np.Value as ComputeShaderParameterFloat).Value );
             if (info.FieldType == typeof(Vector2))
@@ -368,6 +371,29 @@ namespace UnityTools.ComputeShaderTool
                     return false;
                 }
             }
+        }
+    }
+    
+    [Serializable]
+    public class ComputeShaderParameterBool : ComputeShaderParameter<bool>
+    {
+        public ComputeShaderParameterBool(string name, bool defaultValue = default) : base(name, defaultValue) { }
+
+        public override void Set(ComputeShader cs, string kernel = null)
+        {
+            if (this.propertyID != -1)
+            {
+                cs.SetBool(this.propertyID, this.data);
+            }
+            else
+            {
+                cs.SetBool(this.VariableName, this.data);
+            }
+        }
+
+        public override void OnGUI()
+        {
+            ConfigureGUI.OnGUI(ref this.data, this.variableName);
         }
     }
     [Serializable]
