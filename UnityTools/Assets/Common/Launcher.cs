@@ -175,7 +175,7 @@ namespace UnityTools.Common
         {
             var env = this.RunTime;
             var ver = env.appSetting.versionInfo;
-            GUILayout.Label(string.Format("version: {0}.{1}.{2} build on {3}", ver.major, ver.minor, ver.fix, ver.buildTime));
+            GUILayout.Label(string.Format("version: {0}.{1}.{2} build on {3}", ver.major, ver.minor, ver.build, ver.buildTime));
             GUILayout.Label(ver.buildDeviceName);
             GUILayout.Label(ver.comment);
         }

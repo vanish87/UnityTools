@@ -10,12 +10,13 @@ namespace UnityTools.Common
     [System.Serializable]
     public class VersionInfo
     {
+        [Header("Version.txt in StreamingAssets Folder")]
         public int major = 0;
         public int minor = 0;
-        public int fix = 0;
+        public int build = 0;
         public string comment;
-        public string buildTime;
-        public string buildDeviceName;
+        [Attributes.DisableEdit] public string buildTime;
+        [Attributes.DisableEdit] public string buildDeviceName;
     }
 
     #if UNITY_EDITOR
@@ -39,13 +40,17 @@ namespace UnityTools.Common
                         var comment = env.appSetting.versionInfo.comment;
                         data = FileTool.Read<VersionInfo>(path, FileTool.SerializerType.XML);
                         if(data == null) data = new VersionInfo();
-                        data.major = Mathf.Max(data.major, env.appSetting.versionInfo.major);
-                        data.minor = Mathf.Max(data.minor, env.appSetting.versionInfo.minor);
-                        data.fix = Mathf.Max(data.fix, env.appSetting.versionInfo.fix);
-                        data.fix++;
+                        var versionUpdated = data.major != env.appSetting.versionInfo.major || data.minor != env.appSetting.versionInfo.minor;
+
+                        data.major = env.appSetting.versionInfo.major;
+                        data.minor = env.appSetting.versionInfo.minor;
+                        data.build = Mathf.Max(data.build, env.appSetting.versionInfo.build);
                         data.comment = comment;
                         data.buildTime = DateTime.Now.ToString();
                         data.buildDeviceName = SystemInfo.deviceName;
+
+                        if(versionUpdated) data.build = 0;
+                        data.build++;
                     }
                     FileTool.Write(path, data, FileTool.SerializerType.XML);
                     env.appSetting.versionInfo = data;
