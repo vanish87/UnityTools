@@ -427,6 +427,7 @@ namespace UnityTools
             public string lastString;
         }
         static Dictionary<object, LastParseInfo> lastAvailableValue = new Dictionary<object, LastParseInfo>();
+        static Dictionary<int, string> stringTable = new Dictionary<int, string>();
         public class ColorScope : IDisposable
         {
             Color _color;
@@ -468,17 +469,20 @@ namespace UnityTools
         {
             OnGUI(ref value, variableHash + displayName);
         }
-        static public void OnGUI<T>(ref T value, string displayName = null)
+        static public void OnGUI<T>(ref T value, [System.Runtime.CompilerServices.CallerMemberName] string displayName = null)
         {
+            var dhash = displayName.GetHashCode();
+
             var op = new[] { GUILayout.MinWidth(70f) };
             using (var h = new GUILayout.HorizontalScope())
             {
-                GUILayout.Label(displayName==null?typeof(T).ToString():displayName);
+                GUILayout.Label(displayName);
+                var hash = (displayName + value.ToString()).GetHashCode();
                 var target = value.ToString();
-                var hasUnparsedStr = lastAvailableValue.ContainsKey(value);
+                var hasUnparsedStr = stringTable.ContainsKey(hash);
                 if (hasUnparsedStr)
                 {
-                    target = lastAvailableValue[value].lastString;
+                    target = stringTable[hash];
                 }
                 var color = hasUnparsedStr ? Color.red : GUI.color;
 
@@ -497,17 +501,12 @@ namespace UnityTools
                     if (canParse)
                     {
                         value = newValue;
-                        if (hasUnparsedStr) lastAvailableValue.Remove(value);
+                        if (hasUnparsedStr) stringTable.Remove(hash);
                     }
                     else
                     {
-                        lastAvailableValue[value] = new LastParseInfo(){lastAvailableValue = value, lastString = ret};
+                        stringTable[hash] = ret;
                     }
-                }
-                if (hasUnparsedStr && GUILayout.Button("Reset"))
-                {
-                    value = (T)lastAvailableValue[value].lastAvailableValue;
-                    if (hasUnparsedStr) lastAvailableValue.Remove(value);
                 }
             }
         }
