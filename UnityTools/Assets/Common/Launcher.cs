@@ -10,6 +10,8 @@ namespace UnityTools.Common
     public interface ILauncher
     {
         Environment RunTime { get; }
+        bool IsGlobal { get; }
+
     }
     [Serializable]
     public class PCInfo
@@ -49,6 +51,7 @@ namespace UnityTools.Common
         {
             public int vsync = 0;
             public int targetFPS = 30;
+            public bool zipAfterBuild = false;
             public bool useVersionNum = true;
             public VersionInfo versionInfo = new VersionInfo();
         }
@@ -100,6 +103,7 @@ namespace UnityTools.Common
         protected List<ILauncherUser> userList = new List<ILauncherUser>();
 
         public Environment RunTime => this.environment;
+        public bool IsGlobal => this.global;
 
         public string Title => "Application Information";
 

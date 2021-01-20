@@ -27,9 +27,14 @@ namespace UnityTools.Common
 
         public void OnPreprocessBuild(UnityEditor.Build.Reporting.BuildReport report)
         {
+            // if(report.summary.result != UnityEditor.Build.Reporting.BuildResult.Succeeded) return;
+
             var launchers = ObjectTool.FindAllObject<ILauncher>();
             foreach (var l in launchers)
             {
+                if(l.IsGlobal == false) continue;
+
+
                 var env = l.RunTime;
                 if (env.appSetting.useVersionNum)
                 {
