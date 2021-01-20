@@ -23,18 +23,34 @@ namespace UnityTools.Common
         /// <param name="source"></param>
         public static void ReplaceOrRename(string target, string source)
         {
-            try
+            var file = File.GetAttributes(source);
+            if (file.HasFlag(FileAttributes.Directory))
             {
-                if (File.Exists(target))
+                try
                 {
-                    File.Delete(target);
+                    Directory.Move(source, target);
                 }
-                File.Move(source, target);
+                catch (Exception e)
+                {
+                    LogTool.Log("Error on Replace Folder " + target, LogLevel.Error);
+                    LogTool.Log(e.ToString(), LogLevel.Error);
+                }
             }
-            catch (Exception e)
+            else
             {
-                LogTool.Log("Error on Replace file " + target, LogLevel.Error);
-                LogTool.Log(e.ToString(), LogLevel.Error);
+                try
+                {
+                    if (File.Exists(target))
+                    {
+                        File.Delete(target);
+                    }
+                    File.Move(source, target);
+                }
+                catch (Exception e)
+                {
+                    LogTool.Log("Error on Replace file " + target, LogLevel.Error);
+                    LogTool.Log(e.ToString(), LogLevel.Error);
+                }
             }
         }
         public static string GetTempFileName(string filePath)
