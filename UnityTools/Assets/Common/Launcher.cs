@@ -7,6 +7,10 @@ using UnityTools.Debuging;
 
 namespace UnityTools.Common
 {
+    public interface ILauncher
+    {
+        Environment RunTime { get; }
+    }
     [Serializable]
     public class PCInfo
     {
@@ -45,6 +49,8 @@ namespace UnityTools.Common
         {
             public int vsync = 0;
             public int targetFPS = 30;
+            public bool useVersionNum = true;
+            public VersionInfo versionInfo = new VersionInfo();
         }
 
         public Runtime runtime = Runtime.Debug;
@@ -52,7 +58,7 @@ namespace UnityTools.Common
     }
 
     
-    public class Launcher<T> : MonoBehaviour where T : class, new()
+    public class Launcher<T> : MonoBehaviour, ILauncher, GUITool.GUIMenuGroup.IGUIHandler where T : class, new()
     {
         public enum LaunchEvent
         {
@@ -92,6 +98,12 @@ namespace UnityTools.Common
         [SerializeField] protected T data = new T();
         [SerializeField] protected Environment environment = new Environment();
         protected List<ILauncherUser> userList = new List<ILauncherUser>();
+
+        public Environment RunTime => this.environment;
+
+        public string Title => "Application Information";
+
+        public KeyCode OpenKey => KeyCode.F12;
 
         protected virtual void ConfigureEnvironment()
         {
@@ -157,6 +169,15 @@ namespace UnityTools.Common
         protected void CleanUp()
         {
             this.userList.Clear();
+        }
+
+        public virtual void OnDrawGUI()
+        {
+            var env = this.RunTime;
+            var ver = env.appSetting.versionInfo;
+            GUILayout.Label(string.Format("version: {0}.{1}.{2} build on {3}", ver.major, ver.minor, ver.fix, ver.buildTime));
+            GUILayout.Label(ver.buildDeviceName);
+            GUILayout.Label(ver.comment);
         }
     }
 }
