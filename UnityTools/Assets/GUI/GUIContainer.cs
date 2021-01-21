@@ -2,8 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using UnityEngine;
-using static UnityTools.ConfigureGUI;
+using UnityTools.Debuging;
 
 namespace UnityTools.GUITool
 {
@@ -40,46 +41,69 @@ namespace UnityTools.GUITool
             public object defaultValue;
             public object lastValidValue;
             public string displayName;
+            public virtual bool GUIDraw => true;
+
+            
         }
 
         public class GPUVariable : Variable
         {
-            private delegate void Setter(object value, string shaderName, ComputeShader cs, string kernel);
+            private delegate void Setter(object value, string shaderVarName, ComputeShader cs, string kernel);
             static private Dictionary<Type, Setter> TypeSetterMap = new Dictionary<Type, Setter>()
             {
-              {typeof(bool), (value, varName, cs, kernel) =>{ cs.SetBool(varName, (bool)value);} },
-              {typeof(float), SetFloat}
+                {typeof(bool),          (value, shaderVarName, cs, kernel) =>{ cs.SetBool(shaderVarName, (bool)value);} },
+                {typeof(int),           (value, shaderVarName, cs, kernel) =>{ cs.SetInt(shaderVarName, (int)value);} },
+                {typeof(float),         (value, shaderVarName, cs, kernel) =>{ cs.SetFloat(shaderVarName, (float)value);} },
+                {typeof(Matrix4x4),     (value, shaderVarName, cs, kernel) =>{ cs.SetMatrix(shaderVarName, (Matrix4x4)value);} },
+                {typeof(int[]),         (value, shaderVarName, cs, kernel) =>{ cs.SetInts(shaderVarName, (int[])value);} },
+                {typeof(float[]),       (value, shaderVarName, cs, kernel) =>{ cs.SetFloats(shaderVarName, (float[])value);} },
+                {typeof(Matrix4x4[]),   (value, shaderVarName, cs, kernel) =>{ cs.SetMatrixArray(shaderVarName, (Matrix4x4[])value);} },
+                {typeof(Vector2),       (value, shaderVarName, cs, kernel) =>{ cs.SetVector(shaderVarName, (Vector2)value);} },
+                {typeof(Vector3),       (value, shaderVarName, cs, kernel) =>{ cs.SetVector(shaderVarName, (Vector3)value);} },
+                {typeof(Vector4),       (value, shaderVarName, cs, kernel) =>{ cs.SetVector(shaderVarName, (Vector4)value);} },
+                {typeof(Texture),       (value, shaderVarName, cs, kernel) =>{ cs.SetTexture(cs.FindKernel(kernel), shaderVarName, (Texture)value);} },
             };
             public string shaderName;
             public virtual void SetToGPU(object container, ComputeShader cs, string kernel = null) 
             {
+                LogTool.AssertNotNull(container);
+                LogTool.AssertNotNull(cs);
                 var t = this.Value.FieldType;
                 var value = this.Value.GetValue(container);
                 TypeSetterMap[t].Invoke(value, this.shaderName, cs, kernel);
             }
-            public virtual void Release(){}
-
-            static private int SetBool(FieldInfo field, string varName, ComputeShader computeShader, string kernel)
+            public virtual void Release()
             {
-                return 0;
-            }
-
-            static private void SetFloat(object value, string varName, ComputeShader computeShader, string kernel)
-            {
-                computeShader.SetFloat(varName, (float)value);
             }
         }
 
-        public class GPUVariable<T> : GPUVariable
+        public class GPUBufferVariable<T> : GPUVariable
         {
+            public T[] CPUData => this.cpuData;
+            public int Size=>this.size;
+            public override bool GUIDraw => false;
             private T[] cpuData;
-            public GPUVariable(int size, bool cpuData) : base()
+            private int size;
+            private ComputeBuffer gpuBuffer;
+            public void InitBuffer(int size, bool cpuData = false)
             {
+                this.size = size;
+                this.cpuData = cpuData ? new T[this.size] : null;
+                this.gpuBuffer = new ComputeBuffer(this.size, Marshal.SizeOf<T>());
+            }
 
+            public override void Release()
+            {
+                base.Release();
+                this.gpuBuffer.Release();
+                this.cpuData = null;
             }
 
             public override void SetToGPU(object container, ComputeShader cs, string kernel = null)
             {
+                if(cs == null) return;
+                var id = cs.FindKernel(kernel);
+                cs.SetBuffer(id, this.shaderName, this.gpuBuffer);
             }
         }
         public List<Variable> VariableList => this.variableList;
@@ -115,6 +139,7 @@ namespace UnityTools.GUITool
                 if(v.FieldType.IsSubclassOf(typeof(GPUVariable)))
                 {
                     var variable = (GPUVariable)v.GetValue(this);
+                    variable.Value = v;
                     variable.defaultValue = null;
                     variable.lastValidValue = null;
                     variable.displayName = name;
@@ -157,6 +182,14 @@ namespace UnityTools.GUITool
     }
     public abstract class GUIContainer: VariableContainer
     {
+        private delegate void GUIDraw(object containter, Variable variable, Dictionary<string, string> unparsedString);
+        static private Dictionary<Type, GUIDraw> TypeDrawerMap = new Dictionary<Type, GUIDraw>()
+        {
+            {typeof(bool), HandleBool},
+            {typeof(Vector2), HandleVector2},
+            {typeof(Vector3), HandleVector3},
+            {typeof(Vector4), HandleVector4},
+        };
         private Dictionary<string, string> unParsedString = new Dictionary<string, string>();
         private string classHashString;
 
@@ -167,9 +200,13 @@ namespace UnityTools.GUITool
 
         public void ResetToDefault()
         {
-            foreach(var v in this.VariableList)
+            foreach (var v in this.VariableList)
             {
-                v.Value.SetValue(this, v.defaultValue);
+                if(v.defaultValue != null)
+                {
+                    v.Value.SetValue(this, v.defaultValue);
+                    v.lastValidValue = v.defaultValue;
+                }
             }
         }
 
@@ -181,82 +218,88 @@ namespace UnityTools.GUITool
         {
             foreach (var v in this.VariableList)
             {
-                var method = this.GetType().BaseType.GetMethod("HandleFieldValue", BindingFlags.NonPublic | BindingFlags.Instance);
-                var typeFunc = method.MakeGenericMethod(v.Value.FieldType);
-                typeFunc?.Invoke(this, new object[1] { v });
+                if(!v.GUIDraw) continue;
+
+                var t = v.Value.FieldType;
+                if (TypeDrawerMap.ContainsKey(t))
+                {
+                    TypeDrawerMap[t].Invoke(this, v, this.unParsedString);
+                }
+                else
+                {
+                    var method = this.GetType().BaseType.GetMethod("HandleFieldValue", BindingFlags.NonPublic | BindingFlags.Static);
+                    var typeFunc = method.MakeGenericMethod(v.Value.FieldType);
+                    typeFunc?.Invoke(this, new object[3] { this, v, this.unParsedString });
+                }
             }
         }
-        private void HandleBool(Variable v)
+        static private void HandleBool(object container, Variable v, Dictionary<string, string> unparsedString)
         {
             var op = new[] { GUILayout.MinWidth(70f) };
-            var toggle = (bool)v.Value.GetValue(this);
+            var toggle = (bool)v.Value.GetValue(container);
             using (var h = new GUILayout.HorizontalScope())
             {
                 toggle = GUILayout.Toggle(toggle, v.displayName);
             }
-            v.Value.SetValue(this, toggle);
+            v.Value.SetValue(container, toggle);
         }
-        
-        private void HandleFieldValue<T>(Variable variable)
+
+        static private void HandleVector2(object container, Variable variable, Dictionary<string, string> unparsedString)
         {
-            var t = variable.Value.FieldType;
-            if (t == typeof(bool))
+            using (var h = new GUILayout.HorizontalScope())
             {
-                this.HandleBool(variable);
-            }
-            else
-            if (t == typeof(Vector2))
-            {
-                using (var h = new GUILayout.HorizontalScope())
-                {
-                    var v = (Vector2)variable.Value.GetValue(this);
-                    var lv = (Vector2)variable.lastValidValue;
-                    this.OnFieldGUI(ref v.x, variable.displayName + ".x", ref lv.x);
-                    this.OnFieldGUI(ref v.y, variable.displayName + ".y", ref lv.y);
-                    variable.Value.SetValue(this, v);
-                    variable.lastValidValue = lv;
-                }
-            }
-            else
-            if (t == typeof(Vector3))
-            {
-                using (var h = new GUILayout.HorizontalScope())
-                {
-                    var v = (Vector3)variable.Value.GetValue(this);
-                    var lv = (Vector3)variable.lastValidValue;
-                    this.OnFieldGUI(ref v.x, variable.displayName + ".x", ref lv.x);
-                    this.OnFieldGUI(ref v.y, variable.displayName + ".y", ref lv.y);
-                    this.OnFieldGUI(ref v.z, variable.displayName + ".z", ref lv.z);
-                    variable.Value.SetValue(this, v);
-                    variable.lastValidValue = lv;
-                }
-            }
-            else
-            if (t == typeof(Vector4))
-            {
-                using (var h = new GUILayout.HorizontalScope())
-                {
-                    var v = (Vector4)variable.Value.GetValue(this);
-                    var lv = (Vector4)variable.lastValidValue;
-                    this.OnFieldGUI(ref v.x, variable.displayName + ".x", ref lv.x);
-                    this.OnFieldGUI(ref v.y, variable.displayName + ".y", ref lv.y);
-                    this.OnFieldGUI(ref v.z, variable.displayName + ".z", ref lv.z);
-                    this.OnFieldGUI(ref v.w, variable.displayName + ".w", ref lv.w);
-                    variable.Value.SetValue(this, v);
-                    variable.lastValidValue = lv;
-                }
-            }
-            else
-            {
-                var v = (T)variable.Value.GetValue(this);
-                var lv = (T)variable.lastValidValue;
-                this.OnFieldGUI<T>(ref v, variable.displayName, ref lv);
-                variable.Value.SetValue(this, v);
+                var v = (Vector2)variable.Value.GetValue(container);
+                var lv = (Vector2)variable.lastValidValue;
+                OnFieldGUI(ref v.x, variable.displayName + ".x", ref lv.x, unparsedString);
+                OnFieldGUI(ref v.y, variable.displayName + ".y", ref lv.y, unparsedString);
+                variable.Value.SetValue(container, v);
                 variable.lastValidValue = lv;
             }
         }
 
-        private void OnFieldGUI<T>(ref T v, string displayName, ref T lastValidValue)
+        static private void HandleVector3(object container, Variable variable, Dictionary<string, string> unparsedString)
+        {
+            using (var h = new GUILayout.HorizontalScope())
+            {
+                var v = (Vector3)variable.Value.GetValue(container);
+                var lv = (Vector3)variable.lastValidValue;
+                OnFieldGUI(ref v.x, variable.displayName + ".x", ref lv.x, unparsedString);
+                OnFieldGUI(ref v.y, variable.displayName + ".y", ref lv.y, unparsedString);
+                OnFieldGUI(ref v.z, variable.displayName + ".z", ref lv.z, unparsedString);
+                variable.Value.SetValue(container, v);
+                variable.lastValidValue = lv;
+            }
+        }
+        static private void HandleVector4(object container, Variable variable, Dictionary<string, string> unparsedString)
+        {
+            using (var h = new GUILayout.HorizontalScope())
+            {
+                var v = (Vector4)variable.Value.GetValue(container);
+                var lv = (Vector4)variable.lastValidValue;
+                OnFieldGUI(ref v.x, variable.displayName + ".x", ref lv.x, unparsedString);
+                OnFieldGUI(ref v.y, variable.displayName + ".y", ref lv.y, unparsedString);
+                OnFieldGUI(ref v.z, variable.displayName + ".z", ref lv.z, unparsedString);
+                OnFieldGUI(ref v.w, variable.displayName + ".w", ref lv.w, unparsedString);
+                variable.Value.SetValue(container, v);
+                variable.lastValidValue = lv;
+            }
+        }
+        static private void HandleGPUVariable(object container, Variable variable, Dictionary<string, string> unparsedString)
+        {
+            var v = (GPUVariable)variable.Value.GetValue(container);
+            if (v.GUIDraw == false) return;
+
+        }
+        static private void HandleFieldValue<T>(object container, Variable variable, Dictionary<string, string> unparsedString)
+        {
+            var v = (T)variable.Value.GetValue(container);
+            var lv = (T)variable.lastValidValue;
+            OnFieldGUI<T>(ref v, variable.displayName, ref lv, unparsedString);
+            variable.Value.SetValue(container, v);
+            variable.lastValidValue = lv;
+        }
+
+        static private void OnFieldGUI<T>(ref T v, string displayName, ref T lastValidValue, Dictionary<string, string> unParsedString)
         {
             var op = new[] { GUILayout.MinWidth(70f) };
             using (var h = new GUILayout.HorizontalScope())
@@ -264,14 +307,14 @@ namespace UnityTools.GUITool
                 GUILayout.Label(displayName);
                 var hash = displayName;
                 var target = v.ToString();
-                var hasUnparsedStr = this.unParsedString.ContainsKey(hash);
+                var hasUnparsedStr = unParsedString.ContainsKey(hash);
                 if (hasUnparsedStr)
                 {
-                    target = this.unParsedString[hash];
+                    target = unParsedString[hash];
                 }
                 var color = hasUnparsedStr ? Color.red : GUI.color;
 
-                using (var cs = new ColorScope(color))
+                using (var cs = new ConfigureGUI.ColorScope(color))
                 {
                     var ret = GUILayout.TextField(target, op);
 
@@ -288,16 +331,16 @@ namespace UnityTools.GUITool
                     {
                         v = newValue;
                         lastValidValue = newValue;
-                        if (hasUnparsedStr) this.unParsedString.Remove(hash);
+                        if (hasUnparsedStr) unParsedString.Remove(hash);
                     }
                     else
                     {
-                        this.unParsedString[hash] = ret;
+                        unParsedString[hash] = ret;
                     }
                     if (hasUnparsedStr && GUILayout.Button("Reset"))
                     {
                         v = lastValidValue;
-                        this.unParsedString.Remove(hash);
+                        unParsedString.Remove(hash);
                     }
                 }
             }
