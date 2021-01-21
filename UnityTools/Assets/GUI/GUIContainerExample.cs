@@ -13,11 +13,13 @@ namespace UnityTools.GUITool
             public int intField1 = 10;
             protected string stringField = "TestString";
             private Vector4 vec = new Vector4(1,2,3,4);
-            [GUIDisplayName("Nice Name")]public Vector4 vector1 = new Vector4(4,3,2,1);
+            [GUIMenu(DisplayName="Nice Name")]public Vector4 vector1 = new Vector4(4,3,2,1);
 
 
-            [NoneGUI] protected string NoneGUIField = "NONEGUI";
+            [NoneVariable] protected string NoneGUIField = "NONEGUI";
 
+            // [Shader(Name="_Test")] protected float csFoloat = 10;
+            [Shader(Name="_Test")] public GPUVariable<int> csBuffer = new GPUVariable<int>(10);
 
         }
 
@@ -36,6 +38,14 @@ namespace UnityTools.GUITool
 
             var r1 = __makeref(a1);
             var r2 = __makeref(a2);
+
+
+            this.data.csBuffer.SetToGPU(this.data, null);
+
+            foreach(var v in this.data.VariableList)
+            {
+                (v as VariableContainer.GPUVariable)?.SetToGPU(this.data,null);
+            }
 
         }
 
