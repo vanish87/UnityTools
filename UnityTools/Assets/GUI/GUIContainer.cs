@@ -41,8 +41,6 @@ namespace UnityTools.GUITool
             public object defaultValue;
             public object lastValidValue;
             public string displayName;
-            public virtual bool GUIDraw => true;
-
             
         }
 
@@ -62,6 +60,9 @@ namespace UnityTools.GUITool
                 {typeof(Vector3),       (value, shaderVarName, cs, kernel) =>{ cs.SetVector(shaderVarName, (Vector3)value);} },
                 {typeof(Vector4),       (value, shaderVarName, cs, kernel) =>{ cs.SetVector(shaderVarName, (Vector4)value);} },
                 {typeof(Texture),       (value, shaderVarName, cs, kernel) =>{ cs.SetTexture(cs.FindKernel(kernel), shaderVarName, (Texture)value);} },
+                {typeof(Texture2D),     (value, shaderVarName, cs, kernel) =>{ cs.SetTexture(cs.FindKernel(kernel), shaderVarName, (Texture2D)value);} },
+                {typeof(Texture3D),     (value, shaderVarName, cs, kernel) =>{ cs.SetTexture(cs.FindKernel(kernel), shaderVarName, (Texture3D)value);} },
+                {typeof(RenderTexture), (value, shaderVarName, cs, kernel) =>{ cs.SetTexture(cs.FindKernel(kernel), shaderVarName, (RenderTexture)value);} },
             };
             public string shaderName;
             public virtual void SetToGPU(object container, ComputeShader cs, string kernel = null) 
@@ -81,7 +82,6 @@ namespace UnityTools.GUITool
         {
             public T[] CPUData => this.cpuData;
             public int Size=>this.size;
-            public override bool GUIDraw => false;
             private T[] cpuData;
             private int size;
             private ComputeBuffer gpuBuffer;
@@ -104,6 +104,11 @@ namespace UnityTools.GUITool
                 if(cs == null) return;
                 var id = cs.FindKernel(kernel);
                 cs.SetBuffer(id, this.shaderName, this.gpuBuffer);
+            }
+
+            public override string ToString()
+            {
+                return "ComputeBuffer " + this.shaderName + " of type " + typeof(T) + " with size " + this.size;
             }
         }
         public List<Variable> VariableList => this.variableList;
@@ -185,10 +190,17 @@ namespace UnityTools.GUITool
         private delegate void GUIDraw(object containter, Variable variable, Dictionary<string, string> unparsedString);
         static private Dictionary<Type, GUIDraw> TypeDrawerMap = new Dictionary<Type, GUIDraw>()
         {
-            {typeof(bool), HandleBool},
+            {typeof(bool),    HandleBool},
             {typeof(Vector2), HandleVector2},
             {typeof(Vector3), HandleVector3},
             {typeof(Vector4), HandleVector4},
+            {typeof(Color),   HandleColor},
+            {typeof(ComputeBuffer), HandleGPUResource},
+            {typeof(Texture),       HandleGPUResource},
+            {typeof(Texture2D),     HandleGPUResource},
+            {typeof(Texture3D),     HandleGPUResource},
+            {typeof(RenderTexture), HandleGPUResource},
+            {typeof(GPUVariable),   HandleGPUVariable},
         };
         private Dictionary<string, string> unParsedString = new Dictionary<string, string>();
         private string classHashString;
@@ -218,12 +230,11 @@ namespace UnityTools.GUITool
         {
             foreach (var v in this.VariableList)
             {
-                if(!v.GUIDraw) continue;
-
                 var t = v.Value.FieldType;
-                if (TypeDrawerMap.ContainsKey(t))
+                var key = TypeDrawerMap.ContainsKey(t)?t:TypeDrawerMap.Keys.Where(k=>t.IsSubclassOf(k)).FirstOrDefault();
+                if (key != null)
                 {
-                    TypeDrawerMap[t].Invoke(this, v, this.unParsedString);
+                    TypeDrawerMap[key].Invoke(this, v, this.unParsedString);
                 }
                 else
                 {
@@ -284,16 +295,44 @@ namespace UnityTools.GUITool
                 variable.lastValidValue = lv;
             }
         }
+
+        static private void HandleColor(object container, Variable variable, Dictionary<string, string> unparsedString)
+        {
+            using (var h = new GUILayout.HorizontalScope())
+            {
+                var v = (Color)variable.Value.GetValue(container);
+                var lv = (Color)variable.lastValidValue;
+                OnFieldGUI(ref v.r, variable.displayName + ".r", ref lv.r, unparsedString);
+                OnFieldGUI(ref v.g, variable.displayName + ".g", ref lv.g, unparsedString);
+                OnFieldGUI(ref v.b, variable.displayName + ".b", ref lv.b, unparsedString);
+                OnFieldGUI(ref v.a, variable.displayName + ".a", ref lv.a, unparsedString);
+                variable.Value.SetValue(container, v);
+                variable.lastValidValue = lv;
+            }
+        }
+        static private void HandleGPUResource(object container, Variable variable, Dictionary<string, string> unparsedString)
+        {
+            if(variable.Value.FieldType == typeof(ComputeBuffer)) return;
+
+            var v = (Texture)variable.Value.GetValue(container);
+            if(v == null) return;
+
+            GUILayout.Label(variable.displayName);
+            GUILayout.Box(v);
+        }
         static private void HandleGPUVariable(object container, Variable variable, Dictionary<string, string> unparsedString)
         {
             var v = (GPUVariable)variable.Value.GetValue(container);
-            if (v.GUIDraw == false) return;
+            if(v == null) return;
 
+            GUILayout.Label(v.ToString());
         }
         static private void HandleFieldValue<T>(object container, Variable variable, Dictionary<string, string> unparsedString)
         {
             var v = (T)variable.Value.GetValue(container);
             var lv = (T)variable.lastValidValue;
+            if(v == null) return;
+
             OnFieldGUI<T>(ref v, variable.displayName, ref lv, unparsedString);
             variable.Value.SetValue(container, v);
             variable.lastValidValue = lv;

@@ -18,8 +18,11 @@ namespace UnityTools.GUITool
 
             [NoneVariable] protected string NoneGUIField = "NONEGUI";
 
-            // [Shader(Name="_Test")] protected float csFoloat = 10;
-            [Shader(Name="_Test")] public GPUVariable<int> csBuffer = new GPUVariable<int>(10);
+            [Shader(Name="_Test")] protected float csFoloat = 10;
+            [Shader(Name="_Test")] public GPUBufferVariable<int> csBuffer = new GPUBufferVariable<int>();
+            [Shader(Name="_Test")] public Texture texture;
+            [Shader(Name="_Test")] public Texture2D texture1;
+            [Shader(Name="_Test")] public RenderTexture texture2;
 
         }
 
@@ -28,8 +31,9 @@ namespace UnityTools.GUITool
 
         protected void Start()
         {
-            this.data = new Data();
+            // this.data = new Data();
             this.data.intField = 100;
+            this.data.csBuffer.InitBuffer(10, true);
             // this.data.vector1 = new Vector4(5,6,7,8);
 
 
@@ -40,13 +44,17 @@ namespace UnityTools.GUITool
             var r2 = __makeref(a2);
 
 
-            this.data.csBuffer.SetToGPU(this.data, null);
+            // this.data.csBuffer.SetToGPU(this.data, null);
 
             foreach(var v in this.data.VariableList)
             {
-                (v as VariableContainer.GPUVariable)?.SetToGPU(this.data,null);
+                // (v as VariableContainer.GPUVariable)?.SetToGPU(this.data,null);
             }
+        }
 
+        protected void OnDestroy()
+        {
+            this.data.csBuffer.Release();
         }
 
 
