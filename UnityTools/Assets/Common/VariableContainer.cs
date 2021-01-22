@@ -14,7 +14,6 @@ namespace UnityTools.Common
         public List<Variable> VariableList => this.variableList;
         private List<Variable> variableList = new List<Variable>();
 
-
         public VariableContainer()
         {
             var bindingFlags = BindingFlags.Instance |

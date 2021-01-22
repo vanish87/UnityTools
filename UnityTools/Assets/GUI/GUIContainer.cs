@@ -31,9 +31,6 @@ namespace UnityTools.GUITool
         {
             this.classHashString = System.Environment.StackTrace;
         }
-
-
-
         public virtual void OnGUI()
         {
             this.OnGUIInternal();
