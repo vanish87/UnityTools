@@ -28,6 +28,16 @@ namespace UnityTools
         UseEditorValue,
         UseFileValue,
     }
+
+    public enum ConfigurePreset
+    {
+        Default,
+        Preset_1,
+        Preset_2,
+        Preset_3,
+        Preset_4,
+        Preset_5,
+    }
     //same as XmlConfig, but is not subclass of mono
     //Note it could be multiple instance but they will save/load to same file
     public abstract class ConfigNoneMono<T> : IConfigureSerialize where T : class, new()
@@ -55,6 +65,7 @@ namespace UnityTools
         [SerializeField] protected KeyCode saveKey = KeyCode.None;
         [SerializeField] protected KeyCode openKey = KeyCode.None;
         [SerializeField] protected KeyCode loadKey = KeyCode.None;
+        [SerializeField] protected ConfigurePreset preset = ConfigurePreset.Default;
 
         #region IConfigure
         protected event EventHandler OnConfigureChanged;
@@ -120,15 +131,22 @@ namespace UnityTools
         }
         public virtual void Save()
         {
-            var path = this.filePath;
-            if(!path.Contains(typeToExtension[this.saveType])) path += typeToExtension[this.saveType];
+            var path = this.GetFilePath();
             FileTool.Write(path, this.D, this.saveType);
         }
         protected virtual void Load()
         {
-            var path = this.filePath;
-            if(!path.Contains(typeToExtension[this.saveType])) path += typeToExtension[this.saveType];
+            var path = this.GetFilePath();
             this.D = FileTool.Read<T>(path, this.saveType);
+        }
+        protected string GetFilePath()
+        {
+            var path = this.filePath;
+            var ext = typeToExtension[this.saveType];
+            if (path.Contains(ext) == false) path += ext;
+
+            if(this.preset != ConfigurePreset.Default) path.Insert(path.LastIndexOf('.')-1, this.preset.ToString());
+            return path;
         }
         public virtual void LoadAndNotify()
         {
@@ -168,6 +186,7 @@ namespace UnityTools
         [SerializeField] protected KeyCode openKey = KeyCode.None;
         [SerializeField] protected KeyCode loadKey = KeyCode.None;
 
+        [SerializeField] protected ConfigurePreset preset = ConfigurePreset.Default;
 
         #region IConfigure
         protected event EventHandler OnConfigureChanged;
@@ -250,15 +269,22 @@ namespace UnityTools
 
         public virtual void Save()
         {
-            var path = this.filePath;
-            if(!path.Contains(typeToExtension[this.saveType])) path += typeToExtension[this.saveType];
+            var path = this.GetFilePath();
             FileTool.Write(path, this.D, this.saveType);
         }
         protected virtual void Load()
         {
-            var path = this.filePath;
-            if(!path.Contains(typeToExtension[this.saveType])) path += typeToExtension[this.saveType];
+            var path = this.GetFilePath();
             this.D = FileTool.Read<T>(path, this.saveType);
+        }
+        protected string GetFilePath()
+        {
+            var path = this.filePath;
+            var ext = typeToExtension[this.saveType];
+            if (path.Contains(ext) == false) path += ext;
+
+            if(this.preset != ConfigurePreset.Default) path.Insert(path.LastIndexOf('.')-1, this.preset.ToString());
+            return path;
         }
 
         public virtual void LoadAndNotify()
@@ -299,6 +325,7 @@ namespace UnityTools
         [SerializeField] protected KeyCode saveKey = KeyCode.None;
         [SerializeField] protected KeyCode openKey = KeyCode.None;
         [SerializeField] protected KeyCode loadKey = KeyCode.None;
+        [SerializeField] protected ConfigurePreset preset = ConfigurePreset.Default;
 
         #region IConfigure
         protected event EventHandler OnConfigureChanged;
@@ -395,17 +422,23 @@ namespace UnityTools
 
         public virtual void Save()
         {
-            var path = this.filePath;
-            if(!path.Contains(typeToExtension[this.saveType])) path += typeToExtension[this.saveType];
+            var path = this.GetFilePath();
             FileTool.Write(path, this.D, this.saveType);
         }
         protected virtual void Load()
         {
-            var path = this.filePath;
-            if(!path.Contains(typeToExtension[this.saveType])) path += typeToExtension[this.saveType];
+            var path = this.GetFilePath();
             this.D = FileTool.Read<T>(path, this.saveType);
         }
+        protected string GetFilePath()
+        {
+            var path = this.filePath;
+            var ext = typeToExtension[this.saveType];
+            if (path.Contains(ext) == false) path += ext;
 
+            if(this.preset != ConfigurePreset.Default) path = path.Insert(path.LastIndexOf('.'), this.preset.ToString());
+            return path;
+        }
         public virtual void LoadAndNotify()
         {
             this.Load();
