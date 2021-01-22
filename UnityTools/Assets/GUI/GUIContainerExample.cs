@@ -19,7 +19,7 @@ namespace UnityTools.GUITool
             [NoneVariable] protected string NoneGUIField = "NONEGUI";
 
             [Shader(Name="_Test")] protected float csFoloat = 10;
-            [Shader(Name="_Test")] public GPUBufferVariable<int> csBuffer = new GPUBufferVariable<int>();
+            [Shader(Name="_Test")] public GPUBufferVariable<int> csBuffer;
             [Shader(Name="_Test")] public Texture texture;
             [Shader(Name="_Test")] public Texture2D texture1;
             [Shader(Name="_Test")] public RenderTexture texture2;

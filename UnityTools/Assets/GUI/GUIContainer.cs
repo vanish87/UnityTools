@@ -27,11 +27,60 @@ namespace UnityTools.GUITool
     {
         List<VariableContainer.Variable> VariableList { get; }
     }
-    public abstract class VariableContainer: IVariableContainer
+    public class GPUBufferVariable<T> : VariableContainer.GPUVariable
+    {
+        public static implicit operator ComputeBuffer(GPUBufferVariable<T> value)
+        {
+            return value.Data;
+        }
+        public ComputeBuffer Data => this.gpuBuffer;
+        public T[] CPUData => this.cpuData;
+        public int Size => this.size;
+        private T[] cpuData;
+        private int size;
+        private ComputeBuffer gpuBuffer;
+        public GPUBufferVariable(string name, int size, bool cpuData)
+        {
+            this.displayName = name;
+            this.shaderName = name;
+            this.InitBuffer(size, cpuData);
+        }
+        public void InitBuffer(int size, bool cpuData = false)
+        {
+            this.size = size;
+            this.cpuData = cpuData ? new T[this.size] : null;
+            this.gpuBuffer = new ComputeBuffer(this.size, Marshal.SizeOf<T>());
+        }
+
+        public override void Release()
+        {
+            base.Release();
+            this.gpuBuffer.Release();
+            this.cpuData = null;
+        }
+
+        public override void SetToGPU(object container, ComputeShader cs, string kernel = null)
+        {
+            if (cs == null) return;
+            var id = cs.FindKernel(kernel);
+            cs.SetBuffer(id, this.shaderName, this.gpuBuffer);
+        }
+
+        public override string ToString()
+        {
+            return "ComputeBuffer " + this.shaderName + " of type " + typeof(T) + " with size " + this.size;
+        }
+
+        public void UpdateBuffer()
+        {
+            this.Data.SetData(this.CPUData);
+        }
+    }
+    public abstract class VariableContainer : IVariableContainer
     {
         public interface IVariable
         {
-            FieldInfo Value { get; set;}
+            FieldInfo Value { get; set; }
         }
 
         public class Variable : IVariable
@@ -41,7 +90,7 @@ namespace UnityTools.GUITool
             public object defaultValue;
             public object lastValidValue;
             public string displayName;
-            
+
         }
 
         public class GPUVariable : Variable
@@ -65,7 +114,7 @@ namespace UnityTools.GUITool
                 {typeof(RenderTexture), (value, shaderVarName, cs, kernel) =>{ cs.SetTexture(cs.FindKernel(kernel), shaderVarName, (RenderTexture)value);} },
             };
             public string shaderName;
-            public virtual void SetToGPU(object container, ComputeShader cs, string kernel = null) 
+            public virtual void SetToGPU(object container, ComputeShader cs, string kernel = null)
             {
                 LogTool.AssertNotNull(container);
                 LogTool.AssertNotNull(cs);
@@ -78,46 +127,13 @@ namespace UnityTools.GUITool
             }
         }
 
-        public class GPUBufferVariable<T> : GPUVariable
-        {
-            public T[] CPUData => this.cpuData;
-            public int Size=>this.size;
-            private T[] cpuData;
-            private int size;
-            private ComputeBuffer gpuBuffer;
-            public void InitBuffer(int size, bool cpuData = false)
-            {
-                this.size = size;
-                this.cpuData = cpuData ? new T[this.size] : null;
-                this.gpuBuffer = new ComputeBuffer(this.size, Marshal.SizeOf<T>());
-            }
-
-            public override void Release()
-            {
-                base.Release();
-                this.gpuBuffer.Release();
-                this.cpuData = null;
-            }
-
-            public override void SetToGPU(object container, ComputeShader cs, string kernel = null)
-            {
-                if(cs == null) return;
-                var id = cs.FindKernel(kernel);
-                cs.SetBuffer(id, this.shaderName, this.gpuBuffer);
-            }
-
-            public override string ToString()
-            {
-                return "ComputeBuffer " + this.shaderName + " of type " + typeof(T) + " with size " + this.size;
-            }
-        }
         public List<Variable> VariableList => this.variableList;
         private List<Variable> variableList = new List<Variable>();
 
 
         public VariableContainer()
         {
-            var bindingFlags = BindingFlags.Instance  |
+            var bindingFlags = BindingFlags.Instance |
                                BindingFlags.NonPublic |
                                BindingFlags.Public;
 
@@ -125,7 +141,7 @@ namespace UnityTools.GUITool
                      .GetFields(bindingFlags)
                      .Where(field => !Attribute.IsDefined(field, typeof(NoneVariableAttribute)));
 
-            foreach(var v in variableList)
+            foreach (var v in variableList)
             {
                 var name = v.Name;
                 var isGPU = false;
@@ -141,7 +157,7 @@ namespace UnityTools.GUITool
                     shaderName = attrib.Name;
                     isGPU = true;
                 }
-                if(v.FieldType.IsSubclassOf(typeof(GPUVariable)))
+                if (v.FieldType.IsSubclassOf(typeof(GPUVariable)))
                 {
                     var variable = (GPUVariable)v.GetValue(this);
                     variable.Value = v;
@@ -157,11 +173,21 @@ namespace UnityTools.GUITool
                 }
             }
         }
-
+        public void ResetToDefault()
+        {
+            foreach (var v in this.VariableList)
+            {
+                if (v.defaultValue != null)
+                {
+                    v.Value.SetValue(this, v.defaultValue);
+                    v.lastValidValue = v.defaultValue;
+                }
+            }
+        }
 
         private Variable Create(FieldInfo v, string name, object initValue, bool isGPU, string shaderName)
         {
-            if(isGPU)
+            if (isGPU)
             {
                 return new GPUVariable()
                 {
@@ -185,7 +211,7 @@ namespace UnityTools.GUITool
         }
 
     }
-    public abstract class GUIContainer: VariableContainer
+    public abstract class GUIContainer : VariableContainer
     {
         private delegate void GUIDraw(object containter, Variable variable, Dictionary<string, string> unparsedString);
         static private Dictionary<Type, GUIDraw> TypeDrawerMap = new Dictionary<Type, GUIDraw>()
@@ -210,17 +236,7 @@ namespace UnityTools.GUITool
             this.classHashString = Environment.StackTrace;
         }
 
-        public void ResetToDefault()
-        {
-            foreach (var v in this.VariableList)
-            {
-                if(v.defaultValue != null)
-                {
-                    v.Value.SetValue(this, v.defaultValue);
-                    v.lastValidValue = v.defaultValue;
-                }
-            }
-        }
+
 
         public virtual void OnGUI()
         {
@@ -231,7 +247,7 @@ namespace UnityTools.GUITool
             foreach (var v in this.VariableList)
             {
                 var t = v.Value.FieldType;
-                var key = TypeDrawerMap.ContainsKey(t)?t:TypeDrawerMap.Keys.Where(k=>t.IsSubclassOf(k)).FirstOrDefault();
+                var key = TypeDrawerMap.ContainsKey(t) ? t : TypeDrawerMap.Keys.Where(k => t.IsSubclassOf(k)).FirstOrDefault();
                 if (key != null)
                 {
                     TypeDrawerMap[key].Invoke(this, v, this.unParsedString);
@@ -312,10 +328,10 @@ namespace UnityTools.GUITool
         }
         static private void HandleGPUResource(object container, Variable variable, Dictionary<string, string> unparsedString)
         {
-            if(variable.Value.FieldType == typeof(ComputeBuffer)) return;
+            if (variable.Value.FieldType == typeof(ComputeBuffer)) return;
 
             var v = (Texture)variable.Value.GetValue(container);
-            if(v == null) return;
+            if (v == null) return;
 
             GUILayout.Label(variable.displayName);
             GUILayout.Box(v);
@@ -323,7 +339,7 @@ namespace UnityTools.GUITool
         static private void HandleGPUVariable(object container, Variable variable, Dictionary<string, string> unparsedString)
         {
             var v = (GPUVariable)variable.Value.GetValue(container);
-            if(v == null) return;
+            if (v == null) return;
 
             GUILayout.Label(v.ToString());
         }
@@ -331,7 +347,7 @@ namespace UnityTools.GUITool
         {
             var v = (T)variable.Value.GetValue(container);
             var lv = (T)variable.lastValidValue;
-            if(v == null) return;
+            if (v == null) return;
 
             OnFieldGUI<T>(ref v, variable.displayName, ref lv, unparsedString);
             variable.Value.SetValue(container, v);
