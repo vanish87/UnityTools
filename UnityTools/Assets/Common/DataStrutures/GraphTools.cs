@@ -82,9 +82,9 @@ namespace UnityTools.Common
         }
 
 
-        public static IPath GetPath(INewGraph graph, IVertex from, IVertex to)
+        public static IGraphPath GetPath(INewGraph graph, IVertex from, IVertex to)
         {
-            var ret = new Path();
+            var ret = new GraphPath();
             var visited = new HashSet<IVertex>();
 
             var found = GetPathDFS(graph, from, to, ret, visited);
@@ -93,7 +93,7 @@ namespace UnityTools.Common
             return default;
         }
 
-        private static bool GetPathDFS(INewGraph g, IVertex n, IVertex to, IPath current, HashSet<IVertex> visited)
+        private static bool GetPathDFS(INewGraph g, IVertex n, IVertex to, IGraphPath current, HashSet<IVertex> visited)
         {
             visited.Add(n);
             current.Append(n);

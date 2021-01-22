@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace UnityTools.Common
 {
-    public interface IPath : IList<IVertex>
+    public interface IGraphPath : IList<IVertex>
     {
         IEnumerable<IVertex> Vertices { get; }
         ISet<IVertex> ToSet();
@@ -12,7 +12,7 @@ namespace UnityTools.Common
         void Append(IVertex v);
 
     }
-    public class Path : List<IVertex>, IPath
+    public class GraphPath : List<IVertex>, IGraphPath
     {
         public IEnumerable<IVertex> Vertices => this;
 
