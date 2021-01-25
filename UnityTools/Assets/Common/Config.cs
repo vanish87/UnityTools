@@ -1,13 +1,9 @@
 ﻿using UnityEngine;
-using System.Xml.Serialization;
 using UnityEngine.SceneManagement;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.IO;
 using UnityTools.Common;
-using UnityTools.Debuging;
 
 namespace UnityTools
 {
@@ -137,7 +133,8 @@ namespace UnityTools
         protected virtual void Load()
         {
             var path = this.GetFilePath();
-            this.D = FileTool.Read<T>(path, this.saveType);
+            var data = FileTool.Read<T>(path, this.saveType);
+            if (data != null) this.D = data;
         }
         protected string GetFilePath()
         {
@@ -275,7 +272,8 @@ namespace UnityTools
         protected virtual void Load()
         {
             var path = this.GetFilePath();
-            this.D = FileTool.Read<T>(path, this.saveType);
+            var data = FileTool.Read<T>(path, this.saveType);
+            if (data != null) this.D = data;
         }
         protected string GetFilePath()
         {
@@ -347,6 +345,7 @@ namespace UnityTools
 
         protected virtual void OnSaveLoadGUI()
         {
+            ConfigureGUI.OnGUIEnum(ref this.preset, "Preset");
             if(GUILayout.Button("Save"))
             {
                 this.Save();
@@ -428,7 +427,8 @@ namespace UnityTools
         protected virtual void Load()
         {
             var path = this.GetFilePath();
-            this.D = FileTool.Read<T>(path, this.saveType);
+            var data = FileTool.Read<T>(path, this.saveType);
+            if (data != null) this.D = data;
         }
         protected string GetFilePath()
         {
@@ -461,21 +461,6 @@ namespace UnityTools
         }
         static Dictionary<object, LastParseInfo> lastAvailableValue = new Dictionary<object, LastParseInfo>();
         static Dictionary<int, string> stringTable = new Dictionary<int, string>();
-        public class ColorScope : IDisposable
-        {
-            Color _color;
-            public ColorScope(Color color)
-            {
-                _color = GUI.color;
-                GUI.color = color;
-            }
-
-            public void Dispose()
-            {
-                GUI.color = _color;
-            }
-        }
-
         public static void OnGUISlider<T>(ref T value, float min = 0, float max = 1, string displayName = null)
         {
             OnGUI(ref value, displayName);
@@ -519,7 +504,7 @@ namespace UnityTools
                 }
                 var color = hasUnparsedStr ? Color.red : GUI.color;
 
-                using (var cs = new ColorScope(color))
+                using (var cs = new GUIUtil.ColorScope(color))
                 {
                     var ret = GUILayout.TextField(target, op);
                     var newValue = default(T);
