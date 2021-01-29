@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace UnityTools.Lagacy
+namespace UnityTools.Legacy
 {
     [ExecuteInEditMode]
     public class Matrix : Point

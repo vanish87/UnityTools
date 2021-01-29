@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace UnityTools.Lagacy
+namespace UnityTools.Legacy
 {
     public class Point : MonoBehaviour
     {
