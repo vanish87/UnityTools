@@ -23,7 +23,7 @@ namespace UnityTools.Common
     public class VersionNumber : UnityEditor.Build.IPreprocessBuildWithReport
     {
         public int callbackOrder => 0;
-        private readonly string fileName = "Version.txt";
+        private readonly string fileName = "Version.xml";
 
         public void OnPreprocessBuild(UnityEditor.Build.Reporting.BuildReport report)
         {
