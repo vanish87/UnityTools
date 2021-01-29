@@ -7,7 +7,7 @@ using UnityTools.Common;
 
 namespace UnityTools.GUITool
 {
-    public abstract class GUIContainer : VariableContainer
+    public class GUIContainer : VariableContainer
     {
         private delegate void GUIDraw(object containter, Variable variable, Dictionary<string, string> unparsedString);
         static private Dictionary<Type, GUIDraw> TypeDrawerMap = new Dictionary<Type, GUIDraw>()
@@ -31,6 +31,10 @@ namespace UnityTools.GUITool
         {
             this.classHashString = System.Environment.StackTrace;
         }
+        public GUIContainer(Type type, object container): base(type, container)
+        {
+            this.classHashString = System.Environment.StackTrace;
+        }
         public virtual void OnGUI()
         {
             this.OnGUIInternal();
@@ -43,13 +47,13 @@ namespace UnityTools.GUITool
                 var key = TypeDrawerMap.ContainsKey(t) ? t : TypeDrawerMap.Keys.Where(k => t.IsSubclassOf(k)).FirstOrDefault();
                 if (key != null)
                 {
-                    TypeDrawerMap[key].Invoke(this, v, this.unParsedString);
+                    TypeDrawerMap[key].Invoke(this.Container, v, this.unParsedString);
                 }
                 else
                 {
-                    var method = this.GetType().BaseType.GetMethod("HandleFieldValue", BindingFlags.NonPublic | BindingFlags.Static);
+                    var method = typeof(GUIContainer).GetMethod("HandleFieldValue", BindingFlags.NonPublic | BindingFlags.Static);
                     var typeFunc = method.MakeGenericMethod(v.Value.FieldType);
-                    typeFunc?.Invoke(this, new object[3] { this, v, this.unParsedString });
+                    typeFunc?.Invoke(null, new object[3] { this.Container, v, this.unParsedString });
                 }
             }
         }

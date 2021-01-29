@@ -14,13 +14,36 @@ namespace UnityTools.Common
         public List<Variable> VariableList => this.variableList;
         private List<Variable> variableList = new List<Variable>();
 
+        protected object Container => this.container != null ? this.container : this;
+        private object container = null;
         public VariableContainer()
         {
+            this.InitWithType(this.GetType(), this);
+        }
+        public VariableContainer(Type type, object container)
+        {
+            this.InitWithType(type, container);
+        }
+        public void ResetToDefault()
+        {
+            foreach (var v in this.VariableList)
+            {
+                if (v.defaultValue != null)
+                {
+                    v.Value.SetValue(this.Container, v.defaultValue);
+                    v.lastValidValue = v.defaultValue;
+                }
+            }
+        }
+        
+        protected void InitWithType(Type type, object objRef = null)
+        {
+            this.container = objRef;
             var bindingFlags = BindingFlags.Instance |
                                BindingFlags.NonPublic |
                                BindingFlags.Public;
 
-            var variableList = this.GetType()
+            var variableList = type
                      .GetFields(bindingFlags)
                      .Where(field => !Attribute.IsDefined(field, typeof(NoneVariableAttribute)));
 
@@ -42,7 +65,7 @@ namespace UnityTools.Common
                 }
                 if (v.FieldType.IsSubclassOf(typeof(GPUVariable)))
                 {
-                    var variable = (GPUVariable)v.GetValue(this);
+                    var variable = (GPUVariable)v.GetValue(this.Container);
                     variable.Value = v;
                     variable.defaultValue = null;
                     variable.lastValidValue = null;
@@ -52,22 +75,10 @@ namespace UnityTools.Common
                 }
                 else
                 {
-                    this.variableList.Add(this.Create(v, name, v.GetValue(this), isGPU, shaderName));
+                    this.variableList.Add(this.Create(v, name, v.GetValue(this.Container), isGPU, shaderName));
                 }
             }
         }
-        public void ResetToDefault()
-        {
-            foreach (var v in this.VariableList)
-            {
-                if (v.defaultValue != null)
-                {
-                    v.Value.SetValue(this, v.defaultValue);
-                    v.lastValidValue = v.defaultValue;
-                }
-            }
-        }
-
         private Variable Create(FieldInfo v, string name, object initValue, bool isGPU, string shaderName)
         {
             if (isGPU)

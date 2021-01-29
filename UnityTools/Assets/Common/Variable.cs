@@ -107,6 +107,8 @@ namespace UnityTools.Common
 
         public override void SetToGPU(object container, ComputeShader cs, string kernel = null)
         {
+            LogTool.AssertNotNull(container);
+            LogTool.AssertNotNull(cs);
             if (cs == null) return;
             var id = cs.FindKernel(kernel);
             cs.SetBuffer(id, this.shaderName, this.Data);
