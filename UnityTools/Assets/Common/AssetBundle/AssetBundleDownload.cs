@@ -111,7 +111,7 @@ namespace UnityTools.Common
             var www = UnityWebRequestAssetBundle.GetAssetBundle(this.syncServer + "/PackedAssetBundle");
             yield return www.SendWebRequest();
 
-            if (www.isNetworkError || www.isHttpError)
+            if (www.result == UnityWebRequest.Result.ConnectionError)
             {
                 Debug.Log(www.error);
                 this.lastError = LastErrorCode.ERROR;
@@ -171,7 +171,7 @@ namespace UnityTools.Common
             var www = UnityWebRequestAssetBundle.GetAssetBundle(this.syncServer + "/" + name, hash, 0);
             yield return www.SendWebRequest();
 
-            if (www.isNetworkError || www.isHttpError)
+            if (www.result == UnityWebRequest.Result.ConnectionError)
             {
                 Debug.Log(www.error);
                 this.lastError = LastErrorCode.ERROR;
