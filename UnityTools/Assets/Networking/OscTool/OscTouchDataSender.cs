@@ -9,17 +9,13 @@ namespace UnityTools.Networking
     public class OscTouchDataSender : OscSenderTool
     {
         [System.Serializable]
-        public class RemoteConfigure : ConfigNoneMono<RemoteConfigure.RemoteData>
+        public class RemoteConfigure : ConfigureNoneMono<RemoteConfigure.RemoteData>
         {
             [System.Serializable]
             public class RemoteData
             {
                 public PCInfo remote;
             }
-            [SerializeField] protected RemoteData data;
-            public override RemoteData D { get => this.data; set => this.data = value; }
-
-            protected override string filePath => System.IO.Path.Combine(Application.streamingAssetsPath, this.ToString() + ".xml");
         }
 
         [SerializeField] protected RemoteConfigure configure;
@@ -27,7 +23,7 @@ namespace UnityTools.Networking
         protected override void OnEnable()
         {
             this.configure = new RemoteConfigure();
-            this.configure.LoadAndNotify();
+            this.configure.Load();
             this.ip = this.configure.D.remote.ipAddress;
             this.port = this.configure.D.remote.ports[0].port;
             base.OnEnable();
