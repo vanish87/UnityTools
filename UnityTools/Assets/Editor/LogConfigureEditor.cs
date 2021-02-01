@@ -21,7 +21,8 @@ namespace UnityTools.Editor
             }
             if (GUILayout.Button("Load"))
             {
-                configure.LoadAndNotify();
+                configure.Load();
+                configure.NotifyChange();
             }
             base.OnInspectorGUI();
         }
@@ -40,7 +41,8 @@ namespace UnityTools.Editor
             }
             if (GUILayout.Button("Load"))
             {
-                configure.LoadAndNotify();
+                configure.Load();
+                configure.NotifyChange();
             }
             base.OnInspectorGUI();
         }

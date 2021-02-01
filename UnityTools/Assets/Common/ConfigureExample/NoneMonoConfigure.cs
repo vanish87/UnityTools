@@ -1,16 +1,13 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+using UnityTools.Common;
 
 namespace UnityTools.Example
 {
     [System.Serializable]
-    public class NoneMonoConfigureClass : ConfigNoneMono<ConfigureData>
+    public class NoneMonoConfigureClass : ConfigureNoneMono<ConfigureData>
     {
-        [SerializeField] protected ConfigureData data;
-        public override ConfigureData D { get => this.data; set => this.data = value; }
-        protected override string filePath { get { return System.IO.Path.Combine(Application.streamingAssetsPath, "config_none_mono.xml"); } }
     }
 
     public class NoneMonoConfigure : MonoBehaviour

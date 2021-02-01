@@ -40,13 +40,8 @@ namespace UnityTools.Debuging
     #if USE_EDITOR_EXC
     [ExecuteInEditMode]
     #endif
-    public class LogConfigure : Config<LogConfigure.LogConfigureData>
+    public class LogConfigure : Configure<LogConfigure.LogConfigureData>
     {
-        [SerializeField] protected string fileName = "LogConfigureData.xml";
-        [SerializeField] protected LogConfigureData data;
-        protected override string filePath { get { return System.IO.Path.Combine(Application.streamingAssetsPath, this.fileName); } }
-        public override LogConfigureData D { get => this.data; internal set=>this.data = value; }
-
         [Serializable]
         public class LogConfigureData
         {
