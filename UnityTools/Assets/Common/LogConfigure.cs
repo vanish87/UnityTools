@@ -48,36 +48,17 @@ namespace UnityTools.Debuging
             public short remoteLogPort = 13210;
             public List<PCInfo> remoteLogPC = new List<PCInfo>();
             public LogChannel channel;
-            public List<LevelData> levels = new List<LevelData>();
-        }
-        [Serializable]
-        public class LevelData
-        {
             public LogLevel level;
-            public bool enabled = true;
         }
         public void SetupChannel()
         {
             this.Initialize();
 
-            if (this.D.levels.Count == 0)
+            if (this.D.level == LogLevel.None)
             {
                 LogTool.Log("No log level found, Add all log Channels by default", LogLevel.Warning);
-                foreach (LogLevel log in Enum.GetValues(typeof(LogLevel)))
-                {
-                    this.D.levels.Add(new LevelData() { level = log, enabled = true });
-                }
+                this.D.level = LogLevel.Everything;
             }
-
-
-            foreach (LogLevel log in Enum.GetValues(typeof(LogLevel)))
-            {
-                if (this.D.levels.FindAll(c => c.level == log).Count != 1)
-                {
-                    LogTool.Log("Missing/Duplicate log level configure " + log.ToString(), LogLevel.Warning);
-                }
-            }
-
             this.UpdateLog();
         }
 
@@ -93,11 +74,7 @@ namespace UnityTools.Debuging
 
         protected void UpdateLog()
         {
-            foreach (var log in this.D.levels)
-            {
-                LogTool.Enable(log.level, log.enabled);
-            }
-            
+            LogTool.Enable(this.D.level);
             LogTool.Enable(this.D.channel);
         }
 

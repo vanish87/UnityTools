@@ -9,13 +9,16 @@ using UnityTools.Networking;
 namespace UnityTools.Debuging
 {
 
+    [Flags]
     public enum LogLevel
     {
-        Error,
-        Warning,
-        Info,
-        Verbose,
-        Dev,
+        None = 0,
+        Error = 1,
+        Warning = 2,
+        Info = 4,
+        Verbose = 8,
+        Dev = 16,
+        Everything = ~None,
     }
     [Flags]
     public enum LogChannel
@@ -150,14 +153,17 @@ namespace UnityTools.Debuging
         {
             void Log(string message);
         }
-        protected static Dictionary<LogLevel, bool> levelList = new Dictionary<LogLevel, bool>();
-        protected static LogChannel channels = ~LogChannel.None;
+        protected static LogLevel levels = LogLevel.Everything;
+        protected static LogChannel channels = LogChannel.Everything;
         protected static LogMode modes = LogMode.Console;
 
         public static void Enable(LogLevel level, bool enabled)
         {
-            if (levelList.ContainsKey(level)) levelList[level] = enabled;
-            else levelList.Add(level, enabled);
+            levels = enabled ? (levels | level) : (~level & level);
+        }
+        public static void Enable(LogLevel level)
+        {
+            levels = level;
         }
         public static void Enable(LogChannel channel, bool enabled)
         {
@@ -190,38 +196,29 @@ namespace UnityTools.Debuging
         }
         public static void Log(string message, LogLevel level = LogLevel.Verbose, LogChannel channel = LogChannel.Debug)
         {
-            if (levelList.ContainsKey(level) && !levelList[level]) return;
-            if ((channels & channel) == LogChannel.None) return;
+            if (!levels.HasFlag(level)) return;
+            if (!channels.HasFlag(channel)) return;
 
             var msg = FormatMessage(message, level, channel);
-            switch(level)
-            {
-                case LogLevel.Error: Debug.LogError(msg);break;
-                case LogLevel.Warning: Debug.LogWarning(msg);break;
-                case LogLevel.Verbose:
-                case LogLevel.Info:
-                case LogLevel.Dev:
-                default: Debug.Log(msg); break;
-            }
+
+            if (level.HasFlag(LogLevel.Error)) Debug.LogError(msg);
+            else if (level.HasFlag(LogLevel.Warning)) Debug.LogWarning(msg);
+            else Debug.Log(msg);
+
             LogToolNetwork.Log(msg);
 
             // foreach(var user in ObjectTool.FindAllObject<ILogUser>()) user.Log(message);
         }
         public static void LogFormat(string format, LogLevel level = LogLevel.Verbose, LogChannel channel = LogChannel.Debug, params object[] args)
         {
-            if (levelList.ContainsKey(level) && !levelList[level]) return;
-            if ((channels & channel) == LogChannel.None ) return;
+            if (!levels.HasFlag(level)) return;
+            if (!channels.HasFlag(channel)) return;
 
             var msg = FormatMessage(format, level, channel, args);
-            switch (level)
-            {
-                case LogLevel.Error: Debug.LogError(msg); break;
-                case LogLevel.Warning: Debug.LogWarning(msg); break;
-                case LogLevel.Verbose:
-                case LogLevel.Info:
-                case LogLevel.Dev:
-                default: Debug.Log(msg); break;
-            }
+            
+            if (level.HasFlag(LogLevel.Error)) Debug.LogError(msg);
+            else if (level.HasFlag(LogLevel.Warning)) Debug.LogWarning(msg);
+            else Debug.Log(msg);
 
             LogToolNetwork.Log(msg);
         }
