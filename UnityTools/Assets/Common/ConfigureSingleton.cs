@@ -8,22 +8,21 @@ namespace UnityTools.Common
 {
     public abstract class ConfigureSingleton<T> : SingletonMonoBehaviour<ConfigureSingleton<T>>, IConfigure<T>, IConfigureSerialize where T : new()
     {
+        public T D => this.data ??= new T();
         public bool Open => this.open;
 
         public virtual string FilePath => ConfigureTool.GetFilePath(this.ToString(), this.SaveType, this.Preset);
 
-        public ConfigurePreset Preset => this.preset;
+        public virtual ConfigurePreset Preset => this.preset;
 
-        public FileTool.SerializerType SaveType => this.saveType;
+        public virtual FileTool.SerializerType SaveType => this.saveType;
 
-        public T D => this.data ??= new T();
 
-        public KeyCode OpenKey => this.openKey;
+        public virtual KeyCode OpenKey => this.openKey;
 
-        public KeyCode SaveKey => this.saveKey;
+        public virtual KeyCode SaveKey => this.saveKey;
 
-        public KeyCode LoadKey => this.loadKey;
-
+        public virtual KeyCode LoadKey => this.loadKey;
         [SerializeField] protected ConfigureSaveMode saveMode = ConfigureSaveMode.UseEditorValue;
         [SerializeField] protected FileTool.SerializerType saveType = FileTool.SerializerType.XML;
         [SerializeField] protected KeyCode saveKey = KeyCode.None;
