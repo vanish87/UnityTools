@@ -56,7 +56,7 @@ namespace UnityTools.Debuging
 
             if (this.D.level == LogLevel.None)
             {
-                LogTool.Log("No log level found, Add all log Channels by default", LogLevel.Warning);
+                LogTool.Log("No log level found, set to Everything by default", LogLevel.Warning);
                 this.D.level = LogLevel.Everything;
             }
             this.UpdateLog();

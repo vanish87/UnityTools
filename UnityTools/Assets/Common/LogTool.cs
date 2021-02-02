@@ -215,7 +215,7 @@ namespace UnityTools.Debuging
             if (!channels.HasFlag(channel)) return;
 
             var msg = FormatMessage(format, level, channel, args);
-            
+
             if (level.HasFlag(LogLevel.Error)) Debug.LogError(msg);
             else if (level.HasFlag(LogLevel.Warning)) Debug.LogWarning(msg);
             else Debug.Log(msg);
@@ -231,13 +231,13 @@ namespace UnityTools.Debuging
                 case LogLevel.Warning:  color = "yellow";   break;
                 case LogLevel.Error:    color = "red";      break;
                 case LogLevel.Info:     color = "cyan";     break;
-                case LogLevel.Verbose: break;
+                case LogLevel.Verbose:  color = "white";    break;
                 case LogLevel.Dev:      color = "orange";   break;
                 default: break;
             }
             var ccolor = color;
 
-            if((channel & LogChannel.Network) != LogChannel.None) ccolor = "green";
+            if (channel.HasFlag(LogChannel.Network)) ccolor = "green";
 
             var time = DateTime.Now.ToString("yy/MM/dd|HH:mm:ss");
             return string.Format("<color={1}>[{4}|{2}]</color><color={0}>{3}</color>", color, ccolor, channel.ToString(), message, time);
