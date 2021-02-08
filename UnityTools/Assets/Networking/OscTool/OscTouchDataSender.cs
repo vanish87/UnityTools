@@ -34,7 +34,9 @@ namespace UnityTools.Networking
             {
                 var pos = Input.mousePosition;
                 pos = new Vector3(pos.x / Screen.width, pos.y / Screen.height, 1);
+                #if USE_OSC
                 this.client.Send("/debug/pos", pos.x, pos.y);
+                #endif
             }
 
 
