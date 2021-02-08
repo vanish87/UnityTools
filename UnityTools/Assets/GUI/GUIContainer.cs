@@ -166,7 +166,7 @@ namespace UnityTools.GUITool
                 }
                 var color = hasUnparsedStr ? Color.red : GUI.color;
 
-                using (var cs = new GUIUtil.ColorScope(color))
+                using (new GUITool.ColorScope(color))
                 {
                     var ret = GUILayout.TextField(target, op);
 
