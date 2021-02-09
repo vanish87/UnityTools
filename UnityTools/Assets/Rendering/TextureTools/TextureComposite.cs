@@ -60,7 +60,7 @@ namespace UnityTools.Rendering
                 Graphics.Blit(c.texture, this.finalOutput, this.combineMat, 0);
             }
         }
-        protected void SeperateTextures()
+        protected void SeparateTextures()
         {
             Material mat = this.combineMat;
             foreach (var c in this.textureList)

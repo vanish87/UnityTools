@@ -47,7 +47,7 @@ namespace UnityTools.Networking
                 this.finalOutput = cam.targetTexture;
             }
 
-            this.SeperateTextures();
+            this.SeparateTextures();
         }
     }
 }
