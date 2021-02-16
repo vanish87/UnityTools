@@ -51,6 +51,8 @@ namespace UnityTools.Rendering
         }
         protected void CombineTextures()
         {
+            if(this.finalOutput == null) return;
+
             this.finalOutput.Clear();
 
             Material mat = this.combineMat;
@@ -62,6 +64,8 @@ namespace UnityTools.Rendering
         }
         protected void SeparateTextures()
         {
+            if(this.finalOutput == null) return;
+            
             Material mat = this.combineMat;
             foreach (var c in this.textureList)
             {
