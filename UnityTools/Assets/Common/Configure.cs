@@ -63,7 +63,7 @@ namespace UnityTools
             var ext = TypeToExtension[saveType];
             if (path.Contains(ext) == false) path += ext;
 
-            if(preset != ConfigurePreset.Default) path.Insert(path.LastIndexOf('.')-1, preset.ToString());
+            if(preset != ConfigurePreset.Default) path = path.Insert(path.LastIndexOf('.'), preset.ToString());
             return path;
         }
     }
@@ -108,12 +108,12 @@ namespace UnityTools
             this.NotifyChange();
         }
 
-        public void Save()
+        public virtual void Save()
         {
             FileTool.Write(this.FilePath, this.D, this.SaveType);
         }
 
-        public void Load()
+        public virtual void Load()
         {
             var data = FileTool.Read<T>(this.FilePath, this.SaveType);
             if (data != null) this.data = data;
