@@ -79,16 +79,18 @@ namespace UnityTools.Common
         {
             return value.Data;
         }
-        public ComputeBuffer Data => this.gpuBuffer ??= new ComputeBuffer(this.size, Marshal.SizeOf<T>());
+        public ComputeBuffer Data => this.gpuBuffer ??= new ComputeBuffer(this.size, Marshal.SizeOf<T>(), this.type);
         public T[] CPUData => this.cpuData;
         public int Size => this.size;
         private T[] cpuData;
         private int size;
+        private ComputeBufferType type = ComputeBufferType.Default;
         private ComputeBuffer gpuBuffer;
-        public GPUBufferVariable(string name, int size, bool cpuData)
+        public GPUBufferVariable(string name, int size, bool cpuData, ComputeBufferType type)
         {
             this.displayName = name;
             this.shaderName = name;
+            this.type = type;
             this.InitBuffer(size, cpuData);
         }
         public void InitBuffer(int size, bool cpuData = false)
