@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityTools.Debuging;
 
@@ -30,6 +31,12 @@ namespace UnityTools.Common
         FieldInfo Value { get; set; }
     }
 
+    public interface IGPUVariable
+    {
+        void SetToGPU(object container, ComputeShader cs, string kernel = null);
+        void Release();
+    }
+
     public class Variable : IVariable
     {
         public FieldInfo Value { get; set; }
@@ -40,7 +47,7 @@ namespace UnityTools.Common
 
     }
 
-    public class GPUVariable : Variable
+    public class GPUVariable : Variable, IGPUVariable
     {
         private delegate void Setter(object value, string shaderVarName, ComputeShader cs, string kernel);
         static private Dictionary<Type, Setter> TypeSetterMap = new Dictionary<Type, Setter>()
@@ -52,6 +59,7 @@ namespace UnityTools.Common
             {typeof(int[]),         (value, shaderVarName, cs, kernel) =>{ cs.SetInts(shaderVarName, (int[])value);} },
             {typeof(float[]),       (value, shaderVarName, cs, kernel) =>{ cs.SetFloats(shaderVarName, (float[])value);} },
             {typeof(Matrix4x4[]),   (value, shaderVarName, cs, kernel) =>{ cs.SetMatrixArray(shaderVarName, (Matrix4x4[])value);} },
+            {typeof(int2),          (value, shaderVarName, cs, kernel) =>{ var v = (int2)value;cs.SetVector(shaderVarName, new Vector4(v.x,v.y,0,0));} },
             {typeof(Vector2),       (value, shaderVarName, cs, kernel) =>{ cs.SetVector(shaderVarName, (Vector2)value);} },
             {typeof(Vector3),       (value, shaderVarName, cs, kernel) =>{ cs.SetVector(shaderVarName, (Vector3)value);} },
             {typeof(Vector4),       (value, shaderVarName, cs, kernel) =>{ cs.SetVector(shaderVarName, (Vector4)value);} },
@@ -112,6 +120,7 @@ namespace UnityTools.Common
             LogTool.AssertNotNull(container);
             LogTool.AssertNotNull(cs);
             if (cs == null) return;
+            this.UpdateBuffer();
             var id = cs.FindKernel(kernel);
             cs.SetBuffer(id, this.shaderName, this.Data);
         }

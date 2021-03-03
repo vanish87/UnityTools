@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityTools.Common;
 
@@ -14,6 +15,7 @@ namespace UnityTools.GUITool
         {
             {typeof(bool),    HandleBool},
             {typeof(Vector2), HandleVector2},
+            {typeof(int2),    HandleInt2},
             {typeof(Vector3), HandleVector3},
             {typeof(Vector4), HandleVector4},
             {typeof(Color),   HandleColor},
@@ -81,6 +83,18 @@ namespace UnityTools.GUITool
             }
         }
 
+        static private void HandleInt2(object container, Variable variable, Dictionary<string, string> unparsedString)
+        {
+            using (var h = new GUILayout.HorizontalScope())
+            {
+                var v = (int2)variable.Value.GetValue(container);
+                var lv = (int2)variable.lastValidValue;
+                OnFieldGUI(ref v.x, variable.displayName + ".x", ref lv.x, unparsedString);
+                OnFieldGUI(ref v.y, variable.displayName + ".y", ref lv.y, unparsedString);
+                variable.Value.SetValue(container, v);
+                variable.lastValidValue = lv;
+            }
+        }
         static private void HandleVector3(object container, Variable variable, Dictionary<string, string> unparsedString)
         {
             using (var h = new GUILayout.HorizontalScope())

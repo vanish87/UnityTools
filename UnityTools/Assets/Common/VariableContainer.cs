@@ -8,6 +8,7 @@ namespace UnityTools.Common
     public interface IVariableContainer
     {
         List<Variable> VariableList { get; }
+        void Release();
     }
     public abstract class VariableContainer : IVariableContainer
     {
@@ -23,6 +24,23 @@ namespace UnityTools.Common
         public VariableContainer(Type type, object container)
         {
             this.InitWithType(type, container);
+        }
+        public virtual void Release()
+        {
+            foreach(var v in this.VariableList)
+            {
+                if (v.Value.FieldType.IsSubclassOf(typeof(UnityEngine.Texture)))
+                {
+                    var tex = (UnityEngine.Texture)v.Value.GetValue(this.Container);
+                    tex?.DestoryObj();
+                }
+                else
+                if (v.Value.FieldType == typeof(UnityEngine.ComputeBuffer))
+                {
+                    var buffer = (UnityEngine.ComputeBuffer)v.Value.GetValue(this.Container);
+                    buffer?.Release();
+                }
+            }
         }
         public void ResetToDefault()
         {

@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityTools.Common;
 using UnityTools.Debuging;
 
 namespace UnityTools.ComputeShaderTool
@@ -25,7 +26,7 @@ namespace UnityTools.ComputeShaderTool
         }
 
     }
-    public abstract class ComputeShaderParameterContainer
+    public abstract class ComputeShaderParameterContainer: IGPUContainer
     {
         protected List<IComputeShaderParameter> VarList
         {
