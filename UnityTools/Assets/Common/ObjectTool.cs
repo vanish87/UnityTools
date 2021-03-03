@@ -19,6 +19,16 @@ namespace UnityTools
                     Object.DestroyImmediate(obj);
             }
         }
+        public static void DestoryObj(this MonoBehaviour obj, float t = 0f)
+        {
+            if (obj != null)
+            {
+                if (Application.isPlaying)
+                    Object.Destroy(obj.gameObject, t);
+                else
+                    Object.DestroyImmediate(obj.gameObject);
+            }
+        }
         public static T FindOrAddTypeInComponentsAndChildren<T>(this GameObject obj) where T : Component
         {
             var ret = obj.GetComponentInChildren<T>();

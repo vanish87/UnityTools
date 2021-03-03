@@ -175,20 +175,20 @@ namespace UnityTools.Debuging
         }
         public static void AssertIsTrue(bool predict, LogLevel level = LogLevel.Error, LogChannel channel = LogChannel.Debug)
         {
-            LogAssertIsTrue(predict, System.Environment.StackTrace, level, channel);
+            LogAssertIsTrue(predict, null, level, channel);
         }
         public static void AssertIsFalse(bool predict, LogLevel level = LogLevel.Error, LogChannel channel = LogChannel.Debug)
         {
-            LogAssertIsFalse(predict, System.Environment.StackTrace, level, channel);
+            LogAssertIsFalse(predict, null, level, channel);
         }
         public static void AssertNotNull(object obj, LogLevel level = LogLevel.Error, LogChannel channel = LogChannel.Debug)
         {
-            LogAssertIsTrue(obj != null, System.Environment.StackTrace, level, channel);
+            LogAssertIsTrue(obj != null, null, level, channel);
         }
         
         public static void LogAssertIsTrue(bool predict, string message, LogLevel level = LogLevel.Error, LogChannel channel = LogChannel.Debug)
         {
-            if (!predict) Log(message, level, channel);
+            if (!predict) Log(message + "\n Call Stack" + System.Environment.StackTrace, level, channel);
         }
         public static void LogAssertIsFalse(bool predict, string message, LogLevel level = LogLevel.Error, LogChannel channel = LogChannel.Debug)
         {
