@@ -40,6 +40,12 @@ namespace UnityTools.Common
                     var buffer = (UnityEngine.ComputeBuffer)v.Value.GetValue(this.Container);
                     buffer?.Release();
                 }
+                else
+                if (v.Value.FieldType.IsSubclassOf(typeof(GPUVariable)))
+                {
+                    var buffer = (GPUVariable)v.Value.GetValue(this.Container);
+                    buffer?.Release();
+                }
             }
         }
         public void ResetToDefault()
