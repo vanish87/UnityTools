@@ -87,28 +87,36 @@ namespace UnityTools.Common
         {
             return value.Data;
         }
-        public ComputeBuffer Data => this.gpuBuffer ??= new ComputeBuffer(this.size, Marshal.SizeOf<T>());
+        public ComputeBuffer Data => this.gpuBuffer ??= new ComputeBuffer(this.size, Marshal.SizeOf<T>(), this.type);
         public T[] CPUData => this.cpuData;
         public int Size => this.size;
         private T[] cpuData;
         private int size;
+        private ComputeBufferType type = ComputeBufferType.Default;
         private ComputeBuffer gpuBuffer;
-        public GPUBufferVariable(string name, int size, bool cpuData)
+        public GPUBufferVariable(string name, int size, bool cpuData, ComputeBufferType type)
         {
             this.displayName = name;
             this.shaderName = name;
-            this.InitBuffer(size, cpuData);
+            this.InitBuffer(size, cpuData, type);
         }
-        public void InitBuffer(int size, bool cpuData = false)
+        public GPUBufferVariable(int size = 1, bool cpuData = false, ComputeBufferType type = ComputeBufferType.Default)
         {
+            this.InitBuffer(size, cpuData, type);
+        }
+        public void InitBuffer(int size, bool cpuData = false, ComputeBufferType type = ComputeBufferType.Default)
+        {
+            this.Release();
+
             this.size = size;
+            this.type = type;
             this.cpuData = cpuData ? new T[this.size] : null;
         }
 
         public override void Release()
         {
             base.Release();
-            this.Data.Release();
+            this.gpuBuffer?.Release();
             this.gpuBuffer = null;
             this.cpuData = null;
         }
@@ -130,7 +138,10 @@ namespace UnityTools.Common
 
         public void UpdateBuffer()
         {
-            this.Data.SetData(this.CPUData);
+            if(this.CPUData != null)
+            {
+                this.Data.SetData(this.CPUData);
+            }
         }
     }
 }
