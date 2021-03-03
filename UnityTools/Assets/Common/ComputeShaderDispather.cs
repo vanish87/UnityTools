@@ -5,6 +5,7 @@ using UnityEngine;
 using System;
 using Unity.Mathematics;
 using UnityTools.Debuging;
+using UnityTools.Common;
 
 namespace UnityTools.ComputeShaderTool
 {
@@ -14,7 +15,7 @@ namespace UnityTools.ComputeShaderTool
         {
             public int kernel = -1;
             public uint3 kernelDimesion = 0;
-            public List<ComputeShaderParameterContainer> parameters = new List<ComputeShaderParameterContainer>();
+            public List<IGPUContainer> parameters = new List<IGPUContainer>();
         }
 
         protected ComputeShader cs = null;
@@ -37,7 +38,7 @@ namespace UnityTools.ComputeShaderTool
                 k.Value.parameters.Clear();
             }
         }
-        public void AddParameter(string kernel, ComputeShaderParameterContainer parameter)
+        public void AddParameter(string kernel, IGPUContainer parameter)
         {
             LogTool.AssertNotNull(parameter);
             if (this.kernel.ContainsKey(kernel))
@@ -80,7 +81,7 @@ namespace UnityTools.ComputeShaderTool
             {
                 kernel = kernelId,
                 kernelDimesion = new uint3(x, y, z),
-                parameters = new List<ComputeShaderParameterContainer>(),
+                parameters = new List<IGPUContainer>(),
             });
         }
         protected void UpdateParameter(string kernel)
