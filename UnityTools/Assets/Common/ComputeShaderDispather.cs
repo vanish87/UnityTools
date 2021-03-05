@@ -9,6 +9,25 @@ using UnityTools.Common;
 
 namespace UnityTools.ComputeShaderTool
 {
+    public class ComputeShaderDispatcher<T> : ComputeShaderDispatcher where T : Enum
+    {
+        private readonly Dictionary<T, string> kernelMap = new Dictionary<T, string>();
+        public ComputeShaderDispatcher(ComputeShader cs) : base(cs) 
+        {
+            foreach(T k in Enum.GetValues(typeof(T)))
+            {
+                this.kernelMap.Add(k, k.ToString());
+            }
+        }
+        public void Dispatch(T kernel, int X = 1, int Y = 1, int Z = 1)
+        {
+            this.Dispatch(this.kernelMap[kernel], X, Y, Z);
+        }
+        public void AddParameter(T kernel, IGPUContainer parameter)
+        {
+            this.AddParameter(this.kernelMap[kernel], parameter);
+        }
+    }
     public class ComputeShaderDispatcher
     {
         public class KernelInfo
