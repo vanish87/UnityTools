@@ -113,6 +113,15 @@ namespace UnityTools.Common
             this.cpuData = cpuData ? new T[this.size] : null;
         }
 
+        public void InitBuffer(GPUBufferVariable<T> other)
+        {
+            this.Release();
+
+            this.size = other.size;
+            this.type = other.type;
+            this.cpuData = other.cpuData != null ? new T[this.size] : null;
+            this.gpuBuffer = other.Data;
+        }
         public override void Release()
         {
             base.Release();
