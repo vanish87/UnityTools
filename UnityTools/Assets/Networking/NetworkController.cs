@@ -13,7 +13,22 @@ namespace UnityTools.Networking
             public PCInfo current = new PCInfo();
             public List<PCInfo> servers = new List<PCInfo>();
             public List<PCInfo> devPCs = new List<PCInfo>();
-            public List<PCInfo> client = new List<PCInfo>();
+            public List<PCInfo> clients = new List<PCInfo>();
+
+            public void OnGUIDraw()
+            {
+                using (new GUILayout.HorizontalScope())
+                {
+                    GUILayout.Label("Curret");
+                    this.current.OnGUIDraw();
+                }
+                GUILayout.Label("Servers " + this.servers.Count);
+                foreach (var s in this.servers) s.OnGUIDraw();
+                GUILayout.Label("Clients " + this.clients.Count);
+                foreach (var c in this.clients) c.OnGUIDraw();
+                GUILayout.Label("DevPCs " + this.devPCs.Count);
+                foreach (var d in this.devPCs) d.OnGUIDraw();
+            }
         }
         public interface INetworkUser
         {
@@ -38,7 +53,6 @@ namespace UnityTools.Networking
                     break;
                 }
             }
-            var serverData = pcList.FindAll(pc => pc.role == PCInfo.Role.Server);
 
             if (currentPC == null)
             {
@@ -47,6 +61,8 @@ namespace UnityTools.Networking
                 currentPC.ipAddress = currentIPs[0];
                 currentPC.role = PCInfo.Role.None;
             }
+            
+            var serverData = pcList.FindAll(pc => pc.role == PCInfo.Role.Server);
             if (serverData == null)
             {
                 LogTool.Log("serverData not found, add a default one", LogLevel.Warning);
@@ -62,7 +78,7 @@ namespace UnityTools.Networking
                 current = currentPC,
                 servers = serverData,
                 devPCs = devData,
-                client = new List<PCInfo>(clientData)
+                clients = new List<PCInfo>(clientData)
             };
 
             return data;

@@ -28,12 +28,22 @@ namespace UnityTools.Common
         {
             public string name;
             public short port;
+
+            public void OnGUIDraw()
+            {
+                GUILayout.Label("port " + name + " " + port);
+            }
         }
         public string name = "OutputPC";
         public string ipAddress = "127.0.0.1";
         public Role role = Role.None;
         public List<Port> ports = new List<Port>();
 
+        public void OnGUIDraw()
+        {
+            GUILayout.Label(this.name + " " + this.role + " " + this.ipAddress);
+            foreach(var p in this.ports) p.OnGUIDraw();
+        }
     }
     [Serializable]
     public class Environment
