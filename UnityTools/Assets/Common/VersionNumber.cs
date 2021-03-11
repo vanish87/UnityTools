@@ -38,7 +38,8 @@ namespace UnityTools.Common
                 var env = l.RunTime;
                 if (env.appSetting.useVersionNum)
                 {
-                    var path = System.IO.Path.Combine(Application.streamingAssetsPath, fileName);
+                    var vname = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name + fileName;
+                    var path = System.IO.Path.Combine(Application.streamingAssetsPath, vname);
                     var data = new VersionInfo() {buildTime = DateTime.Now.ToString(), buildDeviceName = SystemInfo.deviceName};
                     if (File.Exists(path))
                     {
