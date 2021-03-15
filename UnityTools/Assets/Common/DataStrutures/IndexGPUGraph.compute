@@ -1,0 +1,15 @@
+
+#pragma kernel InitNode
+#pragma kernel InitEdge
+#pragma kernel SplitEdge
+
+#include "UnityCG.cginc"
+#include "IndexGPUGraphData.cginc"
+#include "GPUGraphCommon.cginc"
+
+
+THREAD_ONE
+void SplitEdge (uint3 idx : SV_DispatchThreadID)
+{
+
+}

@@ -36,14 +36,19 @@ namespace UnityTools.Common
             [Shader(Name = "_NodeIndexBufferConsume")] public GPUBufferVariable<int> nodeIndexBufferConsume = new GPUBufferVariable<int>();
             [Shader(Name = "_EdgeIndexBufferConsume")] public GPUBufferVariable<int> edgeIndexBufferConsume = new GPUBufferVariable<int>();
             public GPUBufferVariable<uint> edgeIndirectBuffer = new GPUBufferVariable<uint>();
+            public GPUBufferVariable<uint> nodeIndirectBuffer = new GPUBufferVariable<uint>();
 
         }
 
         [SerializeField] protected ComputeShader computeShader;
         [SerializeField] protected GPUData data = new GPUData();
         [SerializeField] protected Shader shader;
+        [SerializeField] protected Shader nodeShader;
         [SerializeField] protected DisposableMaterial material;
+        [SerializeField] protected DisposableMaterial nodeMaterial;
         [SerializeField] protected Mesh lineMesh;
+        [SerializeField] protected Mesh nodeMesh;
+
         protected ComputeShaderDispatcher<DefaultKernel> defaultDispatcher;
         protected ComputeShaderDispatcher<Kernel> dispatcher;
         protected virtual void Init()
@@ -67,6 +72,7 @@ namespace UnityTools.Common
             this.data.edgeIndexBufferConsume.InitBuffer(this.data.edgeIndexBuffer);
 
             this.data.edgeIndirectBuffer.InitBuffer(5, true, ComputeBufferType.IndirectArguments);
+            this.data.nodeIndirectBuffer.InitBuffer(5, true, ComputeBufferType.IndirectArguments);
         }
 
         protected void InitDispatcher()
@@ -97,13 +103,23 @@ namespace UnityTools.Common
             this.lineMesh = this.GenerateLineMesh();
             this.material = new DisposableMaterial(this.shader);
 
+            this.nodeMaterial = new DisposableMaterial(this.nodeShader);
+
             var args = this.data.edgeIndirectBuffer.CPUData;
             var subIndex = 0;
             args[0] = (uint)this.lineMesh.GetIndexCount(subIndex);
-            args[1] = (uint)this.data.nodeCount;
+            args[1] = (uint)this.data.edgeCount;
             args[2] = (uint)this.lineMesh.GetIndexStart(subIndex);
             args[3] = (uint)this.lineMesh.GetBaseVertex(subIndex);
             this.data.edgeIndirectBuffer.UpdateBuffer();
+
+            args = this.data.nodeIndirectBuffer.CPUData;
+            subIndex = 0;
+            args[0] = (uint)this.nodeMesh.GetIndexCount(subIndex);
+            args[1] = (uint)this.data.nodeCount;
+            args[2] = (uint)this.nodeMesh.GetIndexStart(subIndex);
+            args[3] = (uint)this.nodeMesh.GetBaseVertex(subIndex);
+            this.data.nodeIndexBuffer.UpdateBuffer();
         }
 
 
@@ -121,6 +137,7 @@ namespace UnityTools.Common
         {
             this.data?.Release();
             this.material?.Dispose();
+            this.nodeMaterial?.Dispose();
         }
 
         protected virtual void Draw()
@@ -130,6 +147,11 @@ namespace UnityTools.Common
             mat.SetBuffer("_Edges", this.data.edgeBuffer);
             var b = new Bounds(Vector3.zero, Vector3.one * 10000);
             Graphics.DrawMeshInstancedIndirect(this.lineMesh, 0, this.material, b, this.data.edgeIndirectBuffer, 0);
+
+            mat = this.nodeMaterial;
+            mat.SetBuffer("_Nodes", this.data.nodeBuffer);
+            mat.SetBuffer("_Edges", this.data.edgeBuffer);
+            Graphics.DrawMeshInstancedIndirect(this.nodeMesh, 0, this.nodeMaterial, b, this.data.nodeIndirectBuffer, 0);
         }
 
         protected virtual void OnEnable()

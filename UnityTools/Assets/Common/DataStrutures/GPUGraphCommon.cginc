@@ -1,7 +1,3 @@
-
-#pragma kernel InitNode
-#pragma kernel InitEdge
-
 #define THREAD [numthreads(128,1,1)]
 #define THREAD_ONE [numthreads(1,1,1)]
 
