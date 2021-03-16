@@ -1,4 +1,6 @@
 #define THREAD [numthreads(128,1,1)]
+#define THREAD512 [numthreads(512,1,1)]
+#define THREAD1024 [numthreads(1024,1,1)]
 #define THREAD_ONE [numthreads(1,1,1)]
 
 static const float PI = 3.141592653;

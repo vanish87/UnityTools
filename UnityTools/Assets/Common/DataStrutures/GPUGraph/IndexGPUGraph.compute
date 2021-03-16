@@ -1,15 +1,38 @@
 
 #pragma kernel InitNode
+#pragma kernel InitIndexNode
 #pragma kernel InitEdge
+#pragma kernel InitAdjacentMatrix
 #pragma kernel AddEdge
+#pragma kernel ColorNei
 
 #include "UnityCG.cginc"
 #include "IndexGPUGraphData.cginc"
 #include "GPUGraphCommon.cginc"
 
 RWStructuredBuffer<EdgeToAdd> _EdgeToAddBuffer;
+RWStructuredBuffer<float> _AdjacentMatrix;
 
-THREAD_ONE
+
+int UVtoArray(int x, int y)
+{
+    return x + y * _NodeCount;
+}
+THREAD
+void InitIndexNode (uint3 idx : SV_DispatchThreadID)
+{
+    int id = idx.x;
+    _NodeBuffer[id] = (Node)0;
+    _NodeBuffer[id].index = -1;
+    _NodeIndexBuffer.Append(id);
+}
+
+THREAD1024
+void InitAdjacentMatrix (uint3 idx : SV_DispatchThreadID)
+{
+    _AdjacentMatrix[idx.x] = 0;
+}
+THREAD
 void AddEdge (uint3 idx : SV_DispatchThreadID)
 {
     int id = idx.x;
@@ -27,9 +50,36 @@ void AddEdge (uint3 idx : SV_DispatchThreadID)
         n2.index = e.to;
         n2.pos = e.toPos;
 
+        n1.color = n2.color = 1;
+
         _NodeBuffer[dfrom] = n1;
         _NodeBuffer[dto] = n2;
 
         ConnectNode(dfrom, dto);
+
+        _AdjacentMatrix[UVtoArray(e.from, e.to)] = 1;
+        _AdjacentMatrix[UVtoArray(e.to, e.from)] = 1;
+    }
+}
+
+
+
+THREAD
+void ColorNei (uint3 idx : SV_DispatchThreadID)
+{
+    int id = idx.x;
+    Node node = _NodeBuffer[id];
+    if(node.index == 1)
+    {
+        for(int n = 0; n < _NodeCount; ++n)
+        {
+            if(n == id) continue;
+            if(!_NodeBuffer[n].active) continue;
+
+            int nid = _NodeBuffer[n].index;
+
+            if(_AdjacentMatrix[UVtoArray(node.index, nid)]>0) _NodeBuffer[n].color = float4(1,0,0,1);
+        }
+        _NodeBuffer[id].color = float4(0,1,0,1);
     }
 }

@@ -40,9 +40,9 @@ Shader "Unlit/NodeShader"
         UNITY_TRANSFER_INSTANCE_ID(i, o);
 
         Node node = _Nodes[iid];
-        float4 wp = float4(i.vertex.xyz + node.pos,1);
+        float4 wp = float4(i.vertex.xyz * 0.01 + node.pos,1);
         o.position = UnityObjectToClipPos(wp);
-        o.color = float4(1,1,1,node.active);
+        o.color = float4(node.color.xyz,node.active);
         return o;
 	}
 
@@ -56,9 +56,9 @@ Shader "Unlit/NodeShader"
     SubShader
     {
         // No culling or depth
-        // Cull Off ZWrite Off ZTest Always
+        Cull Off ZWrite Off ZTest Always
 		// Blend One One
-		//Blend One OneMinusSrcAlpha
+		Blend One OneMinusSrcAlpha
     
 		Pass
 		{

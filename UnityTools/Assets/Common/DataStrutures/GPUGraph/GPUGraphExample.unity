@@ -169,8 +169,8 @@ MonoBehaviour:
   drawMode: -1
   computeShader: {fileID: 7200000, guid: 1550935745d457f4b8c281125de4e7ae, type: 3}
   data:
-    nodeCount: 128
-    edgeCount: 128
+    nodeCount: 20480
+    edgeCount: 20480
   edgeShader: {fileID: 4800000, guid: ec4d80daa8329ae49b1cd5582409fe24, type: 3}
   nodeShader: {fileID: 4800000, guid: b53ae24cfaa2a6b4caa67aa129f021a7, type: 3}
   edgeMaterial:
@@ -179,6 +179,7 @@ MonoBehaviour:
     data: {fileID: 0}
   edgeMesh: {fileID: 0}
   nodeMesh: {fileID: 0}
+  testMesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!1 &277658812
 GameObject:
   m_ObjectHideFlags: 0

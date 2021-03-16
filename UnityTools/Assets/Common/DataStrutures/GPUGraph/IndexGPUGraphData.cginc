@@ -5,6 +5,7 @@ struct Node
     bool active;
     int index;
     float3 pos;
+    float4 color;
 };
 
 struct Edge
