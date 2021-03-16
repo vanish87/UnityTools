@@ -10,7 +10,7 @@ namespace UnityTools.Common
     {
         public enum Kernel
         {
-
+            RandomNode,
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -34,6 +34,8 @@ namespace UnityTools.Common
         {
             base.Init();
 
+            this.dispatcher.Dispatch(Kernel.RandomNode, 1);
         }
+
     }
 }

@@ -1,7 +1,7 @@
 
 #pragma kernel InitNode
 #pragma kernel InitEdge
-#pragma kernel SplitEdge
+#pragma kernel RandomNode
 
 #include "UnityCG.cginc"
 #include "IndexGPUGraphData.cginc"
@@ -9,7 +9,8 @@
 
 
 THREAD_ONE
-void SplitEdge (uint3 idx : SV_DispatchThreadID)
+void RandomNode (uint3 idx : SV_DispatchThreadID)
 {
+
 
 }

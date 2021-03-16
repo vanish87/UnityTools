@@ -101,8 +101,8 @@ namespace UnityTools.Common
         protected void InitRender()
         {
             this.lineMesh = this.GenerateLineMesh();
-            this.material = new DisposableMaterial(this.shader);
 
+            this.material = new DisposableMaterial(this.shader);
             this.nodeMaterial = new DisposableMaterial(this.nodeShader);
 
             var args = this.data.edgeIndirectBuffer.CPUData;

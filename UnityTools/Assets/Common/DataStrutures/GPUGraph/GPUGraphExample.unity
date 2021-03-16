@@ -170,10 +170,14 @@ MonoBehaviour:
   data:
     nodeCount: 128
     edgeCount: 128
-  shader: {fileID: 4800000, guid: d79e51fd8488f6c4c9771bdcdc1be33f, type: 3}
+  shader: {fileID: 4800000, guid: ec4d80daa8329ae49b1cd5582409fe24, type: 3}
+  nodeShader: {fileID: 4800000, guid: b53ae24cfaa2a6b4caa67aa129f021a7, type: 3}
   material:
     data: {fileID: 0}
+  nodeMaterial:
+    data: {fileID: 0}
   lineMesh: {fileID: 0}
+  nodeMesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!1 &277658812
 GameObject:
   m_ObjectHideFlags: 0
