@@ -41,3 +41,10 @@ void ConnectNode(int from, int to)
 
     _EdgeBuffer[eid] = e;
 }
+
+int CreateNode()
+{
+    int id = _NodeIndexBufferConsume.Consume();
+    _NodeBuffer[id].active = true;
+    return id;
+}

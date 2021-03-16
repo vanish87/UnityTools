@@ -40,9 +40,9 @@ Shader "Unlit/NodeShader"
         UNITY_TRANSFER_INSTANCE_ID(i, o);
 
         Node node = _Nodes[iid];
-        float4 wp = float4(node.pos,1);
-        o.position = UnityObjectToClipPos(i.vertex + wp);
-        o.color = 1;
+        float4 wp = float4(i.vertex.xyz + node.pos,1);
+        o.position = UnityObjectToClipPos(wp);
+        o.color = float4(1,1,1,node.active);
         return o;
 	}
 

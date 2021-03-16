@@ -1,4 +1,4 @@
-Shader "Unlit/LineShader"
+Shader "Unlit/EdgeShader"
 {
     Properties
     {
@@ -14,6 +14,7 @@ Shader "Unlit/LineShader"
 	{
 		float4 vertex : POSITION;
 		float2 uv : TEXCOORD0;
+        float4 color : TEXCOORD1;
         uint vid : SV_VertexID;
         UNITY_VERTEX_INPUT_INSTANCE_ID
     };
@@ -46,7 +47,7 @@ Shader "Unlit/LineShader"
         float4 vertex = float4(pos, 1);
         o.position = UnityObjectToClipPos(vertex);
 
-        // o.color = lerp(from.color, to.color, i.vid);
+        o.color = e.active;
         return o;
 	}
 

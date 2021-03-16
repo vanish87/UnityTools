@@ -1,16 +1,35 @@
 
 #pragma kernel InitNode
 #pragma kernel InitEdge
-#pragma kernel RandomNode
+#pragma kernel AddEdge
 
 #include "UnityCG.cginc"
 #include "IndexGPUGraphData.cginc"
 #include "GPUGraphCommon.cginc"
 
+RWStructuredBuffer<EdgeToAdd> _EdgeToAddBuffer;
 
 THREAD_ONE
-void RandomNode (uint3 idx : SV_DispatchThreadID)
+void AddEdge (uint3 idx : SV_DispatchThreadID)
 {
+    int id = idx.x;
+    EdgeToAdd e = _EdgeToAddBuffer[id];
+    if(e.from != -1 && e.to != -1)
+    {
+        int dfrom = CreateNode();
+        int dto = CreateNode();
 
+        Node n1 = _NodeBuffer[dfrom];
+        Node n2 = _NodeBuffer[dto];
 
+        n1.index = e.from;
+        n1.pos = e.fromPos;
+        n2.index = e.to;
+        n2.pos = e.toPos;
+
+        _NodeBuffer[dfrom] = n1;
+        _NodeBuffer[dto] = n2;
+
+        ConnectNode(dfrom, dto);
+    }
 }
