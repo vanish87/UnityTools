@@ -179,7 +179,19 @@ MonoBehaviour:
     data: {fileID: 0}
   edgeMesh: {fileID: 0}
   nodeMesh: {fileID: 0}
-  testMesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+  indexData:
+    dt: 0.01
+    stiffness: 0.6
+    dmin:
+      x: -2
+      y: -2
+      z: -2
+    dmax:
+      x: 1
+      y: 1
+      z: 1
+  testMesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
+  raduis: 0.2
 --- !u!1 &277658812
 GameObject:
   m_ObjectHideFlags: 0

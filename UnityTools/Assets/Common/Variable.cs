@@ -61,6 +61,7 @@ namespace UnityTools.Common
             {typeof(Matrix4x4[]),   (value, shaderVarName, cs, kernel) =>{ cs.SetMatrixArray(shaderVarName, (Matrix4x4[])value);} },
             {typeof(int2),          (value, shaderVarName, cs, kernel) =>{ var v = (int2)value;cs.SetVector(shaderVarName, new Vector4(v.x,v.y,0,0));} },
             {typeof(float2),        (value, shaderVarName, cs, kernel) =>{ var v = (float2)value;cs.SetVector(shaderVarName, new Vector4(v.x,v.y,0,0));} },
+            {typeof(float3),        (value, shaderVarName, cs, kernel) =>{ var v = (float3)value;cs.SetVector(shaderVarName, new Vector4(v.x,v.y,v.z,0));} },
             {typeof(Vector2),       (value, shaderVarName, cs, kernel) =>{ cs.SetVector(shaderVarName, (Vector2)value);} },
             {typeof(Vector3),       (value, shaderVarName, cs, kernel) =>{ cs.SetVector(shaderVarName, (Vector3)value);} },
             {typeof(Vector4),       (value, shaderVarName, cs, kernel) =>{ cs.SetVector(shaderVarName, (Vector4)value);} },
@@ -76,6 +77,11 @@ namespace UnityTools.Common
             LogTool.AssertNotNull(cs);
             var t = this.Value.FieldType;
             var value = this.Value.GetValue(container);
+            if(TypeSetterMap.ContainsKey(t) == false)
+            {
+                LogTool.Log(t.ToString() + " Handler not found");
+                return;
+            }
             TypeSetterMap[t].Invoke(value, this.shaderName, cs, kernel);
         }
         public virtual void Release()

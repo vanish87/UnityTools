@@ -15,14 +15,33 @@ namespace UnityTools.Common
             AddEdge,
             ColorNei,
             InitIndexNode,
+            Prediction,
+            PositionCorrection,
+            VelocityUpdate,
         }
 
         [StructLayout(LayoutKind.Sequential)]
         public class Node : NodeBase
         {
             int index;
+            int sid;
             float3 pos;
             float4 color;
+
+
+            float3 predictPos;
+            float3 restPos;
+
+            float4 rotation;
+            float4 predictRotation;
+
+            float3 w;
+            float3 velocity;
+            float a;
+            float b;
+            float c;
+
+            float density;
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -34,13 +53,15 @@ namespace UnityTools.Common
         [StructLayout(LayoutKind.Sequential)]
         public struct EdgeToAdd
         {
+            public int sid;
             public int from;
             public int to;
             public float3 formPos;
             public float3 toPos;
 
-            public EdgeToAdd(int from, int to, float3 fromPos, float3 toPos)
+            public EdgeToAdd(int sid, int from, int to, float3 fromPos, float3 toPos)
             {
+                this.sid = sid;
                 this.from = from;
                 this.to = to;
                 this.formPos = fromPos;
@@ -54,6 +75,10 @@ namespace UnityTools.Common
         {
             [Shader(Name = "_EdgeToAddBuffer")] public GPUBufferVariable<EdgeToAdd> edgeToAdd = new GPUBufferVariable<EdgeToAdd>();
             [Shader(Name = "_AdjacentMatrix")] public GPUBufferVariable<float> adjacentMatrix = new GPUBufferVariable<float>();
+            [Shader(Name = "dt")] public float dt = 0.05f;
+            [Shader(Name = "stiffness")] public float stiffness = 1;
+            [Shader(Name = "dmin")] public float3 dmin = 0;
+            [Shader(Name = "dmax")] public float3 dmax = 10000;
         }
 
         [SerializeField] protected IndexGPUGraphData indexData = new IndexGPUGraphData();
@@ -71,7 +96,6 @@ namespace UnityTools.Common
             {
                 this.dispatcher.AddParameter(e, this.indexData);
             }
-            this.data.nodeIndexBuffer.Data.SetCounterValue(0);
             this.dispatcher.Dispatch(Kernel.InitIndexNode, this.data.nodeCount);
 
             this.dispatcher.Dispatch(Kernel.InitAdjacentMatrix, this.data.nodeCount, this.data.nodeCount);
@@ -83,7 +107,8 @@ namespace UnityTools.Common
                 edges[i].to = -1;
             }
 
-            this.AddMesh(this.testMesh);
+            // this.AddMesh(this.testMesh);
+            this.AddCircle();
 
             this.dispatcher.Dispatch(Kernel.AddEdge, edges.Length);
             this.dispatcher.Dispatch(Kernel.ColorNei, this.data.nodeCount);
@@ -95,11 +120,42 @@ namespace UnityTools.Common
             this.indexData?.Release();
         }
 
+        int sid = 0;
+        int pCount = 0;
+        protected void AddCircle()
+        {
+            this.AddOneCircle(sid++);
+            this.dispatcher.Dispatch(Kernel.AddEdge, this.data.edgeCount);
+        }
+
+        [SerializeField]float raduis = 0.5f;
+        protected void AddOneCircle(int sid)
+        {
+            var edges = this.indexData.edgeToAdd.CPUData;
+            var edgeCount = 0;
+            var prev = new float3(0);
+            var vcount = 64;
+            foreach(var i in Enumerable.Range(0,vcount))
+            {
+                var rad = i * 1f / vcount * 2 * math.PI;
+                var x = math.cos(rad) * raduis;
+                var y = math.sin(rad) * raduis;
+
+                var nrad = (i+1)%vcount * 1f / vcount * 2 * math.PI;
+                var x1 = math.cos(nrad) * raduis;
+                var y1 = math.sin(nrad) * raduis;
+
+                edges[edgeCount++] = new EdgeToAdd(sid, i + pCount, (i + 1) % vcount + pCount, new float3(x, y, 0), new float3(x1, y1, 0));
+            }
+            this.pCount += vcount;
+
+        }
+
         protected void AddMesh(Mesh m)
         {
             var edgeCount = 0;
             var edges = this.indexData.edgeToAdd.CPUData;
-            var indexCount = 0;
+            var indexCount = this.pCount;
             var added = new Dictionary<Vector3, int>();
             for (var t = 0; t < m.triangles.Length; t += 3)
             {
@@ -126,10 +182,30 @@ namespace UnityTools.Common
                     added.Add(v3, p3);
                 }
 
-                edges[edgeCount++] = new EdgeToAdd(p1,p2,v1,v2);
-                edges[edgeCount++] = new EdgeToAdd(p2,p3,v2,v3);
-                edges[edgeCount++] = new EdgeToAdd(p3,p1,v3,v1);
+                edges[edgeCount++] = new EdgeToAdd(this.sid, p1,p2,v1,v2);
+                edges[edgeCount++] = new EdgeToAdd(this.sid, p2,p3,v2,v3);
+                edges[edgeCount++] = new EdgeToAdd(this.sid, p3,p1,v3,v1);
             }
+            this.pCount += added.Count;
+            this.sid++;
+
+            this.dispatcher.Dispatch(Kernel.AddEdge, this.data.edgeCount);
+        }
+
+        // public bool update = false;
+        protected override void Update()
+        {
+            if(Input.GetKeyDown(KeyCode.C)) this.AddCircle();
+            if(Input.GetKeyDown(KeyCode.M)) this.AddMesh(this.testMesh);
+            // if(update)
+            // foreach(var i in Enumerable.Range(0,3))
+            {
+                this.dispatcher.Dispatch(Kernel.Prediction, this.data.nodeCount);
+                this.dispatcher.Dispatch(Kernel.PositionCorrection, this.data.nodeCount);
+                this.dispatcher.Dispatch(Kernel.VelocityUpdate, this.data.nodeCount);
+            }
+
+            this.Draw();
         }
 
     }

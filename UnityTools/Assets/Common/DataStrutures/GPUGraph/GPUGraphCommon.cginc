@@ -4,6 +4,7 @@
 #define THREAD_ONE [numthreads(1,1,1)]
 
 static const float PI = 3.141592653;
+static const float3 GRAVITY = float3(0, -9.8, 0);
 
 int _NodeCount;
 int _EdgeCount;
