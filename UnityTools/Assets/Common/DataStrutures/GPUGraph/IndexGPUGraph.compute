@@ -30,7 +30,7 @@ void InitIndexNode (uint3 idx : SV_DispatchThreadID)
 THREAD1024
 void InitAdjacentMatrix (uint3 idx : SV_DispatchThreadID)
 {
-    _AdjacentMatrix[idx.x] = 0;
+    _AdjacentMatrix[UVtoArray(idx.x, idx.y)] = 0;
 }
 THREAD
 void AddEdge (uint3 idx : SV_DispatchThreadID)

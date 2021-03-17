@@ -38,6 +38,14 @@ namespace UnityTools.Common
             public int to;
             public float3 formPos;
             public float3 toPos;
+
+            public EdgeToAdd(int from, int to, float3 fromPos, float3 toPos)
+            {
+                this.from = from;
+                this.to = to;
+                this.formPos = fromPos;
+                this.toPos = toPos;
+            }
         }
 
 
@@ -59,7 +67,6 @@ namespace UnityTools.Common
             this.indexData.edgeToAdd.InitBuffer(this.data.edgeCount, true);
             this.indexData.adjacentMatrix.InitBuffer(this.data.nodeCount * this.data.nodeCount);
 
-
             foreach(Kernel e in System.Enum.GetValues(typeof(Kernel)))
             {
                 this.dispatcher.AddParameter(e, this.indexData);
@@ -67,7 +74,7 @@ namespace UnityTools.Common
             this.data.nodeIndexBuffer.Data.SetCounterValue(0);
             this.dispatcher.Dispatch(Kernel.InitIndexNode, this.data.nodeCount);
 
-            // this.dispatcher.Dispatch(Kernel.InitAdjacentMatrix, this.indexData.adjacentMatrix.Size);
+            this.dispatcher.Dispatch(Kernel.InitAdjacentMatrix, this.data.nodeCount, this.data.nodeCount);
 
             var edges = this.indexData.edgeToAdd.CPUData;
             foreach(var i in Enumerable.Range(0, edges.Length))
@@ -86,12 +93,6 @@ namespace UnityTools.Common
         {
             base.Deinit();
             this.indexData?.Release();
-        }
-
-
-        protected EdgeToAdd AddEdge(int from, int to, float3 fromPos, float3 toPos)
-        {
-            return new EdgeToAdd() { from = from, to = to, formPos = fromPos, toPos = toPos };
         }
 
         protected void AddMesh(Mesh m)
@@ -125,9 +126,9 @@ namespace UnityTools.Common
                     added.Add(v3, p3);
                 }
 
-                edges[edgeCount++] = this.AddEdge(p1,p2,v1,v2);
-                edges[edgeCount++] = this.AddEdge(p2,p3,v2,v3);
-                edges[edgeCount++] = this.AddEdge(p3,p1,v3,v1);
+                edges[edgeCount++] = new EdgeToAdd(p1,p2,v1,v2);
+                edges[edgeCount++] = new EdgeToAdd(p2,p3,v2,v3);
+                edges[edgeCount++] = new EdgeToAdd(p3,p1,v3,v1);
             }
         }
 
