@@ -97,11 +97,12 @@ namespace UnityTools.Common
         public ComputeBuffer Data => this.gpuBuffer ??= new ComputeBuffer(this.size, Marshal.SizeOf<T>(), this.type);
         public T[] CPUData => this.cpuData;
         public int Size => this.size;
+        public string ShaderName => this.shaderName;
         private T[] cpuData;
         private int size;
         private ComputeBufferType type = ComputeBufferType.Default;
         private ComputeBuffer gpuBuffer;
-        public GPUBufferVariable(string name, int size, bool cpuData, ComputeBufferType type)
+        public GPUBufferVariable(string name, int size, bool cpuData, ComputeBufferType type = ComputeBufferType.Default)
         {
             this.displayName = name;
             this.shaderName = name;
