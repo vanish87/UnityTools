@@ -174,8 +174,6 @@ namespace UnityTools
 
         public virtual void OnGUIDraw()
         {
-            if(!this.Open) return;
-
             if(this.D is GUIContainer gui)
             {
                 gui.OnGUI();
