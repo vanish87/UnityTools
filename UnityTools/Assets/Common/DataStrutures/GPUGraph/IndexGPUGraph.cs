@@ -79,6 +79,8 @@ namespace UnityTools.Common
             [Shader(Name = "stiffness")] public float stiffness = 1;
             [Shader(Name = "dmin")] public float3 dmin = 0;
             [Shader(Name = "dmax")] public float3 dmax = 10000;
+            [Shader(Name = "UseGravity")] public bool useGravity = false;
+
         }
 
         [SerializeField] protected IndexGPUGraphData indexData = new IndexGPUGraphData();
@@ -108,7 +110,7 @@ namespace UnityTools.Common
             }
 
             // this.AddMesh(this.testMesh);
-            this.AddCircle();
+            // this.AddCircle();
 
             this.dispatcher.Dispatch(Kernel.AddEdge, edges.Length);
             this.dispatcher.Dispatch(Kernel.ColorNei, this.data.nodeCount);
@@ -131,11 +133,13 @@ namespace UnityTools.Common
         [SerializeField]float raduis = 0.5f;
         protected void AddOneCircle(int sid)
         {
+            var center = new float3(UnityEngine.Random.value, UnityEngine.Random.value, 0) * 0.01f;
             var edges = this.indexData.edgeToAdd.CPUData;
             var edgeCount = 0;
             var prev = new float3(0);
             var vcount = 64;
-            foreach(var i in Enumerable.Range(0,vcount))
+            edges[edgeCount++] = new EdgeToAdd(sid, pCount, 1 + pCount, new float3(0, 0, 0), new float3(raduis, 0, 0));
+            foreach(var i in Enumerable.Range(1,vcount))
             {
                 var rad = i * 1f / vcount * 2 * math.PI;
                 var x = math.cos(rad) * raduis;
@@ -145,9 +149,10 @@ namespace UnityTools.Common
                 var x1 = math.cos(nrad) * raduis;
                 var y1 = math.sin(nrad) * raduis;
 
-                edges[edgeCount++] = new EdgeToAdd(sid, i + pCount, (i + 1) % vcount + pCount, new float3(x, y, 0), new float3(x1, y1, 0));
+                edges[edgeCount++] = new EdgeToAdd(sid, i + pCount, (i + 1) % vcount + pCount, new float3(x, y, 0) + center, new float3(x1, y1, 0) + center);
+                edges[edgeCount++] = new EdgeToAdd(sid, pCount, (i + 1) % vcount + pCount, new float3(0, 0, 0), new float3(x1, y1, 0) + center);
             }
-            this.pCount += vcount;
+            this.pCount += vcount + 1;
 
         }
 
@@ -181,6 +186,10 @@ namespace UnityTools.Common
                     p3 = indexCount++;
                     added.Add(v3, p3);
                 }
+
+                v1 = this.transform.TransformPoint(v1);
+                v2 = this.transform.TransformPoint(v2);
+                v3 = this.transform.TransformPoint(v3);
 
                 edges[edgeCount++] = new EdgeToAdd(this.sid, p1,p2,v1,v2);
                 edges[edgeCount++] = new EdgeToAdd(this.sid, p2,p3,v2,v3);

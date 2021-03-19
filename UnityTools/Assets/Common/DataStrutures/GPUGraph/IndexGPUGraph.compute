@@ -27,6 +27,8 @@ float stiffness;
 float3 dmin;
 float3 dmax;
 
+bool UseGravity;
+
 int UVtoArray(int x, int y)
 {
     return x + y * _NodeCount;
@@ -143,7 +145,7 @@ void Prediction (uint3 idx : SV_DispatchThreadID)
         }
         // force = clamp(force, -100, 100);
 
-        // force += GRAVITY;
+        if(UseGravity)force += GRAVITY;
 
         p.predictPos = p.pos + p.velocity * dt + 0.5f * force * dt * dt;
 
