@@ -19,7 +19,7 @@
 #include "SVD.hlsl"
 
 RWStructuredBuffer<EdgeToAdd> _EdgeToAddBuffer;
-RWStructuredBuffer<float> _AdjacentMatrix;
+RWStructuredBuffer<int> _AdjacentMatrix;
 
 float dt;
 float stiffness;
@@ -36,7 +36,7 @@ int UVtoArray(int x, int y)
 
 bool IsConnected(int id1, int id2)
 {
-    return _AdjacentMatrix[UVtoArray(id1, id2)]>0;
+    return _AdjacentMatrix[UVtoArray(id1, id2)]>=0;
 }
 
 float Mass(Node n)
@@ -65,7 +65,7 @@ void InitIndexNode (uint3 idx : SV_DispatchThreadID)
 THREAD1024
 void InitAdjacentMatrix (uint3 idx : SV_DispatchThreadID)
 {
-    _AdjacentMatrix[UVtoArray(idx.x, idx.y)] = 0;
+    _AdjacentMatrix[UVtoArray(idx.x, idx.y)] = -1;
 }
 THREAD
 void AddEdge (uint3 idx : SV_DispatchThreadID)
@@ -74,8 +74,18 @@ void AddEdge (uint3 idx : SV_DispatchThreadID)
     EdgeToAdd e = _EdgeToAddBuffer[id];
     if(e.from != -1 && e.to != -1)
     {
-        int dfrom = CreateNode();
-        int dto = CreateNode();
+        int dfrom = -1;
+        int dto = -1;
+        for(int i = 0; i < _NodeCount; ++i)
+        {
+            Node n = _NodeBuffer[i];
+            if(!n.active) continue;
+
+            if(n.sid == e.from) dfrom = i;
+            if(n.sid == e.to)   dto = i;
+        }
+        if(dfrom == -1) dfrom = CreateNode();
+        if(dto == -1)  dto = CreateNode();
 
         Node n1 = _NodeBuffer[dfrom];
         Node n2 = _NodeBuffer[dto];
@@ -96,8 +106,8 @@ void AddEdge (uint3 idx : SV_DispatchThreadID)
 
         ConnectNode(dfrom, dto);
 
-        _AdjacentMatrix[UVtoArray(e.from, e.to)] = 1;
-        _AdjacentMatrix[UVtoArray(e.to, e.from)] = 1;
+        _AdjacentMatrix[UVtoArray(e.from, e.to)] = id;
+        _AdjacentMatrix[UVtoArray(e.to, e.from)] = id;
     }
 }
 
@@ -131,8 +141,8 @@ void Prediction (uint3 idx : SV_DispatchThreadID)
         float3 force = 0;
         for(int n = 0; n < _NodeCount; ++n)
         {
-            if(n == did) continue;
             Node next = _NodeBuffer[n];
+            if(n == did) continue;
             if(!next.active) continue;
             if(next.sid == p.sid) continue;
 
@@ -140,6 +150,7 @@ void Prediction (uint3 idx : SV_DispatchThreadID)
             {
                 float3 rejection = p.pos - next.pos;
                 float scale = (1.0 / length(rejection) - 1);
+                scale = clamp(scale, 0, 50);
                 force += rejection * scale;
             }
         }
@@ -290,7 +301,8 @@ void VelocityUpdate (uint3 idx : SV_DispatchThreadID)
 
         GetAngleAxis(pq, angle, axis);
 
-        if (abs(angle) < 0.1f) angle = 0;
+        if (abs(angle) < 0.05f) angle = 0;
+        // if (abs(angle) > PI) angle = angle>0?PI:-PI;
 
         p.w = axis * angle / dt;
         p.rotation = p.predictRotation;

@@ -46,6 +46,8 @@ namespace UnityTools.Common
             [Shader(Name = "_EdgeIndexBufferConsume")] public GPUBufferVariable<int> edgeIndexBufferConsume = new GPUBufferVariable<int>();
             public GPUBufferVariable<uint> edgeIndirectBuffer = new GPUBufferVariable<uint>();
             public GPUBufferVariable<uint> nodeIndirectBuffer = new GPUBufferVariable<uint>();
+            [Shader(Name = "_LineScale")] public float lineScale = 1;
+            [Shader(Name = "_NodeScale")] public float nodeScale = 1;
         }
         [SerializeField] protected DrawMode drawMode = DrawMode.All;
         [SerializeField] protected ComputeShader computeShader;
@@ -169,8 +171,7 @@ namespace UnityTools.Common
                 LogTool.Log("Draw buffer is null, nothing to draw", LogLevel.Warning);
                 return;
             }
-            material.SetBuffer("_Nodes", this.data.nodeBuffer);
-            material.SetBuffer("_Edges", this.data.edgeBuffer);
+            this.data.UpdateGPU(material);
             var b = new Bounds(Vector3.zero, Vector3.one * 10000);
             Graphics.DrawMeshInstancedIndirect(mesh, 0, material, b, indirectBuffer, 0);
         }

@@ -171,14 +171,16 @@ MonoBehaviour:
   data:
     nodeCount: 20480
     edgeCount: 20480
+    lineScale: 1
+    nodeScale: 0.1
   edgeShader: {fileID: 4800000, guid: ec4d80daa8329ae49b1cd5582409fe24, type: 3}
   nodeShader: {fileID: 4800000, guid: b53ae24cfaa2a6b4caa67aa129f021a7, type: 3}
   edgeMaterial:
     data: {fileID: 0}
   nodeMaterial:
     data: {fileID: 0}
-  edgeMesh: {fileID: 0}
-  nodeMesh: {fileID: 0}
+  edgeMesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
+  nodeMesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
   indexData:
     dt: 0.05
     stiffness: 0.1
@@ -187,11 +189,16 @@ MonoBehaviour:
       y: -2
       z: -2
     dmax:
-      x: 1
-      y: 1
-      z: 1
+      x: 2
+      y: 2
+      z: 2
+    useGravity: 0
+    lineScale: 1
+    nodeScale: 1
   testMesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
-  raduis: 0.2
+  radius: 0.3
+  vcount: 6
+  withCenter: 1
 --- !u!1 &277658812
 GameObject:
   m_ObjectHideFlags: 0
@@ -227,7 +234,7 @@ Camera:
   m_GameObject: {fileID: 277658812}
   m_Enabled: 1
   serializedVersion: 2
-  m_ClearFlags: 1
+  m_ClearFlags: 2
   m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
@@ -242,10 +249,10 @@ Camera:
     width: 1
     height: 1
   near clip plane: 0.3
-  far clip plane: 1000
+  far clip plane: 10
   field of view: 60
-  orthographic: 0
-  orthographic size: 5
+  orthographic: 1
+  orthographic size: 2
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -269,7 +276,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 277658812}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: -10}
+  m_LocalPosition: {x: 0, y: 0, z: -5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}

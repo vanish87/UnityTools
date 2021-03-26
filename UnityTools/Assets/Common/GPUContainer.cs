@@ -23,6 +23,16 @@ namespace UnityTools.Common
                 }
             }
         }
+        public void UpdateGPU(Material material)
+        {
+            foreach(var p in this.VariableList)
+            {
+                if(p is IGPUVariable gpu)
+                {
+                    gpu.SetToMaterial(this, material);
+                }
+            }
+        }
 
     }
 

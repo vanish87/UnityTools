@@ -34,6 +34,7 @@ namespace UnityTools.Common
     public interface IGPUVariable
     {
         void SetToGPU(object container, ComputeShader cs, string kernel = null);
+        void SetToMaterial(object container, Material material);
         void Release();
     }
 
@@ -50,6 +51,7 @@ namespace UnityTools.Common
     public class GPUVariable : Variable, IGPUVariable
     {
         private delegate void Setter(object value, string shaderVarName, ComputeShader cs, string kernel);
+        private delegate void SetterMat(object value, string shaderVarName, Material mat);
         static private Dictionary<Type, Setter> TypeSetterMap = new Dictionary<Type, Setter>()
         {
             {typeof(bool),          (value, shaderVarName, cs, kernel) =>{ cs.SetBool(shaderVarName, (bool)value);} },
@@ -70,6 +72,24 @@ namespace UnityTools.Common
             {typeof(Texture3D),     (value, shaderVarName, cs, kernel) =>{ cs.SetTexture(cs.FindKernel(kernel), shaderVarName, (Texture3D)value);} },
             {typeof(RenderTexture), (value, shaderVarName, cs, kernel) =>{ cs.SetTexture(cs.FindKernel(kernel), shaderVarName, (RenderTexture)value);} },
         };
+        static private Dictionary<Type, SetterMat> TypeSetterMatMap = new Dictionary<Type, SetterMat>()
+        {
+            {typeof(bool),          (value, shaderVarName, mat) =>{ mat.SetInt(shaderVarName, (bool)value?1:0);} },
+            {typeof(int),           (value, shaderVarName, mat) =>{ mat.SetInt(shaderVarName, (int)value);} },
+            {typeof(float),         (value, shaderVarName, mat) =>{ mat.SetFloat(shaderVarName, (float)value);} },
+            {typeof(Matrix4x4),     (value, shaderVarName, mat) =>{ mat.SetMatrix(shaderVarName, (Matrix4x4)value);} },
+            {typeof(Matrix4x4[]),   (value, shaderVarName, mat) =>{ mat.SetMatrixArray(shaderVarName, (Matrix4x4[])value);} },
+            {typeof(int2),          (value, shaderVarName, mat) =>{ var v = (int2)value;  mat.SetVector(shaderVarName, new Vector4(v.x,v.y,0,0));} },
+            {typeof(float2),        (value, shaderVarName, mat) =>{ var v = (float2)value;mat.SetVector(shaderVarName, new Vector4(v.x,v.y,0,0));} },
+            {typeof(float3),        (value, shaderVarName, mat) =>{ var v = (float3)value;mat.SetVector(shaderVarName, new Vector4(v.x,v.y,v.z,0));} },
+            {typeof(Vector2),       (value, shaderVarName, mat) =>{ mat.SetVector(shaderVarName, (Vector2)value);} },
+            {typeof(Vector3),       (value, shaderVarName, mat) =>{ mat.SetVector(shaderVarName, (Vector3)value);} },
+            {typeof(Vector4),       (value, shaderVarName, mat) =>{ mat.SetVector(shaderVarName, (Vector4)value);} },
+            {typeof(Texture),       (value, shaderVarName, mat) =>{ mat.SetTexture(shaderVarName, (Texture)value);} },
+            {typeof(Texture2D),     (value, shaderVarName, mat) =>{ mat.SetTexture(shaderVarName, (Texture2D)value);} },
+            {typeof(Texture3D),     (value, shaderVarName, mat) =>{ mat.SetTexture(shaderVarName, (Texture3D)value);} },
+            {typeof(RenderTexture), (value, shaderVarName, mat) =>{ mat.SetTexture(shaderVarName, (RenderTexture)value);} },
+        };
         internal string shaderName;
         public virtual void SetToGPU(object container, ComputeShader cs, string kernel = null)
         {
@@ -83,6 +103,19 @@ namespace UnityTools.Common
                 return;
             }
             TypeSetterMap[t].Invoke(value, this.shaderName, cs, kernel);
+        }
+        public virtual void SetToMaterial(object container, Material material)
+        {
+            LogTool.AssertNotNull(container);
+            LogTool.AssertNotNull(material);
+            var t = this.Value.FieldType;
+            var value = this.Value.GetValue(container);
+            if(TypeSetterMatMap.ContainsKey(t) == false)
+            {
+                LogTool.Log(t.ToString() + " Handler not found");
+                return;
+            }
+            TypeSetterMatMap[t].Invoke(value, this.shaderName, material);
         }
         public virtual void Release()
         {
@@ -130,7 +163,12 @@ namespace UnityTools.Common
             this.cpuData = other.cpuData != null ? new T[this.size] : null;
             this.gpuBuffer = other.Data;
         }
-        public override void Release()
+        public void ClearData(bool gpu = true)
+        {
+            this.cpuData = this.cpuData != null ? new T[this.size] : null;
+            if (gpu) this.UpdateBuffer();
+        }
+       public override void Release()
         {
             base.Release();
             this.gpuBuffer?.Release();
@@ -146,6 +184,14 @@ namespace UnityTools.Common
             this.UpdateBuffer();
             var id = cs.FindKernel(kernel);
             cs.SetBuffer(id, this.shaderName, this.Data);
+        }
+        public override void SetToMaterial(object container, Material material)
+        {
+            LogTool.AssertNotNull(container);
+            LogTool.AssertNotNull(material);
+            if (material == null) return;
+            this.UpdateBuffer();
+            material.SetBuffer(this.shaderName, this.Data);
         }
 
         public override string ToString()

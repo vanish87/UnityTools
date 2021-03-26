@@ -22,16 +22,18 @@ Shader "Unlit/NodeShader"
     {
         float4 position : SV_POSITION;
 		float2 uv : TEXCOORD0;
-        float4 color : TEXCOORD1;
+        float4 color : COLOR;
         UNITY_VERTEX_INPUT_INSTANCE_ID
 	};
 
 	sampler2D _MainTex;
 	float4 _ST;
 
+    float _NodeScale;
+    float _LineScale;
 
-    StructuredBuffer<Node> _Nodes;
-    StructuredBuffer<Edge> _Edges;
+    StructuredBuffer<Node> _NodeBuffer;
+    StructuredBuffer<Edge> _EdgeBuffer;
 
 	v2f vert(appdata i, uint iid : SV_InstanceID) 
 	{
@@ -39,8 +41,8 @@ Shader "Unlit/NodeShader"
         UNITY_SETUP_INSTANCE_ID(i);
         UNITY_TRANSFER_INSTANCE_ID(i, o);
 
-        Node node = _Nodes[iid];
-        float4 wp = float4(i.vertex.xyz * 0.01 + node.pos,1);
+        Node node = _NodeBuffer[iid];
+        float4 wp = float4(i.vertex.xyz * _NodeScale + node.pos,1) * node.active;
         o.position = UnityObjectToClipPos(wp);
         o.color = float4(node.color.xyz,node.active);
         return o;
@@ -56,9 +58,11 @@ Shader "Unlit/NodeShader"
     SubShader
     {
         // No culling or depth
-        Cull Off ZWrite Off ZTest Always
+        // Cull On ZWrite On ZTest Always
+        // ZWrite On ZTest Always
 		// Blend One One
-		Blend One OneMinusSrcAlpha
+		// Blend One OneMinusSrcAlpha
+        Blend SrcAlpha OneMinusSrcAlpha
     
 		Pass
 		{

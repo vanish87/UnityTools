@@ -74,7 +74,7 @@ namespace UnityTools.Common
         public class IndexGPUGraphData: GPUContainer
         {
             [Shader(Name = "_EdgeToAddBuffer")] public GPUBufferVariable<EdgeToAdd> edgeToAdd = new GPUBufferVariable<EdgeToAdd>();
-            [Shader(Name = "_AdjacentMatrix")] public GPUBufferVariable<float> adjacentMatrix = new GPUBufferVariable<float>();
+            [Shader(Name = "_AdjacentMatrix")] public GPUBufferVariable<int> adjacentMatrix = new GPUBufferVariable<int>();
             [Shader(Name = "dt")] public float dt = 0.05f;
             [Shader(Name = "stiffness")] public float stiffness = 1;
             [Shader(Name = "dmin")] public float3 dmin = 0;
@@ -130,29 +130,77 @@ namespace UnityTools.Common
             this.dispatcher.Dispatch(Kernel.AddEdge, this.data.edgeCount);
         }
 
-        [SerializeField]float raduis = 0.5f;
+        [SerializeField]float radius = 0.5f;
+        [SerializeField]int vcount = 6;
+        [SerializeField]bool withCenter = true;
         protected void AddOneCircle(int sid)
         {
-            var center = new float3(UnityEngine.Random.value, UnityEngine.Random.value, 0) * 0.01f;
             var edges = this.indexData.edgeToAdd.CPUData;
             var edgeCount = 0;
-            var prev = new float3(0);
-            var vcount = 64;
-            edges[edgeCount++] = new EdgeToAdd(sid, pCount, 1 + pCount, new float3(0, 0, 0), new float3(raduis, 0, 0));
-            foreach(var i in Enumerable.Range(1,vcount))
+            var vBase = this.pCount;
+            var center = new float3(UnityEngine.Random.value, UnityEngine.Random.value, 0) * 0.01f;
+            var cid = vcount;
+            var rand = UnityEngine.Random.value;
+            var circle = this.GetCirclePoint(vcount, this.radius);
+            foreach(var i in Enumerable.Range(0,vcount))
             {
-                var rad = i * 1f / vcount * 2 * math.PI;
-                var x = math.cos(rad) * raduis;
-                var y = math.sin(rad) * raduis;
-
-                var nrad = (i+1)%vcount * 1f / vcount * 2 * math.PI;
-                var x1 = math.cos(nrad) * raduis;
-                var y1 = math.sin(nrad) * raduis;
-
-                edges[edgeCount++] = new EdgeToAdd(sid, i + pCount, (i + 1) % vcount + pCount, new float3(x, y, 0) + center, new float3(x1, y1, 0) + center);
-                edges[edgeCount++] = new EdgeToAdd(sid, pCount, (i + 1) % vcount + pCount, new float3(0, 0, 0), new float3(x1, y1, 0) + center);
+                var i1 = i;
+                var i2 = (i + 1) % vcount;
+                edges[edgeCount++] = new EdgeToAdd(sid, i1 + vBase, i2 + vBase, circle[i1] + center, circle[i2] + center);
             }
-            this.pCount += vcount + 1;
+            if(this.withCenter)
+            {
+                foreach (var i in Enumerable.Range(0, vcount))
+                {
+                    edges[edgeCount++] = new EdgeToAdd(sid, i + vBase, cid + vBase, circle[i] + center, center);
+                }
+                this.pCount += vcount + 1;
+            }
+            else
+            {
+                this.pCount += vcount;
+            }
+
+            while (edgeCount < edges.Length) edges[edgeCount++] = new EdgeToAdd(-1, -1, -1, 0, 0);
+        }
+        protected List<float3> GetCirclePoint(int vcount, float radius = 1)
+        {
+            var ret = new List<float3>();
+
+            foreach(var i in Enumerable.Range(0,vcount))
+            {
+                var rad = i * 1f / vcount * 2 * math.PI; 
+                var x = math.cos(rad) * radius;
+                var y = math.sin(rad) * radius;
+                ret.Add(new float3(x,y,0));
+            }
+            return ret;
+        }
+        protected void AddH2O()
+        {
+            var angle = 104.5f;
+            var edges = this.indexData.edgeToAdd.CPUData;
+            var edgeCount = 0;
+            var vBase = this.pCount;
+            var vcount = 3;
+            var y = 0.1f;
+            var x = math.tan(angle * 0.5f * Mathf.Deg2Rad) * y;
+            var center = new float3(UnityEngine.Random.value, UnityEngine.Random.value, 0) * 0.01f;
+            var rand = UnityEngine.Random.rotationUniform;
+            // rand = Quaternion.Euler(0, 0, UnityEngine.Random.value * 2 * Mathf.PI * Mathf.Rad2Deg);
+            var p1 = rand * new Vector3(x,y,0);
+            var p2 = rand * new Vector3(-x,y,0);
+            edges[edgeCount++] = new EdgeToAdd(sid, vBase, vBase + 1, center, center + new float3(p1));
+            edges[edgeCount++] = new EdgeToAdd(sid, vBase, vBase + 2, center, center + new float3(p2));
+            while (edgeCount < edges.Length) edges[edgeCount++] = new EdgeToAdd(-1, -1, -1, 0, 0);
+
+            this.sid++;
+            this.pCount += vcount;
+            this.dispatcher.Dispatch(Kernel.AddEdge, this.data.edgeCount);
+        }
+        
+        protected void AddHex()
+        {
 
         }
 
@@ -205,6 +253,7 @@ namespace UnityTools.Common
         protected override void Update()
         {
             if(Input.GetKeyDown(KeyCode.C)) this.AddCircle();
+            if(Input.GetKeyDown(KeyCode.H)) this.AddH2O();
             if(Input.GetKeyDown(KeyCode.M)) this.AddMesh(this.testMesh);
             // if(update)
             // foreach(var i in Enumerable.Range(0,3))
