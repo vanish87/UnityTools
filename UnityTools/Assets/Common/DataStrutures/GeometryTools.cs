@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityTools.Common;
@@ -10,6 +11,19 @@ namespace UnityTools.Algorithm
 {
     public class GeometryTools
     {
+        public static List<float3> GenerateCirclePoint(int vcount, float radius = 1)
+        {
+            var ret = new List<float3>();
+
+            foreach(var i in Enumerable.Range(0,vcount))
+            {
+                var rad = i * 1f / vcount * 2 * math.PI; 
+                var x = math.cos(rad) * radius;
+                var y = math.sin(rad) * radius;
+                ret.Add(new float3(x,y,0));
+            }
+            return ret;
+        }       
         private static float Norm2(float3 v)
         {
             return math.dot(v, v);

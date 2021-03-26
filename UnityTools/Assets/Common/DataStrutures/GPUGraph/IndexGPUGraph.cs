@@ -3,6 +3,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using Unity.Mathematics;
 using UnityEngine;
+using UnityTools.Algorithm;
 using UnityTools.Rendering;
 
 namespace UnityTools.Common
@@ -141,7 +142,7 @@ namespace UnityTools.Common
             var center = new float3(UnityEngine.Random.value, UnityEngine.Random.value, 0) * 0.01f;
             var cid = vcount;
             var rand = UnityEngine.Random.value;
-            var circle = this.GetCirclePoint(vcount, this.radius);
+            var circle = GeometryTools.GenerateCirclePoint(vcount, this.radius);
             foreach(var i in Enumerable.Range(0,vcount))
             {
                 var i1 = i;
@@ -163,19 +164,7 @@ namespace UnityTools.Common
 
             while (edgeCount < edges.Length) edges[edgeCount++] = new EdgeToAdd(-1, -1, -1, 0, 0);
         }
-        protected List<float3> GetCirclePoint(int vcount, float radius = 1)
-        {
-            var ret = new List<float3>();
-
-            foreach(var i in Enumerable.Range(0,vcount))
-            {
-                var rad = i * 1f / vcount * 2 * math.PI; 
-                var x = math.cos(rad) * radius;
-                var y = math.sin(rad) * radius;
-                ret.Add(new float3(x,y,0));
-            }
-            return ret;
-        }
+        
         protected void AddH2O()
         {
             var angle = 104.5f;
