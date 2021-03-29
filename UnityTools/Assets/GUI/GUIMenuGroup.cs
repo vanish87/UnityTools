@@ -109,7 +109,7 @@ namespace UnityTools.GUITool
         {
             foreach(var w in this.windowData)
             {
-                GUILayout.Label(w.title + " window uses " + w.key.ToString() + " Key");
+                GUILayout.Label("Use " + w.key.ToString()+ " key for " + w.title + " window");
             }
         }
         
