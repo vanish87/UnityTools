@@ -183,6 +183,7 @@ namespace UnityTools.Common
             if (cs == null) return;
             this.UpdateBuffer();
             var id = cs.FindKernel(kernel);
+            cs.SetInt(this.shaderName + "Count", this.Size);
             cs.SetBuffer(id, this.shaderName, this.Data);
         }
         public override void SetToMaterial(object container, Material material)
