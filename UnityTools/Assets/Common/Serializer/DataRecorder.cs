@@ -78,9 +78,10 @@ namespace UnityTools.Common
             lock(this.lockObj)
             {
                 this.data.time = DateTime.Now;
-                var fileName = this.FilePrefix + this.data.time.ToString("_yyyy_MM_dd_HH_mm_ss");
-                var path = System.IO.Path.Combine(Application.streamingAssetsPath, fileName + FileExtension);
+                this.fileName = this.FilePrefix + this.data.time.ToString("_yyyy_MM_dd_HH_mm_ss") + FileExtension;
+                var path = System.IO.Path.Combine(Application.streamingAssetsPath, this.fileName );
                 FileTool.Write(path, this.data, this.SaveType);
+
             }
         }
 
