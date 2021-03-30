@@ -34,9 +34,9 @@ namespace UnityTools.Rendering
         {
             foreach(var t in this.textureList)
             {
-                t.texture.DestoryObj();
+                t.texture?.DestoryObj();
             }
-            this.finalOutput.DestoryObj();
+            this.finalOutput?.DestoryObj();
             this.CleanUp();
         }
 
@@ -47,8 +47,8 @@ namespace UnityTools.Rendering
 
         protected virtual void OnDisable()
         {
-            this.combineMat.Dispose();
-            this.finalOutput.DestoryObj();
+            this.combineMat?.Dispose();
+            this.finalOutput?.DestoryObj();
         }
 
         public void AddTexture(Texture tex)
