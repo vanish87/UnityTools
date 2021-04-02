@@ -98,7 +98,7 @@ namespace UnityTools.Common
                 this.data = FileTool.Read<SaveData>(path, this.SaveType);
             }
         }
-        public void OnGrawGUI()
+        public void OnDrawGUI()
         {
             using (var h = new GUILayout.HorizontalScope())
             {
