@@ -98,6 +98,16 @@ namespace UnityTools.Common
                 this.data = FileTool.Read<SaveData>(path, this.SaveType);
             }
         }
+        public void OnGrawGUI()
+        {
+            using (var h = new GUILayout.HorizontalScope())
+            {
+                GUILayout.Label("Current Mode " + this.Mode.ToString());
+                if (GUILayout.Button("Record")) { this.Mode = DataRecorderMode.Record; }
+                if (GUILayout.Button("Save")) { this.Save(); }
+                if (GUILayout.Button("LoadAndReplay")) { this.Load(); this.Mode = DataRecorderMode.Replay; }
+            }
+        }
     }
 
 }
