@@ -130,6 +130,14 @@ namespace UnityTools.Common
 
             Application.targetFrameRate = this.environment.appSetting.targetFPS;
             QualitySettings.vSyncCount = this.environment.appSetting.vsync;
+
+            foreach(var config in ObjectTool.FindAllObject<IConfigure>())
+            {
+                config.Initialize();
+            }
+            #if !DEBUG
+            this.environment.runtime = Environment.Runtime.Production;
+            #endif
         }
 
         protected virtual Environment OnCreateEnv()

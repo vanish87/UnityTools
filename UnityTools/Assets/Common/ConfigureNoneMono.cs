@@ -7,7 +7,7 @@ namespace UnityTools.Common
     public abstract class ConfigureNoneMono<T> : IConfigure<T>, IConfigureSerialize where T : new()
     {
         public T D => this.data ??= new T();
-        public bool Open => this.open;
+        public bool IsOpen => this.open;
 
         public virtual string FilePath => ConfigureTool.GetFilePath(this.ToString(), this.SaveType, this.Preset);
 
@@ -37,7 +37,7 @@ namespace UnityTools.Common
             this.Initialize();
         }
 
-        public virtual void OnConfigureChange(IConfigure<T> sender, EventArgs args) { }
+        public virtual void OnConfigureChange(object sender, EventArgs args) { }
 
         public void Initialize()
         {
@@ -71,7 +71,7 @@ namespace UnityTools.Common
         {
             if (Input.GetKeyDown(this.OpenKey))
             {
-                this.open = !this.Open;
+                this.open = !this.IsOpen;
             }
             if (Input.GetKeyDown(this.LoadKey))
             {
@@ -86,7 +86,7 @@ namespace UnityTools.Common
 
         public virtual void OnGUIDraw()
         {
-            if(!this.Open) return;
+            if(!this.IsOpen) return;
             if(this.D is GUIContainer gui)
             {
                 gui.OnGUI();

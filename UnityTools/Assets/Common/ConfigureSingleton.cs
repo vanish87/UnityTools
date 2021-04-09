@@ -9,7 +9,7 @@ namespace UnityTools.Common
     public abstract class ConfigureSingleton<T> : SingletonMonoBehaviour<ConfigureSingleton<T>>, IConfigure<T>, IConfigureSerialize where T : new()
     {
         public T D => this.data ??= new T();
-        public bool Open => this.open;
+        public bool IsOpen => this.open;
 
         public virtual string FilePath => ConfigureTool.GetFilePath(this.ToString(), this.SaveType, this.Preset);
 
@@ -34,7 +34,7 @@ namespace UnityTools.Common
         protected bool open = false;
         private GUIContainer guiContainer = null;
 
-        public virtual void OnConfigureChange(IConfigure<T> sender, EventArgs args) { }
+        public virtual void OnConfigureChange(object sender, EventArgs args) { }
 
         public void Initialize()
         {
@@ -78,7 +78,7 @@ namespace UnityTools.Common
         {
             if (Input.GetKeyDown(this.OpenKey))
             {
-                this.open = !this.Open;
+                this.open = !this.IsOpen;
             }
             if (Input.GetKeyDown(this.LoadKey))
             {
@@ -93,7 +93,7 @@ namespace UnityTools.Common
         private Rect windowRect;
         protected virtual void OnGUIDrawWindow()
         {
-            if(!this.Open) return;
+            if(!this.IsOpen) return;
             this.windowRect =
                 GUILayout.Window(
                     //GUIUtil.ResizableWindow(
@@ -107,7 +107,7 @@ namespace UnityTools.Common
         }
         public virtual void OnGUIDraw()
         {
-            if(!this.Open) return;
+            if(!this.IsOpen) return;
             if (this.D is GUIContainer gui)
             {
                 gui.OnGUI();
