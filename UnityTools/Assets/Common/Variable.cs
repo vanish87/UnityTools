@@ -64,6 +64,7 @@ namespace UnityTools.Common
             {typeof(int2),          (value, shaderVarName, cs, kernel) =>{ var v = (int2)value;cs.SetVector(shaderVarName, new Vector4(v.x,v.y,0,0));} },
             {typeof(float2),        (value, shaderVarName, cs, kernel) =>{ var v = (float2)value;cs.SetVector(shaderVarName, new Vector4(v.x,v.y,0,0));} },
             {typeof(float3),        (value, shaderVarName, cs, kernel) =>{ var v = (float3)value;cs.SetVector(shaderVarName, new Vector4(v.x,v.y,v.z,0));} },
+            {typeof(float4),        (value, shaderVarName, cs, kernel) =>{ var v = (float4)value;cs.SetVector(shaderVarName, new Vector4(v.x,v.y,v.z,v.w));} },
             {typeof(Vector2),       (value, shaderVarName, cs, kernel) =>{ cs.SetVector(shaderVarName, (Vector2)value);} },
             {typeof(Vector3),       (value, shaderVarName, cs, kernel) =>{ cs.SetVector(shaderVarName, (Vector3)value);} },
             {typeof(Vector4),       (value, shaderVarName, cs, kernel) =>{ cs.SetVector(shaderVarName, (Vector4)value);} },
@@ -82,6 +83,7 @@ namespace UnityTools.Common
             {typeof(int2),          (value, shaderVarName, mat) =>{ var v = (int2)value;  mat.SetVector(shaderVarName, new Vector4(v.x,v.y,0,0));} },
             {typeof(float2),        (value, shaderVarName, mat) =>{ var v = (float2)value;mat.SetVector(shaderVarName, new Vector4(v.x,v.y,0,0));} },
             {typeof(float3),        (value, shaderVarName, mat) =>{ var v = (float3)value;mat.SetVector(shaderVarName, new Vector4(v.x,v.y,v.z,0));} },
+            {typeof(float4),        (value, shaderVarName, mat) =>{ var v = (float4)value;mat.SetVector(shaderVarName, new Vector4(v.x,v.y,v.z,v.w));} },
             {typeof(Vector2),       (value, shaderVarName, mat) =>{ mat.SetVector(shaderVarName, (Vector2)value);} },
             {typeof(Vector3),       (value, shaderVarName, mat) =>{ mat.SetVector(shaderVarName, (Vector3)value);} },
             {typeof(Vector4),       (value, shaderVarName, mat) =>{ mat.SetVector(shaderVarName, (Vector4)value);} },
@@ -133,24 +135,26 @@ namespace UnityTools.Common
         public string ShaderName => this.shaderName;
         private T[] cpuData;
         private int size;
+        private bool autoSet = true;
         private ComputeBufferType type = ComputeBufferType.Default;
         private ComputeBuffer gpuBuffer;
-        public GPUBufferVariable(string name, int size, bool cpuData, ComputeBufferType type = ComputeBufferType.Default)
+        public GPUBufferVariable(string name, int size, bool cpuData, bool autoSet = true, ComputeBufferType type = ComputeBufferType.Default)
         {
             this.displayName = name;
             this.shaderName = name;
-            this.InitBuffer(size, cpuData, type);
+            this.InitBuffer(size, cpuData, autoSet, type);
         }
-        public GPUBufferVariable(int size = 1, bool cpuData = false, ComputeBufferType type = ComputeBufferType.Default)
+        public GPUBufferVariable(int size = 1, bool cpuData = false, bool autoSet = false, ComputeBufferType type = ComputeBufferType.Default)
         {
-            this.InitBuffer(size, cpuData, type);
+            this.InitBuffer(size, cpuData, autoSet, type);
         }
-        public void InitBuffer(int size, bool cpuData = false, ComputeBufferType type = ComputeBufferType.Default)
+        public void InitBuffer(int size, bool cpuData = false, bool autoSet = true, ComputeBufferType type = ComputeBufferType.Default)
         {
             this.Release();
 
             this.size = size;
             this.type = type;
+            this.autoSet = autoSet;
             this.cpuData = cpuData ? new T[this.size] : null;
         }
 
@@ -166,7 +170,7 @@ namespace UnityTools.Common
         public void ClearData(bool gpu = true)
         {
             this.cpuData = this.cpuData != null ? new T[this.size] : null;
-            if (gpu) this.UpdateBuffer();
+            if (gpu) this.SetToGPUBuffer();
         }
        public override void Release()
         {
@@ -181,7 +185,7 @@ namespace UnityTools.Common
             LogTool.AssertNotNull(container);
             LogTool.AssertNotNull(cs);
             if (cs == null) return;
-            this.UpdateBuffer();
+            this.SetToGPUBuffer();
             var id = cs.FindKernel(kernel);
             cs.SetInt(this.shaderName + "Count", this.Size);
             cs.SetBuffer(id, this.shaderName, this.Data);
@@ -191,7 +195,7 @@ namespace UnityTools.Common
             LogTool.AssertNotNull(container);
             LogTool.AssertNotNull(material);
             if (material == null) return;
-            this.UpdateBuffer();
+            this.SetToGPUBuffer();
             material.SetBuffer(this.shaderName, this.Data);
         }
 
@@ -200,11 +204,19 @@ namespace UnityTools.Common
             return "ComputeBuffer " + this.shaderName + " of type " + typeof(T) + " with size " + this.size;
         }
 
-        public void UpdateBuffer()
+        public void SetToGPUBuffer()
+        {
+            if(this.CPUData != null && this.autoSet)
+            {
+                this.Data.SetData(this.CPUData);
+            }
+        }
+
+        public void GetToCPUData()
         {
             if(this.CPUData != null)
             {
-                this.Data.SetData(this.CPUData);
+                this.Data.GetData(this.CPUData);
             }
         }
     }
