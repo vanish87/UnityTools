@@ -104,7 +104,10 @@ namespace UnityTools.Common
             LowLevel    = 0,
             Network     = 100,
             Default     = 1000,
-            Application = 2000,
+
+            DynamicCreation = 1500,
+            AfterDynamicCreation = 5000,
+            Application = 10000,
         }
 
         [SerializeField] protected bool global = false;
