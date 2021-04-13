@@ -75,14 +75,14 @@ namespace UnityTools.Common
             this.data.nodeBuffer.InitBuffer(this.data.nodeCount, false);
             this.data.edgeBuffer.InitBuffer(this.data.edgeCount, false);
 
-            this.data.nodeIndexBuffer.InitBuffer(this.data.nodeCount, false, ComputeBufferType.Append);
-            this.data.edgeIndexBuffer.InitBuffer(this.data.edgeCount, false, ComputeBufferType.Append);
+            this.data.nodeIndexBuffer.InitBuffer(this.data.nodeCount, false, false, ComputeBufferType.Append);
+            this.data.edgeIndexBuffer.InitBuffer(this.data.edgeCount, false, false, ComputeBufferType.Append);
 
             this.data.nodeIndexBufferConsume.InitBuffer(this.data.nodeIndexBuffer);
             this.data.edgeIndexBufferConsume.InitBuffer(this.data.edgeIndexBuffer);
 
-            this.data.edgeIndirectBuffer.InitBuffer(5, true, ComputeBufferType.IndirectArguments);
-            this.data.nodeIndirectBuffer.InitBuffer(5, true, ComputeBufferType.IndirectArguments);
+            this.data.edgeIndirectBuffer.InitBuffer(5, true, false, ComputeBufferType.IndirectArguments);
+            this.data.nodeIndirectBuffer.InitBuffer(5, true, false, ComputeBufferType.IndirectArguments);
         }
 
         protected void InitDispatcher()
@@ -138,7 +138,7 @@ namespace UnityTools.Common
             args[1] = (uint)count;
             args[2] = (uint)mesh.GetIndexStart(subIndex);
             args[3] = (uint)mesh.GetBaseVertex(subIndex);
-            buffer.UpdateBuffer();
+            buffer.SetToGPUBuffer();
         }
 
         protected Mesh GenerateEdgeMesh()
