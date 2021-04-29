@@ -205,7 +205,7 @@ namespace UnityTools.ComputeShaderTool
         }
         protected virtual void OnRenderObject()
         {
-            var inverseViewMatrix = Camera.main.worldToCameraMatrix.inverse;
+            var inverseViewMatrix = Camera.current.worldToCameraMatrix.inverse;
 
             this.m.SetPass(0);
             this.m.SetMatrix("_InvViewMatrix", inverseViewMatrix);
