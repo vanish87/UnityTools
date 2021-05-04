@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using UnityEngine;
@@ -13,9 +14,9 @@ namespace UnityTools.Networking
     [Serializable]
     public class Datatex : MessageDataSocket.IMessageData
     {
-        [SerializeField]int test;
+        [SerializeField] int test;
 
-        [SerializeField]string testString = "tset PC";
+        [SerializeField] string testString = "tset PC";
 
         public string HashString => typeof(Datatex).ToString();
 
@@ -36,70 +37,77 @@ namespace UnityTools.Networking
         [Serializable]
         public class Data
         {
-            public string hash;
             public int messageID;
+            public Type type;
             public short replyPort;
             public byte[] data;
         }
 
         public interface IMessage
         {
-            string hash { get; }
             byte[] OnSerialize();
-            void OnDeserialize(byte[] data);
 
             void OnSuccessReceived();
         }
 
-        protected ConcurrentDictionary<string, Data> currentSendingData = new ConcurrentDictionary<string, Data>();
+        protected ConcurrentDictionary<int, (IMessage, Data)> currentSendingData = new ConcurrentDictionary<int, (IMessage, Data)>();
         protected ConcurrentDictionary<int, Data> currentReceivedData = new ConcurrentDictionary<int, Data>();
-        protected ConcurrentDictionary<string, IMessage> messageMap = new ConcurrentDictionary<string, IMessage>();
         protected List<SocketData> remote = new List<SocketData>();
         protected short replayPort = -1;
 
         protected int messageCounter = 0;
+        protected Action<IMessage> newMessageActions;
+
+        public void NewMessage(Action<IMessage> action)
+        {
+            this.newMessageActions -= action;
+            this.newMessageActions += action;
+        }
 
         protected short GetNextAvailablePortFrom(short port = 10000)
         {
             var currentPorts = System.Net.NetworkInformation.IPGlobalProperties.GetIPGlobalProperties().GetActiveUdpListeners();
-            while(port < short.MaxValue)
+            while (port < short.MaxValue)
             {
-                var np = Array.Find(currentPorts,udp=>udp.Port == port);
-                if(np == null) return port;
+                var np = Array.Find(currentPorts, udp => udp.Port == port);
+                if (np == null) return port;
 
                 port++;
             }
             return -1;
         }
 
-        public void SetupReply()
+        protected void SetupReply()
         {
-            if(this.replayPort > 0) return;
+            if (this.replayPort > 0) return;
             this.replayPort = this.GetNextAvailablePortFrom();
             this.StartReceive(this.replayPort);
         }
 
         public override void OnMessage(SocketData socket, Data data)
         {
-            lock(obj)
+            if (this.replayPort > 0)
             {
-            if(this.replayPort > 0 && this.currentSendingData.ContainsKey(data.hash))
-            {
-                var d = default(Data);
-                this.currentSendingData.TryRemove(data.hash, out d);
-                if (this.messageMap.ContainsKey(data.hash)) this.messageMap[data.hash].OnSuccessReceived();
+                var d = default((IMessage, Data));
+                if (this.currentSendingData.TryRemove(data.messageID, out d))
+                {
+                    d.Item1.OnSuccessReceived();
+                }
             }
             else
             {
-                if(!this.currentReceivedData.ContainsKey(data.messageID))
+                if (!this.currentReceivedData.ContainsKey(data.messageID))
                 {
-                    this.messageMap[data.hash].OnDeserialize(data.data);
+                    var method = typeof(Serialization).GetMethod("ByteArrayToObject", BindingFlags.Public | BindingFlags.Static);
+                    var typeFunc = method.MakeGenericMethod(data.type);
+                    var ret = (IMessage)typeFunc?.Invoke(null, new object[1] { data.data });
+                    this.newMessageActions?.Invoke(ret);
                 }
 
                 this.currentReceivedData.AddOrUpdate(data.messageID, data, (mid, old) => data);
                 var server = SocketData.Make(socket.endPoint.Address, data.replyPort);
+                data.data = null;
                 this.Send(server, data);
-            }
             }
         }
 
@@ -107,38 +115,33 @@ namespace UnityTools.Networking
         {
             this.remote = sockets;
         }
-        public void BindData(IMessage message)
-        {
-            if(this.messageMap.ContainsKey(message.hash))
-            {
-                LogTool.Log("Same hash, use different hash", LogLevel.Warning);
-                return;
-            }
-            this.messageMap.AddOrUpdate(message.hash, message, (h, old) => message);
-        }
         public void Send(IMessage message)
         {
-            // this.SetupReply();
+            this.SetupReply();
 
-            var hash = message.hash;
-            var mid = this.messageCounter++%int.MaxValue;
-            var data = new Data() { hash = message.hash, messageID = mid, replyPort = this.replayPort, data = message.OnSerialize() };
-            this.currentSendingData.AddOrUpdate(hash, data, (h, old)=>data);
+            var mid = this.messageCounter++ % int.MaxValue;
+            var data = new Data() { type = message.GetType(), messageID = mid, replyPort = this.replayPort, data = message.OnSerialize() };
+            this.currentSendingData.AddOrUpdate(mid, (message, data), (h, old) => (message, data));
         }
 
-        object obj = new object();
 
         public void Update()
         {
-            lock(obj)
-            {
-            foreach(var r in this.remote)
+            foreach (var r in this.remote)
             {
                 foreach (var d in this.currentSendingData)
                 {
-                    this.Send(r, d.Value);
+                    this.Send(r, d.Value.Item2);
                 }
             }
+        }
+
+        public void OnGUI()
+        {
+
+            foreach (var d in this.currentSendingData)
+            {
+                GUILayout.Label(d.Key.ToString());
             }
         }
     }
