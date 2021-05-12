@@ -50,8 +50,11 @@ namespace UnityTools.Networking
             void OnSuccessReceived();
         }
 
-        protected ConcurrentDictionary<int, (IMessage, Data)> currentSendingData = new ConcurrentDictionary<int, (IMessage, Data)>();
-        protected ConcurrentDictionary<int, Data> currentReceivedData = new ConcurrentDictionary<int, Data>();
+        protected readonly float timeout = 10;
+
+        protected ConcurrentDictionary<int, (IMessage, Data, DateTime)> currentSendingData = new ConcurrentDictionary<int, (IMessage, Data, DateTime)>();
+        protected ConcurrentQueue<(IMessage, Data)> currentSendingQueue = new ConcurrentQueue<(IMessage, Data)>();
+        protected ConcurrentDictionary<int, DateTime> currentReceivedData = new ConcurrentDictionary<int, DateTime>();
         protected List<SocketData> remote = new List<SocketData>();
         protected short replayPort = -1;
 
@@ -88,7 +91,7 @@ namespace UnityTools.Networking
         {
             if (this.replayPort > 0)
             {
-                var d = default((IMessage, Data));
+                var d = default((IMessage, Data, DateTime));
                 if (this.currentSendingData.TryRemove(data.messageID, out d))
                 {
                     d.Item1.OnSuccessReceived();
@@ -104,10 +107,14 @@ namespace UnityTools.Networking
                     this.newMessageActions?.Invoke(ret);
                 }
 
-                this.currentReceivedData.AddOrUpdate(data.messageID, data, (mid, old) => data);
-                var server = SocketData.Make(socket.endPoint.Address, data.replyPort);
-                data.data = null;
-                this.Send(server, data);
+                this.currentReceivedData.AddOrUpdate(data.messageID, DateTime.Now, (mid, old) => DateTime.Now);
+
+                if(data.replyPort > 0)
+                {
+                    var server = SocketData.Make(socket.endPoint.Address, data.replyPort);
+                    data.data = null;
+                    this.Send(server, data);
+                }
             }
         }
 
@@ -121,7 +128,13 @@ namespace UnityTools.Networking
 
             var mid = this.messageCounter++ % int.MaxValue;
             var data = new Data() { type = message.GetType(), messageID = mid, replyPort = this.replayPort, data = message.OnSerialize() };
-            this.currentSendingData.AddOrUpdate(mid, (message, data), (h, old) => (message, data));
+            this.currentSendingData.AddOrUpdate(mid, (message, data, DateTime.Now), (h, old) => (message, data, DateTime.Now));
+        }
+        public void SendNoneReply(IMessage message)
+        {
+            var mid = this.messageCounter++ % int.MaxValue;
+            var data = new Data() { type = message.GetType(), messageID = mid, replyPort = -1, data = message.OnSerialize() };
+            this.currentSendingQueue.Enqueue((message, data));
         }
 
 
@@ -133,12 +146,53 @@ namespace UnityTools.Networking
                 {
                     this.Send(r, d.Value.Item2);
                 }
+                while(this.currentSendingQueue.Count > 0)
+                {
+                    var d = default((IMessage, Data));
+                    if(this.currentSendingQueue.TryDequeue(out d))
+                    {
+                        this.Send(r, d.Item2);
+                        d.Item1.OnSuccessReceived();
+                    }
+                }
             }
+
+            this.UpdateSendingTimeout();
+            this.UpdateReceiveTimeout();
+
         }
+
+        protected void UpdateSendingTimeout()
+        {
+            var timeout = new List<int>();
+            foreach(var d in this.currentSendingData)
+            {
+                if(DateTime.Now.Subtract(d.Value.Item3).Seconds > this.timeout)
+                {
+                    timeout.Add(d.Key);
+                }
+            }
+            foreach(var mid in timeout) this.currentSendingData.TryRemove(mid, out _);
+
+        }
+
+        protected void UpdateReceiveTimeout()
+        {
+
+            var timeout = new List<int>();
+            foreach(var d in this.currentReceivedData)
+            {
+                if(DateTime.Now.Subtract(d.Value).Seconds > this.timeout)
+                {
+                    timeout.Add(d.Key);
+                }
+            }
+            foreach(var mid in timeout) this.currentReceivedData.TryRemove(mid, out _);
+        }
+
 
         public void OnGUI()
         {
-
             foreach (var d in this.currentSendingData)
             {
                 GUILayout.Label(d.Key.ToString());
