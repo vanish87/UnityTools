@@ -90,6 +90,7 @@ namespace UnityTools.Common
                 if (v.FieldType.IsSubclassOf(typeof(GPUVariable)))
                 {
                     var variable = (GPUVariable)v.GetValue(this.Container);
+                    if(variable == null) return;
                     variable.Value = v;
                     variable.defaultValue = null;
                     variable.lastValidValue = null;
