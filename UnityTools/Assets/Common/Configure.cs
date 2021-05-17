@@ -3,16 +3,16 @@ using UnityEngine.SceneManagement;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using UnityTools.Common;
 using UnityTools.GUITool;
 
 namespace UnityTools
 {
-    public interface IConfigure<T>
+    public interface IConfigure
     {
-        void OnConfigureChange(IConfigure<T> sender, EventArgs args);
-        T D { get; }
-        bool Open { get; }
+        void OnConfigureChange(object sender, EventArgs args);
+        bool IsOpen { get; }
         string FilePath { get; }
         ConfigurePreset Preset { get; }
 
@@ -25,6 +25,11 @@ namespace UnityTools
         void Load();
         void NotifyChange();
         void OnGUIDraw();
+
+    }
+    public interface IConfigure<T> : IConfigure
+    {
+        T D { get; }
     }
 
     public interface IConfigureSerialize
@@ -71,7 +76,7 @@ namespace UnityTools
     public abstract class Configure<T> : MonoBehaviour, IConfigure<T>, IConfigureSerialize where T : new()
     {
         public T D => this.data ??= new T();
-        public bool Open => this.open;
+        public bool IsOpen => this.open;
 
         public virtual string FilePath => ConfigureTool.GetFilePath(this.ToString(), this.SaveType, this.Preset);
 
@@ -97,7 +102,7 @@ namespace UnityTools
         protected bool open = false;
         private GUIContainer guiContainer = null;
 
-        public virtual void OnConfigureChange(IConfigure<T> sender, EventArgs args) { }
+        public virtual void OnConfigureChange(object sender, EventArgs args) { }
 
         public void Initialize()
         {
@@ -143,7 +148,7 @@ namespace UnityTools
         {
             if (Input.GetKeyDown(this.OpenKey))
             {
-                this.open = !this.Open;
+                this.open = !this.IsOpen;
             }
             if (Input.GetKeyDown(this.LoadKey))
             {
@@ -159,7 +164,7 @@ namespace UnityTools
         private Rect windowRect;
         protected virtual void OnGUIDrawWindow()
         {
-            if(!this.Open) return;
+            if(!this.IsOpen) return;
             this.windowRect =
                 GUILayout.Window(
                     //GUIUtil.ResizableWindow(
@@ -174,8 +179,6 @@ namespace UnityTools
 
         public virtual void OnGUIDraw()
         {
-            if(!this.Open) return;
-
             if(this.D is GUIContainer gui)
             {
                 gui.OnGUI();
@@ -397,28 +400,75 @@ namespace UnityTools
                 }
             }
         }
-        static public void OnGUIEnum<T>(ref T value, string displayName = null, GUILayoutOption[] op = null) where T : struct
+        public static bool HasFlag<T>(Enum value, T flag)
         {
-            using (var h = new GUILayout.VerticalScope())
+            Type underlyingType = Enum.GetUnderlyingType(value.GetType());
+
+            // note: AsInt mean: math integer vs enum (not the c# int type)
+            dynamic valueAsInt = Convert.ChangeType(value, underlyingType);
+            dynamic flagAsInt = Convert.ChangeType(flag, underlyingType);
+
+            if(flagAsInt == 0) return false;
+            if(flagAsInt == ~0) return false;
+
+            return (valueAsInt & flagAsInt) == flagAsInt;
+        }
+        public static T SetFlag<T>(Enum value, T flag, bool set)
+        {
+            Type underlyingType = Enum.GetUnderlyingType(value.GetType());
+
+            // note: AsInt mean: math integer vs enum (not the c# int type)
+            dynamic valueAsInt = Convert.ChangeType(value, underlyingType);
+            dynamic flagAsInt = Convert.ChangeType(flag, underlyingType);
+            if (set)
             {
-                var labels = Enum.GetNames(typeof(T));
-                var index = Array.IndexOf(labels, Enum.GetName(typeof(T), value));
-                if (labels.Length > 1)
+                valueAsInt |= flagAsInt;
+            }
+            else
+            {
+                valueAsInt &= ~flagAsInt;
+            }
+
+            return (T)valueAsInt;
+        }
+        static public void OnGUIEnum<T>(ref T value, string displayName = null, GUILayoutOption[] op = null) where T : struct, System.Enum
+        {
+            // if(typeof(T).GetCustomAttributes<FlagsAttribute>().Any())
+            // {
+            //     using (var h = new GUILayout.HorizontalScope())
+            //     {
+            //         var labels = Enum.GetValues(typeof(T));
+            //         foreach(T l in labels)
+            //         {
+            //             var v =  HasFlag(value, l);
+            //             v = GUILayout.Toggle(v, l.ToString());
+            //             value = SetFlag(value, l, v);
+            //         }
+            //     }
+            // }
+            // else
+            {
+                using (var h = new GUILayout.VerticalScope())
                 {
-                    GUILayout.Label(displayName);
-                    if (index >= 0)
+                    var labels = Enum.GetNames(typeof(T));
+                    var index = Array.IndexOf(labels, Enum.GetName(typeof(T), value));
+                    if (labels.Length > 1)
                     {
-                        index = GUILayout.SelectionGrid(index, labels, 4, op);
-                        Enum.TryParse(labels[index], out value);
+                        GUILayout.Label(displayName);
+                        if (index >= 0)
+                        {
+                            index = GUILayout.SelectionGrid(index, labels, 4, op);
+                            Enum.TryParse(labels[index], out value);
+                        }
+                        else
+                        {
+                            GUILayout.Label(string.Format("value:{0} index {1} is not valid", value, index));
+                        }
                     }
                     else
                     {
-                        GUILayout.Label(string.Format("value:{0} index {1} is not valid", value, index));
+                        GUILayout.Label(displayName + labels.FirstOrDefault());
                     }
-                }
-                else
-                {
-                    GUILayout.Label(displayName + labels.FirstOrDefault());
                 }
             }
         }

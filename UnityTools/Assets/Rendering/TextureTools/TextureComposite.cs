@@ -22,10 +22,23 @@ namespace UnityTools.Rendering
             Horizontal,
             Vertical,
         }
+        public RenderTexture FinalOutput => this.finalOutput;
+        public int TextureCount => this.textureList.Count;
         [SerializeField] protected Shader shader;
         [SerializeField] protected DisposableMaterial combineMat;
         [SerializeField] protected RenderTexture finalOutput;
         [SerializeField] protected List<TextureObject> textureList = new List<TextureObject>();
+
+
+        public virtual void Clear()
+        {
+            foreach(var t in this.textureList)
+            {
+                t.texture?.DestoryObj();
+            }
+            this.finalOutput?.DestoryObj();
+            this.CleanUp();
+        }
 
         protected virtual void OnEnable()
         {
@@ -34,11 +47,11 @@ namespace UnityTools.Rendering
 
         protected virtual void OnDisable()
         {
-            this.combineMat.Dispose();
-            this.finalOutput.DestoryObj();
+            this.combineMat?.Dispose();
+            this.finalOutput?.DestoryObj();
         }
 
-        protected void AddTexture(Texture tex)
+        public void AddTexture(Texture tex)
         {
             this.textureList.Add(new TextureObject() { texture = tex });
         }
@@ -49,7 +62,7 @@ namespace UnityTools.Rendering
             //so it is not responsible for texture resource management
             this.textureList.Clear();
         }
-        protected void CombineTextures()
+        public void CombineTextures()
         {
             if(this.finalOutput == null) return;
 
@@ -62,7 +75,7 @@ namespace UnityTools.Rendering
                 Graphics.Blit(c.texture, this.finalOutput, this.combineMat, 0);
             }
         }
-        protected void SeparateTextures()
+        public void SeparateTextures()
         {
             if(this.finalOutput == null) return;
             
@@ -77,7 +90,7 @@ namespace UnityTools.Rendering
             }
         }
 
-        protected virtual void RecalculateTextureParameter(TextureLayout layout = TextureLayout.Auto)
+        public virtual void RecalculateTextureParameter(TextureLayout layout = TextureLayout.Auto)
         {
             if(this.textureList.Count == 0)
             {
@@ -191,20 +204,30 @@ namespace UnityTools.Rendering
                 }
             }
 
-            this.CreateFinalTexture(newSize, this.textureList[0].texture as RenderTexture);
+            this.CreateFinalTexture(newSize, this.textureList.FirstOrDefault()?.texture);
         }
 
-        protected void CreateFinalTexture(Vector2Int size, RenderTexture source = null)
+        public void UpdateST(List<Vector4> st, Vector2Int newSize)
+        {
+            foreach(var i in Enumerable.Range(0, st.Count))
+            {
+                this.textureList[i].st = st[i];
+            }
+
+            this.CreateFinalTexture(newSize, this.textureList.FirstOrDefault()?.texture);
+        }
+
+        protected void CreateFinalTexture(Vector2Int size, Texture source = null)
         {
             this.finalOutput.DestoryObj();
 
             var desc = new RenderTextureDescriptor(size.x, size.y);
             desc.enableRandomWrite = true;
-            if (source != null)
+            if (source is RenderTexture src)
             {
-                desc.colorFormat = source.format;
-                desc.enableRandomWrite = source.enableRandomWrite;
-                desc.sRGB = source.sRGB;
+                desc.colorFormat = src.format;
+                desc.enableRandomWrite = src.enableRandomWrite;
+                desc.sRGB = src.sRGB;
             }
             this.finalOutput = TextureManager.Create(desc);
             this.finalOutput.name = "FinalOutput";

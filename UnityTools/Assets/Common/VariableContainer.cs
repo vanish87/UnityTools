@@ -40,6 +40,12 @@ namespace UnityTools.Common
                     var buffer = (UnityEngine.ComputeBuffer)v.Value.GetValue(this.Container);
                     buffer?.Release();
                 }
+                else
+                if (v.Value.FieldType.IsSubclassOf(typeof(GPUVariable)))
+                {
+                    var buffer = (GPUVariable)v.Value.GetValue(this.Container);
+                    buffer?.Release();
+                }
             }
         }
         public void ResetToDefault()
@@ -84,6 +90,7 @@ namespace UnityTools.Common
                 if (v.FieldType.IsSubclassOf(typeof(GPUVariable)))
                 {
                     var variable = (GPUVariable)v.GetValue(this.Container);
+                    if(variable == null) return;
                     variable.Value = v;
                     variable.defaultValue = null;
                     variable.lastValidValue = null;

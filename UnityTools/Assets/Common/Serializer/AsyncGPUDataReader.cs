@@ -51,9 +51,9 @@ namespace UnityTools.Common
         }
         protected void ProcessQueue()
         {
-            while (frameQueue.Count > 0)
+            while (this.frameQueue.Count > 0)
             {
-                var frame = frameQueue.Peek();
+                var frame = this.frameQueue.Peek();
 
                 // Edit mode: Wait for readback completion every frame.
                 if (!Application.isPlaying) frame.readback.WaitForCompletion();
@@ -62,7 +62,7 @@ namespace UnityTools.Common
                 if (frame.readback.hasError)
                 {
                     Debug.LogWarning("GPU readback error was detected.");
-                    frameQueue.Dequeue();
+                    this.frameQueue.Dequeue();
                     continue;
                 }
 
@@ -73,7 +73,7 @@ namespace UnityTools.Common
                 // frame asynchronously.
                 this.OnSuccessed(frame);
                 // Done. Remove the frame from the queue.
-                frameQueue.Dequeue();
+                this.frameQueue.Dequeue();
             }
         }
         protected virtual void Update()

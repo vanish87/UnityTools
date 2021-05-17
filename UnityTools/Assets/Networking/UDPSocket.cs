@@ -31,6 +31,10 @@ namespace UnityTools.Networking
             return new SocketData(ip, port);
         }
 
+        public static SocketData Make(IPAddress ip, int port)
+        {
+            return new SocketData(ip, port);
+        }
         protected SocketData(IPEndPoint end)
         {
             this.endPoint = new IPEndPoint(end.Address, end.Port);
@@ -40,6 +44,12 @@ namespace UnityTools.Networking
         protected SocketData(int port = 0)
         {
             this.endPoint = new IPEndPoint(IPAddress.Any, port);
+            //optional reachable check, it may cause memory leak
+            this.reachable = true; // Tool.IsReachable(this.endPoint);
+        }
+        protected SocketData(IPAddress address, int port = 0)
+        {
+            this.endPoint = new IPEndPoint(address, port);
             //optional reachable check, it may cause memory leak
             this.reachable = true; // Tool.IsReachable(this.endPoint);
         }

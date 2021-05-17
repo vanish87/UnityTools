@@ -122,7 +122,7 @@ namespace UnityTools.ComputeShaderTool
             this.variableList = this.GetType()
                      .GetFields(bindingFlags)
                      .Where(field
-                        => field.FieldType.IsSubclassOf(typeof(IComputeShaderParameter))
+                        => typeof(IComputeShaderParameter).IsAssignableFrom(field.FieldType)
                         && !Attribute.IsDefined(field, typeof(NoneGPUAttribute)))
                      .Select(field => field.GetValue(this) as IComputeShaderParameter)
                      .ToList();

@@ -8,15 +8,15 @@ namespace UnityTools.Common.Example
     {
         public Environment Runtime { get; set; }
 
-        public int Order => (int)SystemLauncher.LauncherOrder.Network;
+        public int Order => (int)SystemLauncher.Order.Network;
 
-        public Launcher<SystemLauncher.Data>.LauncherState CurrentState { get; set; }
+        public SystemLauncher.State CurrentState { get; set; }
 
-        public void OnLaunchEvent(SystemLauncher.Data data, Launcher<SystemLauncher.Data>.LaunchEvent levent)
+        public void OnLaunchEvent(SystemLauncher.Data data, SystemLauncher.Event levent)
         {
             switch(levent)
             {
-                case SystemLauncher.LaunchEvent.Init:
+                case SystemLauncher.Event.Init:
                     {
                         var networkData = this.GetNetworkData(data.pcConfigure.D.pcList);
                         this.NotifyUser(networkData);

@@ -10,6 +10,7 @@ namespace UnityTools.Rendering
     #endif
     public class CameraFrustumGizmos : MonoBehaviour
     {
+        public bool AlwaysDisplay = false;
         [SerializeField] protected Camera cam;
         protected void Start()
         {
@@ -18,7 +19,14 @@ namespace UnityTools.Rendering
 
         protected void OnDrawGizmosSelected()
         {
-            if (this.enabled)
+            if (this.enabled && !this.AlwaysDisplay)
+            {
+                OnDrawOffCenterCameraFrustum(this.cam);
+            }
+        }
+        protected void OnDrawGizmos()
+        {
+            if(this.enabled && this.AlwaysDisplay)
             {
                 OnDrawOffCenterCameraFrustum(this.cam);
             }

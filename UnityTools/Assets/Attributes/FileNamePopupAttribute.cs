@@ -6,12 +6,7 @@ namespace UnityTools.Attributes
 {
     public class FileNamePopupAttribute : PropertyAttribute
     {
-        public string regex;
-
-        public FileNamePopupAttribute(string searchPattern)
-        {
-            this.regex = searchPattern;
-        }
+        public string Regex;
     }
 }
  namespace UnityTools.Editor
@@ -39,9 +34,11 @@ namespace UnityTools.Attributes
 
             if (displayNames == null)
             {
-                string regex = (attribute as FileNamePopupAttribute).regex;
+                string regex = (attribute as FileNamePopupAttribute).Regex;
                 InitDisplayNames(regex);
             }
+
+            if(displayNames.Length == 0) return;
 
             if (selectedIndex < 0)
             {

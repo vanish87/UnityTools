@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace UnityTools.Common.Example
 {
-    public class SystemLauncher : Launcher<SystemLauncher.Data>
+    public class SystemLauncher : Launcher<SystemLauncher.Data, Environment>
     {
         [Serializable]
         public class Data

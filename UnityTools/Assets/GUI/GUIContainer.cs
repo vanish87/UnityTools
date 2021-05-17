@@ -15,9 +15,14 @@ namespace UnityTools.GUITool
         {
             {typeof(bool),    HandleBool},
             {typeof(Vector2), HandleVector2},
-            {typeof(int2),    HandleInt2},
             {typeof(Vector3), HandleVector3},
             {typeof(Vector4), HandleVector4},
+            {typeof(int2),    HandleInt2},
+            {typeof(int3),    HandleInt3},
+            {typeof(int4),    HandleInt4},
+            {typeof(float2),  HandleFloat2},
+            {typeof(float3),  HandleFloat3},
+            {typeof(float4),  HandleFloat4},
             {typeof(Color),   HandleColor},
             {typeof(ComputeBuffer), HandleGPUResource},
             {typeof(Texture),       HandleGPUResource},
@@ -76,34 +81,24 @@ namespace UnityTools.GUITool
             {
                 var v = (Vector2)variable.Value.GetValue(container);
                 var lv = (Vector2)variable.lastValidValue;
-                OnFieldGUI(ref v.x, variable.displayName + ".x", ref lv.x, unparsedString);
-                OnFieldGUI(ref v.y, variable.displayName + ".y", ref lv.y, unparsedString);
+                var dv = (Vector2)variable.defaultValue;
+                OnFieldGUI(ref v.x, variable.displayName + ".x", ref lv.x, dv.x, unparsedString);
+                OnFieldGUI(ref v.y, variable.displayName + ".y", ref lv.y, dv.y, unparsedString);
                 variable.Value.SetValue(container, v);
                 variable.lastValidValue = lv;
             }
         }
 
-        static private void HandleInt2(object container, Variable variable, Dictionary<string, string> unparsedString)
-        {
-            using (var h = new GUILayout.HorizontalScope())
-            {
-                var v = (int2)variable.Value.GetValue(container);
-                var lv = (int2)variable.lastValidValue;
-                OnFieldGUI(ref v.x, variable.displayName + ".x", ref lv.x, unparsedString);
-                OnFieldGUI(ref v.y, variable.displayName + ".y", ref lv.y, unparsedString);
-                variable.Value.SetValue(container, v);
-                variable.lastValidValue = lv;
-            }
-        }
         static private void HandleVector3(object container, Variable variable, Dictionary<string, string> unparsedString)
         {
             using (var h = new GUILayout.HorizontalScope())
             {
                 var v = (Vector3)variable.Value.GetValue(container);
                 var lv = (Vector3)variable.lastValidValue;
-                OnFieldGUI(ref v.x, variable.displayName + ".x", ref lv.x, unparsedString);
-                OnFieldGUI(ref v.y, variable.displayName + ".y", ref lv.y, unparsedString);
-                OnFieldGUI(ref v.z, variable.displayName + ".z", ref lv.z, unparsedString);
+                var dv = (Vector3)variable.defaultValue;
+                OnFieldGUI(ref v.x, variable.displayName + ".x", ref lv.x, dv.x, unparsedString);
+                OnFieldGUI(ref v.y, variable.displayName + ".y", ref lv.y, dv.y, unparsedString);
+                OnFieldGUI(ref v.z, variable.displayName + ".z", ref lv.z, dv.z, unparsedString);
                 variable.Value.SetValue(container, v);
                 variable.lastValidValue = lv;
             }
@@ -114,10 +109,95 @@ namespace UnityTools.GUITool
             {
                 var v = (Vector4)variable.Value.GetValue(container);
                 var lv = (Vector4)variable.lastValidValue;
-                OnFieldGUI(ref v.x, variable.displayName + ".x", ref lv.x, unparsedString);
-                OnFieldGUI(ref v.y, variable.displayName + ".y", ref lv.y, unparsedString);
-                OnFieldGUI(ref v.z, variable.displayName + ".z", ref lv.z, unparsedString);
-                OnFieldGUI(ref v.w, variable.displayName + ".w", ref lv.w, unparsedString);
+                var dv = (Vector4)variable.defaultValue;
+                OnFieldGUI(ref v.x, variable.displayName + ".x", ref lv.x, dv.x, unparsedString);
+                OnFieldGUI(ref v.y, variable.displayName + ".y", ref lv.y, dv.y, unparsedString);
+                OnFieldGUI(ref v.z, variable.displayName + ".z", ref lv.z, dv.z, unparsedString);
+                OnFieldGUI(ref v.w, variable.displayName + ".w", ref lv.w, dv.w, unparsedString);
+                variable.Value.SetValue(container, v);
+                variable.lastValidValue = lv;
+            }
+        }
+        static private void HandleInt2(object container, Variable variable, Dictionary<string, string> unparsedString)
+        {
+            using (var h = new GUILayout.HorizontalScope())
+            {
+                var v = (int2)variable.Value.GetValue(container);
+                var lv = (int2)variable.lastValidValue;
+                var dv = (int2)variable.defaultValue;
+                OnFieldGUI(ref v.x, variable.displayName + ".x", ref lv.x, dv.x, unparsedString);
+                OnFieldGUI(ref v.y, variable.displayName + ".y", ref lv.y, dv.y, unparsedString);
+                variable.Value.SetValue(container, v);
+                variable.lastValidValue = lv;
+            }
+        }
+        static private void HandleInt3(object container, Variable variable, Dictionary<string, string> unparsedString)
+        {
+            using (var h = new GUILayout.HorizontalScope())
+            {
+                var v = (int3)variable.Value.GetValue(container);
+                var lv = (int3)variable.lastValidValue;
+                var dv = (int3)variable.defaultValue;
+                OnFieldGUI(ref v.x, variable.displayName + ".x", ref lv.x, dv.x, unparsedString);
+                OnFieldGUI(ref v.y, variable.displayName + ".y", ref lv.y, dv.y, unparsedString);
+                OnFieldGUI(ref v.z, variable.displayName + ".z", ref lv.z, dv.z, unparsedString);
+                variable.Value.SetValue(container, v);
+                variable.lastValidValue = lv;
+            }
+        }
+        static private void HandleInt4(object container, Variable variable, Dictionary<string, string> unparsedString)
+        {
+            using (var h = new GUILayout.HorizontalScope())
+            {
+                var v = (int4)variable.Value.GetValue(container);
+                var lv = (int4)variable.lastValidValue;
+                var dv = (int4)variable.defaultValue;
+                OnFieldGUI(ref v.x, variable.displayName + ".x", ref lv.x, dv.x, unparsedString);
+                OnFieldGUI(ref v.y, variable.displayName + ".y", ref lv.y, dv.y, unparsedString);
+                OnFieldGUI(ref v.z, variable.displayName + ".z", ref lv.z, dv.z, unparsedString);
+                OnFieldGUI(ref v.w, variable.displayName + ".w", ref lv.w, dv.w, unparsedString);
+                variable.Value.SetValue(container, v);
+                variable.lastValidValue = lv;
+            }
+        }
+        static private void HandleFloat2(object container, Variable variable, Dictionary<string, string> unparsedString)
+        {
+            using (var h = new GUILayout.HorizontalScope())
+            {
+                var v = (float2)variable.Value.GetValue(container);
+                var lv = (float2)variable.lastValidValue;
+                var dv = (float2)variable.defaultValue;
+                OnFieldGUI(ref v.x, variable.displayName + ".x", ref lv.x, dv.x, unparsedString);
+                OnFieldGUI(ref v.y, variable.displayName + ".y", ref lv.y, dv.y, unparsedString);
+                variable.Value.SetValue(container, v);
+                variable.lastValidValue = lv;
+            }
+        }
+        static private void HandleFloat3(object container, Variable variable, Dictionary<string, string> unparsedString)
+        {
+            using (var h = new GUILayout.HorizontalScope())
+            {
+                var v = (float3)variable.Value.GetValue(container);
+                var lv = (float3)variable.lastValidValue;
+                var dv = (float3)variable.defaultValue;
+                OnFieldGUI(ref v.x, variable.displayName + ".x", ref lv.x, dv.x, unparsedString);
+                OnFieldGUI(ref v.y, variable.displayName + ".y", ref lv.y, dv.y, unparsedString);
+                OnFieldGUI(ref v.z, variable.displayName + ".z", ref lv.z, dv.z, unparsedString);
+                variable.Value.SetValue(container, v);
+                variable.lastValidValue = lv;
+            }
+        }
+        static private void HandleFloat4(object container, Variable variable, Dictionary<string, string> unparsedString)
+        {
+            using (var h = new GUILayout.HorizontalScope())
+            {
+                var v = (float4)variable.Value.GetValue(container);
+                var lv = (float4)variable.lastValidValue;
+                var dv = (float4)variable.defaultValue;
+                OnFieldGUI(ref v.x, variable.displayName + ".x", ref lv.x, dv.x, unparsedString);
+                OnFieldGUI(ref v.y, variable.displayName + ".y", ref lv.y, dv.y, unparsedString);
+                OnFieldGUI(ref v.z, variable.displayName + ".z", ref lv.z, dv.z, unparsedString);
+                OnFieldGUI(ref v.w, variable.displayName + ".w", ref lv.w, dv.w, unparsedString);
                 variable.Value.SetValue(container, v);
                 variable.lastValidValue = lv;
             }
@@ -129,10 +209,11 @@ namespace UnityTools.GUITool
             {
                 var v = (Color)variable.Value.GetValue(container);
                 var lv = (Color)variable.lastValidValue;
-                OnFieldGUI(ref v.r, variable.displayName + ".r", ref lv.r, unparsedString);
-                OnFieldGUI(ref v.g, variable.displayName + ".g", ref lv.g, unparsedString);
-                OnFieldGUI(ref v.b, variable.displayName + ".b", ref lv.b, unparsedString);
-                OnFieldGUI(ref v.a, variable.displayName + ".a", ref lv.a, unparsedString);
+                var dv = (Color)variable.defaultValue;
+                OnFieldGUI(ref v.r, variable.displayName + ".r", ref lv.r, dv.r, unparsedString);
+                OnFieldGUI(ref v.g, variable.displayName + ".g", ref lv.g, dv.g, unparsedString);
+                OnFieldGUI(ref v.b, variable.displayName + ".b", ref lv.b, dv.b, unparsedString);
+                OnFieldGUI(ref v.a, variable.displayName + ".a", ref lv.a, dv.a, unparsedString);
                 variable.Value.SetValue(container, v);
                 variable.lastValidValue = lv;
             }
@@ -158,14 +239,15 @@ namespace UnityTools.GUITool
         {
             var v = (T)variable.Value.GetValue(container);
             var lv = (T)variable.lastValidValue;
+            var dv = (T)variable.defaultValue;
             if (v == null) return;
 
-            OnFieldGUI<T>(ref v, variable.displayName, ref lv, unparsedString);
+            OnFieldGUI<T>(ref v, variable.displayName, ref lv, dv, unparsedString);
             variable.Value.SetValue(container, v);
             variable.lastValidValue = lv;
         }
 
-        static private void OnFieldGUI<T>(ref T v, string displayName, ref T lastValidValue, Dictionary<string, string> unParsedString)
+        static private void OnFieldGUI<T>(ref T v, string displayName, ref T lastValidValue, T defaultValue, Dictionary<string, string> unParsedString)
         {
             var op = new[] { GUILayout.MinWidth(70f) };
             using (var h = new GUILayout.HorizontalScope())
@@ -207,6 +289,10 @@ namespace UnityTools.GUITool
                     {
                         v = lastValidValue;
                         unParsedString.Remove(hash);
+                    }
+                    if(GUILayout.Button("Default"))
+                    {
+                        v = defaultValue;
                     }
                 }
             }

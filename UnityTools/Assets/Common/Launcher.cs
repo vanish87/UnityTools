@@ -28,12 +28,22 @@ namespace UnityTools.Common
         {
             public string name;
             public short port;
+
+            public void OnGUIDraw()
+            {
+                GUILayout.Label("port " + name + " " + port);
+            }
         }
         public string name = "OutputPC";
         public string ipAddress = "127.0.0.1";
         public Role role = Role.None;
         public List<Port> ports = new List<Port>();
 
+        public void OnGUIDraw()
+        {
+            GUILayout.Label(this.name + " " + this.role + " " + this.ipAddress);
+            foreach(var p in this.ports) p.OnGUIDraw();
+        }
     }
     [Serializable]
     public class Environment
@@ -60,10 +70,10 @@ namespace UnityTools.Common
         public ApplicationSetting appSetting = new ApplicationSetting();
     }
 
-    
-    public class Launcher<T> : MonoBehaviour, ILauncher, GUITool.GUIMenuGroup.IGUIHandler where T : class, new()
+
+    public class Launcher<Data, Env> : MonoBehaviour, ILauncher, GUITool.GUIMenuGroup.IGUIHandler where Data : class, new() where Env : Environment, new()
     {
-        public enum LaunchEvent
+        public enum Event
         {
             Init = 0,
             DeInit,
@@ -71,17 +81,17 @@ namespace UnityTools.Common
         }
         public interface ILauncherUser
         {
-            void OnLaunchEvent(T data, LaunchEvent levent);
+            void OnLaunchEvent(Data data, Event levent);
 
-            Environment Runtime { get; set; }
+            Env Runtime { get; set; }
 
             //higher order of user executes after than lower order user
             //see LauncherOrder for default setting
             int Order { get; }
-            LauncherState CurrentState { get; set; }
+            State CurrentState { get; set; }
         }
 
-        public enum LauncherState
+        public enum State
         {
             Undefined,
             Inited,
@@ -89,17 +99,20 @@ namespace UnityTools.Common
 
         }
 
-        public enum LauncherOrder
+        public enum Order
         {
             LowLevel    = 0,
             Network     = 100,
             Default     = 1000,
-            Application = 2000,
+
+            DynamicCreation = 1500,
+            AfterDynamicCreation = 5000,
+            Application = 10000,
         }
 
         [SerializeField] protected bool global = false;
-        [SerializeField] protected T data = new T();
-        [SerializeField] protected Environment environment = new Environment();
+        [SerializeField] protected Data data = new Data();
+        [SerializeField] protected Env environment = new Env();
         protected List<ILauncherUser> userList = new List<ILauncherUser>();
 
         public Environment RunTime => this.environment;
@@ -120,11 +133,14 @@ namespace UnityTools.Common
 
             Application.targetFrameRate = this.environment.appSetting.targetFPS;
             QualitySettings.vSyncCount = this.environment.appSetting.vsync;
-        }
 
-        protected virtual Environment OnCreateEnv()
-        {
-            return this.environment;
+            foreach(var config in ObjectTool.FindAllObject<IConfigure>())
+            {
+                config.Initialize();
+            }
+            #if !DEBUG
+            this.environment.runtime = Environment.Runtime.Production;
+            #endif
         }
 
         protected virtual void OnEnable()
@@ -139,7 +155,6 @@ namespace UnityTools.Common
                 this.userList.AddRange(this.GetComponentsInChildren<ILauncherUser>());
             }
 
-            this.environment = this.OnCreateEnv();
             this.ConfigureEnvironment();
 
             foreach (var u in this.userList) u.Runtime = this.environment;
@@ -148,16 +163,16 @@ namespace UnityTools.Common
             foreach (var u in this.userList)
             {
                 LogTool.Log("Init order " + u.Order + " " + u.ToString(), LogLevel.Dev);
-                u.OnLaunchEvent(this.data, LaunchEvent.Init);
-                u.CurrentState = LauncherState.Inited;
+                u.OnLaunchEvent(this.data, Event.Init);
+                u.CurrentState = State.Inited;
             }
         }
         protected virtual void OnDisable()
         {
             foreach (var u in this.userList)
             {
-                u.OnLaunchEvent(this.data, LaunchEvent.DeInit);
-                u.CurrentState = LauncherState.DeInited;
+                u.OnLaunchEvent(this.data, Event.DeInit);
+                u.CurrentState = State.DeInited;
             }
             this.CleanUp();
         }
@@ -166,7 +181,7 @@ namespace UnityTools.Common
         {
             foreach (var u in this.userList)
             {
-                u.OnLaunchEvent(this.data, LaunchEvent.Reload);
+                u.OnLaunchEvent(this.data, Event.Reload);
             }
         }
 

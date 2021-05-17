@@ -1,0 +1,312 @@
+
+#pragma kernel InitNode
+#pragma kernel InitIndexNode
+#pragma kernel InitEdge
+#pragma kernel InitAdjacentMatrix
+#pragma kernel AddEdge
+#pragma kernel ColorNei
+
+
+#pragma kernel Prediction
+#pragma kernel PositionCorrection
+#pragma kernel VelocityUpdate
+
+#include "UnityCG.cginc"
+#include "IndexGPUGraphData.cginc"
+#include "GPUGraphCommon.cginc"
+
+#include "Quaternion.hlsl"
+#include "SVD.hlsl"
+
+RWStructuredBuffer<EdgeToAdd> _EdgeToAddBuffer;
+RWStructuredBuffer<int> _AdjacentMatrix;
+
+float dt;
+float stiffness;
+
+float3 dmin;
+float3 dmax;
+
+bool UseGravity;
+
+int UVtoArray(int x, int y)
+{
+    return x + y * _NodeCount;
+}
+
+bool IsConnected(int id1, int id2)
+{
+    return _AdjacentMatrix[UVtoArray(id1, id2)]>=0;
+}
+
+float Mass(Node n)
+{
+    return 4.0f/3.0f*PI*n.a*n.b*n.c  * n.density;
+}
+
+float3x3 Ai(Node n)
+{
+    float3x3 A = float3x3(n.a*n.a,0,0,0,n.b*n.b,0,0,0,n.c*n.c);
+    float3x3 R = quaternion_to_matrix(n.predictRotation);
+    return (1.0f/5)*Mass(n)*mul(A,R);
+}
+
+THREAD
+void InitIndexNode (uint3 idx : SV_DispatchThreadID)
+{
+    int id = idx.x;
+    _NodeBuffer[id].index = -1;
+    _NodeBuffer[id].a = 0.5f;
+    _NodeBuffer[id].b = 0.5f;
+    _NodeBuffer[id].c = 0.5f;
+    _NodeBuffer[id].density = 1.0f * 0.5f;
+}
+
+THREAD1024
+void InitAdjacentMatrix (uint3 idx : SV_DispatchThreadID)
+{
+    _AdjacentMatrix[UVtoArray(idx.x, idx.y)] = -1;
+}
+THREAD
+void AddEdge (uint3 idx : SV_DispatchThreadID)
+{
+    int id = idx.x;
+    EdgeToAdd e = _EdgeToAddBuffer[id];
+    if(e.from != -1 && e.to != -1)
+    {
+        int dfrom = -1;
+        int dto = -1;
+        for(int i = 0; i < _NodeCount; ++i)
+        {
+            Node n = _NodeBuffer[i];
+            if(!n.active) continue;
+
+            if(n.sid == e.from) dfrom = i;
+            if(n.sid == e.to)   dto = i;
+        }
+        if(dfrom == -1) dfrom = CreateNode();
+        if(dto == -1)  dto = CreateNode();
+
+        Node n1 = _NodeBuffer[dfrom];
+        Node n2 = _NodeBuffer[dto];
+
+        n1.index = e.from;
+        n1.sid = e.sid;
+        n1.pos = e.fromPos;
+        n1.restPos = e.fromPos;
+        n2.index = e.to;
+        n2.sid = e.sid;
+        n2.pos = e.toPos;
+        n2.restPos = e.toPos;
+
+        n1.color = n2.color = 1;
+
+        _NodeBuffer[dfrom] = n1;
+        _NodeBuffer[dto] = n2;
+
+        ConnectNode(dfrom, dto);
+
+        _AdjacentMatrix[UVtoArray(e.from, e.to)] = id;
+        _AdjacentMatrix[UVtoArray(e.to, e.from)] = id;
+    }
+}
+
+
+THREAD
+void ColorNei (uint3 idx : SV_DispatchThreadID)
+{
+    int id = idx.x;
+    Node node = _NodeBuffer[id];
+    if(node.index == 2)
+    {
+        for(int n = 0; n < _NodeCount; ++n)
+        {
+            if(n == id) continue;
+            if(!_NodeBuffer[n].active) continue;
+
+            int nid = _NodeBuffer[n].index;
+
+            if(IsConnected(node.index, nid)) _NodeBuffer[n].color = float4(1,0,0,1);
+        }
+        _NodeBuffer[id].color = float4(0,1,0,1);
+    }
+}
+THREAD
+void Prediction (uint3 idx : SV_DispatchThreadID)
+{
+    int did = idx.x;
+    Node p = _NodeBuffer[did];
+    if(p.active)
+    {
+        float3 force = 0;
+        for(int n = 0; n < _NodeCount; ++n)
+        {
+            Node next = _NodeBuffer[n];
+            if(n == did) continue;
+            if(!next.active) continue;
+            if(next.sid == p.sid) continue;
+
+            if(distance(p.pos, next.pos) < 0.2f)
+            {
+                float3 rejection = p.pos - next.pos;
+                float scale = (1.0 / length(rejection) - 1);
+                scale = clamp(scale, 0, 50);
+                force += rejection * scale;
+            }
+        }
+        // force = clamp(force, -100, 100);
+
+        if(UseGravity)force += GRAVITY;
+
+        p.predictPos = p.pos + p.velocity * dt + 0.5f * force * dt * dt;
+
+
+        float3 w = p.w;
+        float wl = length(w);
+        float4 predictQ = p.predictRotation;
+        if(wl > 0)
+        {
+            float3 wn = normalize(w);
+            float3 wq = wn * sin(0.5f * dt * wl);
+            float4 wdt = float4(wq.xyz, cos(0.5f*dt*wl));
+            predictQ = qmul(wdt, predictQ);
+        }
+        p.predictRotation = predictQ;
+
+        _NodeBuffer[did] = p;
+    }
+
+}
+
+float3x3 GetA(Node n)
+{
+    return Ai(n) + Mass(n) * Math_OuterProduct(n.predictPos, n.restPos);
+}
+
+float3 GetC0(Node n)
+{
+    return Mass(n) * n.restPos;
+}
+
+float3 GetCt(Node n)
+{
+    return Mass(n) * n.predictPos;
+}
+THREAD
+void PositionCorrection (uint3 idx : SV_DispatchThreadID)
+{
+    int did = idx.x;
+    Node n = _NodeBuffer[did];
+    if(n.active)
+    {
+        float3x3 A = GetA(n);
+        float3 C0 = GetC0(n);
+        float3 Ct = GetCt(n);
+        float MassSum = Mass(n);
+
+        int next = 0;
+
+        for(next = 0; next < _NodeCount; ++next)
+        {
+            if(next == did) continue;
+            if(!_NodeBuffer[next].active) continue;
+
+            int nid = _NodeBuffer[next].index;
+
+            if(IsConnected(n.index, nid))
+            {
+                A += GetA(_NodeBuffer[next]);
+                C0 += GetC0(_NodeBuffer[next]);
+                Ct += GetCt(_NodeBuffer[next]);
+                MassSum += Mass(_NodeBuffer[next]);
+            }
+        }
+        C0 /= MassSum;
+        Ct /= MassSum;
+
+        float3x3 cc = Math_OuterProduct(Ct, C0);
+        A -= MassSum * cc;
+
+        float3x3 U;
+        float3 d;
+        float3x3 V;
+
+        GetSVD3D(A, U, d, V);
+
+        float3x3 R = mul(U, transpose(V));
+
+        for(next = 0; next < _NodeCount; ++next)
+        {
+            if(next == did) continue;
+            if(!_NodeBuffer[next].active) continue;
+
+            int nid = _NodeBuffer[next].index;
+
+            if(IsConnected(n.index, nid))
+            {
+                Node p = _NodeBuffer[next];
+                float3 goal = mul(R, p.restPos - C0) + Ct;
+                float3 delta = goal - p.predictPos;
+
+                p.predictPos += delta * stiffness;
+
+                _NodeBuffer[next] = p;
+            }
+        }
+
+        float3 goal = mul(R, n.restPos - C0) + Ct;
+        float3 delta = goal - n.predictPos;
+        n.predictPos += delta * stiffness;
+
+        n.predictRotation = matrix_to_quaternion(R);
+
+        _NodeBuffer[did] = n;
+    }
+}
+void GetAngleAxis(float4 q, out float angle, out float3 axis)
+{
+    angle = 0;
+    axis = float3(0, 0, 0);
+
+    float4 qv = normalize(q);
+
+    angle = 2 * acos(qv.w);
+    float s = sqrt(1 - qv.w * qv.w);
+    if (qv.w == 1)
+    {
+        axis = qv.xyz;
+    }
+    else
+    {
+        axis = qv.xyz / s;
+    }
+}
+THREAD
+void VelocityUpdate (uint3 idx : SV_DispatchThreadID)
+{
+    int did = idx.x;
+    Node p = _NodeBuffer[did];
+    if(p.active)
+    {
+        p.predictPos = clamp(p.predictPos, dmin, dmax);
+
+        p.velocity = (p.predictPos - p.pos) / dt;
+        p.pos = p.predictPos;
+
+        float4 pq = qmul(p.predictRotation, q_inverse(p.rotation));
+        if (pq.w < 0) pq = -pq;
+
+        float angle = 0.0f;
+        float3 axis = float3(1, 0, 0);
+
+        GetAngleAxis(pq, angle, axis);
+
+        if (abs(angle) < 0.05f) angle = 0;
+        // if (abs(angle) > PI) angle = angle>0?PI:-PI;
+
+        p.w = axis * angle / dt;
+        p.rotation = p.predictRotation;
+
+        _NodeBuffer[did] = p;
+    }
+}
