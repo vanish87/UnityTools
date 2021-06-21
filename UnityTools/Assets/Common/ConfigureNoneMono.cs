@@ -8,6 +8,7 @@ namespace UnityTools.Common
     {
         public T D => this.data ??= new T();
         public bool IsOpen => this.open;
+        public bool IsSyncing=>this.isSyncing;
 
         public virtual string FilePath => ConfigureTool.GetFilePath(this.ToString(), this.SaveType, this.Preset);
 
@@ -27,6 +28,7 @@ namespace UnityTools.Common
         [SerializeField] protected KeyCode openKey = KeyCode.None;
         [SerializeField] protected KeyCode loadKey = KeyCode.None;
         [SerializeField] protected ConfigurePreset preset = ConfigurePreset.Default;
+		[SerializeField] protected bool isSyncing = false;
 
         [SerializeField] private T data;
         protected bool open = false;
@@ -104,5 +106,15 @@ namespace UnityTools.Common
             if (GUILayout.Button("Save")) this.Save();
             if (GUILayout.Button("Load")) { this.Load(); this.NotifyChange(); }
         }
-    }
+
+		public byte[] OnSerialize()
+		{
+            return Serialization.ObjectToByteArray(JsonUtility.ToJson(this.D));
+		}
+
+		public void OnDeserialize(byte[] data)
+		{
+            JsonUtility.FromJsonOverwrite(Serialization.ByteArrayToObject<string>(data), this.data);
+		}
+	}
 }

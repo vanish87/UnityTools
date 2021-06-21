@@ -34,7 +34,11 @@ namespace UnityTools
 
     public interface IConfigureSerialize
     {
-        FileTool.SerializerType SaveType { get; } 
+        FileTool.SerializerType SaveType { get; }
+		bool IsSyncing { get; }
+
+        byte[] OnSerialize();
+        void OnDeserialize(byte[] data);
     }
 
     public enum ConfigureSaveMode
@@ -77,6 +81,7 @@ namespace UnityTools
     {
         public T D => this.data ??= new T();
         public bool IsOpen => this.open;
+        public bool IsSyncing=>this.isSyncing;
 
         public virtual string FilePath => ConfigureTool.GetFilePath(this.ToString(), this.SaveType, this.Preset);
 
@@ -98,6 +103,7 @@ namespace UnityTools
         [SerializeField] protected KeyCode loadKey = KeyCode.None;
         [SerializeField] protected ConfigurePreset preset = ConfigurePreset.Default;
 
+		[SerializeField] protected bool isSyncing = false;
         [SerializeField] private T data;
         protected bool open = false;
         private GUIContainer guiContainer = null;
@@ -197,7 +203,17 @@ namespace UnityTools
             if (GUILayout.Button("Save")) this.Save();
             if (GUILayout.Button("Load")) { this.Load(); this.NotifyChange(); }
         }
-    }
+
+		public virtual byte[] OnSerialize()
+		{
+            return Serialization.ObjectToByteArray(JsonUtility.ToJson(this.D));
+		}
+
+		public virtual void OnDeserialize(byte[] data)
+		{
+            JsonUtility.FromJsonOverwrite(Serialization.ByteArrayToObject<string>(data), this.data);
+		}
+	}
 
     public class ConfigureGUI
     {
