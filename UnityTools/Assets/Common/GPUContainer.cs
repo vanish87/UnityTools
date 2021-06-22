@@ -10,6 +10,7 @@ namespace UnityTools.Common
     public interface IGPUContainer
     {
         void UpdateGPU(ComputeShader computeShader, string kernel = null);
+        void UpdateGPU(Material material);
     }
     public class GPUContainer : GUIContainer, IGPUContainer
     {

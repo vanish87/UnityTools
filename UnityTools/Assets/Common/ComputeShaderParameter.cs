@@ -205,8 +205,12 @@ namespace UnityTools.ComputeShaderTool
             //if (info.FieldType == typeof(Color)) info.SetValue(this, (np.Value as ComputeShaderParameterColor).Value );
         }
 
-
-    }
+		public void UpdateGPU(Material material)
+		{
+            //No material for Compute Shader Container
+            LogTool.AssertIsTrue(false);
+		}
+	}
 
     public interface IComputeShaderParameter
     {
