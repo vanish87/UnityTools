@@ -79,6 +79,10 @@ namespace UnityTools
 
     public abstract class Configure<T> : MonoBehaviour, IConfigure<T>, IConfigureSerialize where T : new()
     {
+        public static implicit operator T(Configure<T> source)
+        {
+            return source.D;
+        }
         public T D => this.data ??= new T();
         public bool IsOpen => this.open;
         public bool IsSyncing=>this.isSyncing;
