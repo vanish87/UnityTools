@@ -108,7 +108,7 @@ namespace UnityTools
         [SerializeField] protected ConfigurePreset preset = ConfigurePreset.Default;
 
 		[SerializeField] protected bool isSyncing = false;
-        [SerializeField] private T data;
+        [SerializeField] protected T data;
         protected bool open = false;
         private GUIContainer guiContainer = null;
 
