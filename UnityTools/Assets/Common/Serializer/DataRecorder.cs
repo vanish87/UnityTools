@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using UnityEngine;
 using UnityTools.Attributes;
 using UnityTools.Debuging;
@@ -85,16 +87,18 @@ namespace UnityTools.Common
             }
         }
 
-        public void Load()
+        public void Load(bool useLatest = true)
         {
-            if(this.fileName == null) 
+			var path = System.IO.Path.Combine(Application.streamingAssetsPath, this.fileName);
+            if(this.fileName == null || !File.Exists(path) || useLatest) 
             {
-                LogTool.Log("No file to load", LogLevel.Warning);
-                return;
+                this.fileName = this.GetLatestFile();
+				path = System.IO.Path.Combine(Application.streamingAssetsPath, this.fileName);
+                LogTool.Log("Use " + path, LogLevel.Warning);
             }
+
             lock(this.lockObj)
             {
-                var path = System.IO.Path.Combine(Application.streamingAssetsPath, this.fileName);
                 this.data = FileTool.Read<SaveData>(path, this.SaveType);
             }
         }
@@ -105,8 +109,28 @@ namespace UnityTools.Common
                 GUILayout.Label("Current Mode " + this.Mode.ToString());
                 if (GUILayout.Button("Record")) { this.Mode = DataRecorderMode.Record; }
                 if (GUILayout.Button("Save")) { this.Save(); }
-                if (GUILayout.Button("LoadAndReplay")) { this.Load(); this.Mode = DataRecorderMode.Replay; }
+                if (GUILayout.Button("LoadSelectedAndReplay")) { this.Load(false); this.Mode = DataRecorderMode.Replay; }
+                if (GUILayout.Button("LoadLatestAndReplay")) { this.Load(); this.Mode = DataRecorderMode.Replay; }
             }
+        }
+
+        protected string GetLatestFile()
+        {
+            var regex = "*" + FileExtension;
+            string[] fullpathes = Directory.GetFiles(Application.streamingAssetsPath, regex, SearchOption.AllDirectories);
+
+            var ret = fullpathes.Select(f =>
+            {
+                string path = f.Replace(Application.streamingAssetsPath, "")
+                               .Replace('\\', '/');
+                if (path.StartsWith("/"))
+                {
+                    path = path.Substring(1);
+                }
+                return path;
+            }).ToArray().Last();
+
+            return ret;
         }
     }
 
