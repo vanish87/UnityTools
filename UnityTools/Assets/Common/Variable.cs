@@ -48,6 +48,10 @@ namespace UnityTools.Common
 
     }
 
+    public class ListVariable : Variable
+    {
+        public List<Variable> variables = new List<Variable>();
+    }
     public class GPUVariable : Variable, IGPUVariable
     {
         private delegate void Setter(object value, string shaderVarName, ComputeShader cs, string kernel);

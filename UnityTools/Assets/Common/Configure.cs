@@ -12,7 +12,7 @@ namespace UnityTools
     public interface IConfigure
     {
         void OnConfigureChange(object sender, EventArgs args);
-        bool IsOpen { get; }
+		bool IsOpen { get; set; }
         string FilePath { get; }
         ConfigurePreset Preset { get; }
 
@@ -84,7 +84,7 @@ namespace UnityTools
             return source.D;
         }
         public T D => this.data ??= new T();
-        public bool IsOpen => this.open;
+		public bool IsOpen { get => this.open; set => this.open = value; }
         public bool IsSyncing=>this.isSyncing;
 
         public virtual string FilePath => ConfigureTool.GetFilePath(this.ToString(), this.SaveType, this.Preset);
@@ -172,7 +172,7 @@ namespace UnityTools
         }
 
         private Rect windowRect;
-        protected virtual void OnGUIDrawWindow()
+        protected virtual void OnGUI()
         {
             if(!this.IsOpen) return;
             this.windowRect =

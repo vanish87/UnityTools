@@ -7,7 +7,7 @@ namespace UnityTools.Common
     public abstract class ConfigureNoneMono<T> : IConfigure<T>, IConfigureSerialize where T : new()
     {
         public T D => this.data ??= new T();
-        public bool IsOpen => this.open;
+		public bool IsOpen { get => this.open; set => this.open = value; }
         public bool IsSyncing=>this.isSyncing;
 
         public virtual string FilePath => ConfigureTool.GetFilePath(this.ToString(), this.SaveType, this.Preset);
