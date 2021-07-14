@@ -59,6 +59,10 @@ namespace UnityTools.Common
             this.guiContainer = null;
         }
 
+        public virtual void OpenFile()
+        {
+            Application.OpenURL(this.FilePath);
+        }
         public void NotifyChange()
         {
             this.OnConfigureChange(this, null);

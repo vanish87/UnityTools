@@ -23,6 +23,7 @@ namespace UnityTools
         void Initialize();
         void Save();
         void Load();
+        void OpenFile();
         void NotifyChange();
         void OnGUIDraw();
 
@@ -133,6 +134,10 @@ namespace UnityTools
             var data = FileTool.Read<T>(this.FilePath, this.SaveType);
             if (data != null) this.data = data;
             this.guiContainer = null;
+        }
+        public virtual void OpenFile()
+        {
+            Application.OpenURL(this.FilePath);
         }
 
         public void NotifyChange()
