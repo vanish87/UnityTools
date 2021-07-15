@@ -13,7 +13,7 @@ namespace UnityTools.Common
         [Header("Version.txt in StreamingAssets Folder")]
         public int major = 0;
         public int minor = 0;
-        public int build = 0;
+		[Attributes.DisableEdit] public int build = 0;
         public string comment;
         [Attributes.DisableEdit] public string buildTime;
         [Attributes.DisableEdit] public string buildDeviceName;
