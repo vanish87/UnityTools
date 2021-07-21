@@ -58,6 +58,7 @@ namespace UnityTools.Common
         private delegate void SetterMat(object value, string shaderVarName, Material mat);
         static private Dictionary<Type, Setter> TypeSetterMap = new Dictionary<Type, Setter>()
         {
+            {typeof(Enum),          (value, shaderVarName, cs, kernel) =>{ cs.SetInt(shaderVarName, (int)value);} },
             {typeof(bool),          (value, shaderVarName, cs, kernel) =>{ cs.SetBool(shaderVarName, (bool)value);} },
             {typeof(int),           (value, shaderVarName, cs, kernel) =>{ cs.SetInt(shaderVarName, (int)value);} },
             {typeof(float),         (value, shaderVarName, cs, kernel) =>{ cs.SetFloat(shaderVarName, (float)value);} },
@@ -82,6 +83,7 @@ namespace UnityTools.Common
         };
         static private Dictionary<Type, SetterMat> TypeSetterMatMap = new Dictionary<Type, SetterMat>()
         {
+            {typeof(Enum),          (value, shaderVarName, mat) =>{ mat.SetInt(shaderVarName, (int)value);} },
             {typeof(bool),          (value, shaderVarName, mat) =>{ mat.SetInt(shaderVarName, (bool)value?1:0);} },
             {typeof(int),           (value, shaderVarName, mat) =>{ mat.SetInt(shaderVarName, (int)value);} },
             {typeof(float),         (value, shaderVarName, mat) =>{ mat.SetFloat(shaderVarName, (float)value);} },
