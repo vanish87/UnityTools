@@ -214,9 +214,9 @@ namespace UnityTools.Common
             return "ComputeBuffer " + this.shaderName + " of type " + typeof(T) + " with size " + this.size;
         }
 
-        public void SetToGPUBuffer()
+        public void SetToGPUBuffer(bool force = false)
         {
-            if(this.CPUData != null && this.autoSet)
+            if(this.CPUData != null && (force || this.autoSet))
             {
                 this.Data.SetData(this.CPUData);
             }
