@@ -179,6 +179,13 @@ namespace UnityTools.Common
             this.cpuData = other.cpuData != null ? new T[this.size] : null;
             this.gpuBuffer = other.Data;
         }
+        public void UpdateBuffer(GPUBufferVariable<T> other)
+        {
+            this.size = other.size;
+            this.type = other.type;
+            this.cpuData = other.cpuData != null ? new T[this.size] : null;
+            this.gpuBuffer = other.Data;
+        }
         public void ClearData(bool gpu = true)
         {
             this.cpuData = this.cpuData != null ? new T[this.size] : null;
