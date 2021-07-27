@@ -65,6 +65,7 @@ namespace UnityTools.Common
 		}
 
 		[SerializeField] protected Space3D space;
+		[SerializeField] protected bool drawDebugGrid = false;
 		[SerializeField] protected GPUData gridData = new GPUData();
 
 		private void Init()
@@ -102,7 +103,7 @@ namespace UnityTools.Common
 		protected virtual void OnDrawGizmos()
 		{
 			this.space?.OnDrawGizmos();
-			if (Application.isPlaying) GridHelper.OnDrawGrid(this.gridData.gridMin, this.gridData.gridMax, this.gridData.gridSpacing);
+			if (Application.isPlaying && this.drawDebugGrid) GridHelper.OnDrawGrid(this.gridData.gridMin, this.gridData.gridMax, this.gridData.gridSpacing);
 		}
 	}
 }
