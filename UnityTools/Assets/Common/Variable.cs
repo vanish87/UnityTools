@@ -137,6 +137,12 @@ namespace UnityTools.Common
     }
     public class GPUBufferVariable<T> : GPUVariable
     {
+        public static void SwapBuffer(GPUBufferVariable<T> lhs, GPUBufferVariable<T> rhs)
+        {
+            var temp = lhs.gpuBuffer;
+            lhs.gpuBuffer = rhs.gpuBuffer;
+            rhs.gpuBuffer = temp;
+        }
         public static implicit operator ComputeBuffer(GPUBufferVariable<T> value)
         {
             return value.Data;
