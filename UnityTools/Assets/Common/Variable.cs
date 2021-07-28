@@ -150,7 +150,7 @@ namespace UnityTools.Common
         private bool autoSet = true;
         private ComputeBufferType type = ComputeBufferType.Default;
         private ComputeBuffer gpuBuffer;
-        public GPUBufferVariable(string name, int size, bool cpuData, bool autoSet = true, ComputeBufferType type = ComputeBufferType.Default)
+        public GPUBufferVariable(string name, int size, bool cpuData = false, bool autoSet = true, ComputeBufferType type = ComputeBufferType.Default)
         {
             this.displayName = name;
             this.shaderName = name;
