@@ -64,7 +64,7 @@ namespace UnityTools.Rendering
 			this.Draw(this.particleMesh, this.particleMaterial, this.data.particleIndirectBuffer);
 		}
 
-		protected void Draw(Mesh mesh, Material material, GPUBufferVariable<uint> indirectBuffer)
+		protected virtual void Draw(Mesh mesh, Material material, GPUBufferVariable<uint> indirectBuffer)
 		{
 			if (this.buffer == null || mesh == null || material == null || indirectBuffer == null)
 			{
