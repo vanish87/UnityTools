@@ -24,7 +24,7 @@ namespace UnityTools.Common
         public virtual KeyCode SaveKey => this.saveKey;
 
         public virtual KeyCode LoadKey => this.loadKey;
-        [SerializeField] protected ConfigureSaveMode saveMode = ConfigureSaveMode.UseEditorValue;
+        [SerializeField] protected ConfigureSaveMode saveMode = ConfigureSaveMode.SaveEditorValueWhenExitingPlayMode;
         [SerializeField] protected FileTool.SerializerType saveType = FileTool.SerializerType.XML;
         [SerializeField] protected KeyCode saveKey = KeyCode.None;
         [SerializeField] protected KeyCode openKey = KeyCode.None;
@@ -83,7 +83,7 @@ namespace UnityTools.Common
         }
         protected virtual void OnDisable()
         {
-            if (Application.isEditor && this.saveMode == ConfigureSaveMode.UseEditorValue)
+            if (Application.isEditor && this.saveMode == ConfigureSaveMode.SaveEditorValueWhenExitingPlayMode)
             {
                 this.Save();
                 //LogTool.Log("Configure " + this.name + " Saved", LogLevel.Verbose, LogChannel.IO);

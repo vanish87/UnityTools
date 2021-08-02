@@ -45,7 +45,7 @@ namespace UnityTools
     public enum ConfigureSaveMode
     {
         None = 0,
-        UseEditorValue,
+        SaveEditorValueWhenExitingPlayMode,
         UseFileValue,
     }
 
@@ -101,7 +101,7 @@ namespace UnityTools
 
         public virtual KeyCode LoadKey => this.loadKey;
 
-        [SerializeField] protected ConfigureSaveMode saveMode = ConfigureSaveMode.UseEditorValue;
+        [SerializeField] protected ConfigureSaveMode saveMode = ConfigureSaveMode.SaveEditorValueWhenExitingPlayMode;
         [SerializeField] protected FileTool.SerializerType saveType = FileTool.SerializerType.XML;
         [SerializeField] protected KeyCode openKey = KeyCode.None;
         [SerializeField] protected KeyCode saveKey = KeyCode.None;
@@ -151,7 +151,7 @@ namespace UnityTools
         }
         protected virtual void OnDisable()
         {
-            if (Application.isEditor && this.saveMode == ConfigureSaveMode.UseEditorValue)
+            if (Application.isEditor && this.saveMode == ConfigureSaveMode.SaveEditorValueWhenExitingPlayMode)
             {
                 this.Save();
                 this.Load();
