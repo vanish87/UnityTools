@@ -21,6 +21,7 @@ namespace UnityTools.Common
             public Exit exit = null;
             public bool async = true;
             public bool enableLogging = true;
+            public bool rawOutput = true;
 
             internal StreamWriter log = null;
             internal Process process = null;
@@ -76,7 +77,7 @@ namespace UnityTools.Common
         }
         static private void OutputDataHandler(CommandInfo command, string output)
         {
-            var message = "["+DateTime.Now.ToString()+"][OUTPUT]" + output;
+			var message = command.rawOutput ? output : "[" + DateTime.Now.ToString() + "][OUTPUT]" + output;
 
             command.output?.Invoke(message);
 
@@ -87,7 +88,7 @@ namespace UnityTools.Common
         }
         static private void ErrorDataHandler(CommandInfo command, string error)
         {
-            var message = "[" + DateTime.Now.ToString() + "][ERROR]" + error;
+			var message = command.rawOutput ? error : "[" + DateTime.Now.ToString() + "][OUTPUT]" + error;
 
             command.output?.Invoke(message);
 
@@ -100,7 +101,7 @@ namespace UnityTools.Common
         {
             var message = string.Format("[{2}][INFO]Command {0} {1} End Running with Code {3}", command.exe, command.args, DateTime.Now.ToString(), code);
 
-            command.exit?.Invoke(command.exe, command.args, code);
+            if(!command.rawOutput) command.exit?.Invoke(command.exe, command.args, code);
 
             if(command.enableLogging)
             {
