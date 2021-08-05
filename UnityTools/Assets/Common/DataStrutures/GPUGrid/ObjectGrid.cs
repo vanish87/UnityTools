@@ -9,7 +9,7 @@ using System;
 namespace UnityTools.Common
 {
 	[RequireComponent(typeof(GridIndexSort))]
-	public class ObjectGrid<T> : GPUGrid<uint2>
+	public class ObjectGrid<T, Cell> : GPUGrid<Cell>
 	{
 		public enum Kernel
 		{
