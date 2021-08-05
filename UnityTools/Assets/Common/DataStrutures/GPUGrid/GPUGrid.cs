@@ -54,7 +54,7 @@ namespace UnityTools.Common
 			RightUp,
 		}
 		[System.Serializable]
-		public class GPUData : GPUContainer
+		public class Data : GPUContainer
 		{
 			[Shader(Name = "_GridCenterMode")] public int centerMode = (int)CenterMode.Center;
 			[Shader(Name = "_GridSize")] public int3 gridSize = new int3(128, 128, 128);
@@ -66,7 +66,7 @@ namespace UnityTools.Common
 
 		[SerializeField] protected Space3D space;
 		[SerializeField] protected bool drawDebugGrid = false;
-		[SerializeField] protected GPUData gridData = new GPUData();
+		[SerializeField] protected Data gridData = new Data();
 
 		private void Init()
 		{
