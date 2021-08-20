@@ -228,8 +228,11 @@ namespace UnityTools.GUITool
             var v = (Texture)variable.Value.GetValue(container);
             if (v == null) return;
 
+			var aspect = v.width * 1.0f / v.height;
+            var w = 256f;
+            var h = w / aspect;
             GUILayout.Label(variable.displayName);
-            GUILayout.Box(v);
+            GUILayout.Box(v, GUILayout.Width(w), GUILayout.Height(h));
         }
         static private void HandleGPUVariable(object container, Variable variable, Dictionary<string, string> unparsedString)
         {

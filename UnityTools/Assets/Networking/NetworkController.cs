@@ -56,10 +56,21 @@ namespace UnityTools.Networking
 
             if (currentPC == null)
             {
-                LogTool.Log("Current pc not found, use current ip and Set to Dev" + currentIPs[0], LogLevel.Warning);
-                currentPC = new PCInfo();
-                currentPC.ipAddress = currentIPs[0];
-                currentPC.role = PCInfo.Role.Development;
+                var pcData = pcList.FindAll(pc => pc.name == SystemInfo.deviceName);
+                if (pcData != null && pcData.Count > 0)
+                {
+                    currentPC = pcData[0];
+					currentPC.ipAddress = currentIPs[0];
+					LogTool.Log("Use pc name " + currentPC.name + " " + currentPC.ipAddress.ToString() +" as Current PC", LogLevel.Dev);
+                }
+                else
+                {
+					currentPC = new PCInfo();
+					currentPC.name = SystemInfo.deviceName;
+					currentPC.ipAddress = currentIPs[0];
+					currentPC.role = PCInfo.Role.Development;
+					LogTool.Log("Current pc not found, use current ip and Set " + currentPC.name + " to Dev" + currentPC.ipAddress, LogLevel.Warning);
+                }
             }
             
             var serverData = pcList.FindAll(pc => pc.role == PCInfo.Role.Server);

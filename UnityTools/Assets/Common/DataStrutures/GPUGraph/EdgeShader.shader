@@ -39,7 +39,7 @@ Shader "Unlit/EdgeShader"
 
 	v2f vert(appdata i, uint iid : SV_InstanceID) 
 	{
-        v2f o;
+        v2f o = (v2f)0;
         UNITY_SETUP_INSTANCE_ID(i);
         UNITY_TRANSFER_INSTANCE_ID(i, o);
 
