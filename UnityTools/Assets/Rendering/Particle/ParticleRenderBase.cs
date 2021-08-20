@@ -21,8 +21,7 @@ namespace UnityTools.Rendering
 
 		public class RenderData : GPUContainer
 		{
-			public GPUBufferVariable<uint> particleIndirectBuffer = new GPUBufferVariable<uint>();
-
+			public GPUBufferIndirectArgument particleIndirectBuffer = new GPUBufferIndirectArgument();
 		}
 
 		protected RenderData data = new RenderData();
@@ -37,20 +36,7 @@ namespace UnityTools.Rendering
 			
 			this.particleMaterial = new DisposableMaterial(this.particleShader);
 
-			this.data.particleIndirectBuffer.InitBuffer(5, true, true, ComputeBufferType.IndirectArguments);
-			this.SetupIndirectBuffer(this.data.particleIndirectBuffer, this.particleMesh, this.buffer.Buffer.Size);
-		}
-
-
-		protected void SetupIndirectBuffer(GPUBufferVariable<uint> buffer, Mesh mesh, int count)
-		{
-			var args = buffer.CPUData;
-			var subIndex = 0;
-			args[0] = (uint)mesh.GetIndexCount(subIndex);
-			args[1] = (uint)count;
-			args[2] = (uint)mesh.GetIndexStart(subIndex);
-			args[3] = (uint)mesh.GetBaseVertex(subIndex);
-			buffer.SetToGPUBuffer();
+			this.data.particleIndirectBuffer.InitBuffer(this.particleMesh, this.buffer.Buffer.Size);
 		}
 
 		protected void OnDestroy()
@@ -64,7 +50,7 @@ namespace UnityTools.Rendering
 			this.Draw(this.particleMesh, this.particleMaterial, this.data.particleIndirectBuffer);
 		}
 
-		protected virtual void Draw(Mesh mesh, Material material, GPUBufferVariable<uint> indirectBuffer)
+		protected virtual void Draw(Mesh mesh, Material material, GPUBufferIndirectArgument indirectBuffer)
 		{
 			if (this.buffer == null || mesh == null || material == null || indirectBuffer == null)
 			{
