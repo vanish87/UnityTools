@@ -86,6 +86,9 @@ namespace UnityTools.ComputeShaderTool
             var threadNum = kernelInfo.kernelDimesion;
 
             this.UpdateParameter(kernel);
+            this.cs.SetInt("_DispatchedX", X);
+            this.cs.SetInt("_DispatchedY", Y);
+            this.cs.SetInt("_DispatchedZ", Z);
             this.cs.Dispatch(kernelInfo.kernel, this.GetDispatchSize(X, threadNum.x), this.GetDispatchSize(Y, threadNum.y), this.GetDispatchSize(Z, threadNum.z));
         }
 
@@ -118,7 +121,11 @@ namespace UnityTools.ComputeShaderTool
             Assert.IsTrue(desired > 0);
             Assert.IsTrue(threadNum > 0);
 
-            return (int)((desired + threadNum - 1) / threadNum);
+            var dsize = (int)((desired + threadNum - 1) / threadNum);
+
+			if (desired != dsize * threadNum) LogTool.Log("Dispatch threads " + dsize*threadNum + " more than desired " + desired, LogLevel.Warning);
+
+            return dsize;
         }
     }
 }
