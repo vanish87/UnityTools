@@ -194,7 +194,7 @@ namespace UnityTools.Common
 			this.cpuData = cpuData ? new T[this.size] : null;
         }
 
-        public void InitBuffer(GPUBufferVariable<T> other)
+        public virtual void InitBuffer(GPUBufferVariable<T> other)
         {
             LogTool.AssertIsTrue(other.Size > 0);
 
@@ -202,14 +202,24 @@ namespace UnityTools.Common
 
             this.size = other.Size;
             this.type = other.type;
-            this.cpuData = other.cpuData != null ? new T[this.size] : null;
+            this.autoSet = other.autoSet;
+            if(other.cpuData != null)
+            {
+                if(this.cpuData == null || this.cpuData.Length != other.cpuData.Length) this.cpuData = new T[this.size];
+                Array.Copy(other.cpuData, this.cpuData, this.size);
+            }
             this.gpuBuffer = other.Data;
         }
         public void UpdateBuffer(GPUBufferVariable<T> other)
         {
             this.size = other.size;
             this.type = other.type;
-            this.cpuData = other.cpuData != null ? new T[this.size] : null;
+            this.autoSet = other.autoSet;
+            if(other.cpuData != null)
+            {
+                if(this.cpuData == null || this.cpuData.Length != other.cpuData.Length) this.cpuData = new T[this.size];
+                Array.Copy(other.cpuData, this.cpuData, this.size);
+            }
             this.gpuBuffer = other.Data;
         }
         public void ClearData(bool gpu = true)
@@ -281,7 +291,7 @@ namespace UnityTools.Common
 			args[1] = instanceCount;
 			args[2] = (int)instance.GetIndexStart(subMeshIndex);
 			args[3] = (int)instance.GetBaseVertex(subMeshIndex);
-			this.SetToGPUBuffer();
+			this.SetToGPUBuffer(true);
         }
     }
     public class GPUBufferAppendConsume<T>: GPUBufferVariable<T>
@@ -295,6 +305,14 @@ namespace UnityTools.Common
 
             //no cpu data for append buffer
             base.InitBuffer(size, false, autoSet, ComputeBufferType.Append);
+            this.ResetCounter();
+        }
+        public void InitAppendBuffer(GPUBufferAppendConsume<T> other)
+        {
+            LogTool.AssertIsTrue(other.Size > 0);
+
+            //no cpu data for append buffer
+            base.InitBuffer(other);
             this.ResetCounter();
         }
 
@@ -319,6 +337,13 @@ namespace UnityTools.Common
         {
             LogTool.Log("Use InitAppendBuffer(int size, bool autoSet = false) for clear code", LogLevel.Warning);
             this.InitAppendBuffer(size);
+        }
+        public override void InitBuffer(GPUBufferVariable<T> other)
+        {
+            LogTool.Log("Use InitAppendBuffer(GPUBufferAppendConsume<T> other)", LogLevel.Warning);
+            LogTool.AssertIsTrue(other is GPUBufferAppendConsume<T>);
+
+            this.InitAppendBuffer(other as GPUBufferAppendConsume<T>);
         }
 
         public override void Release()
