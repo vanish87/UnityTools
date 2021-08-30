@@ -23,6 +23,10 @@ namespace UnityTools.ComputeShaderTool
         {
             this.Dispatch(this.kernelMap[kernel], X, Y, Z);
         }
+        public void DispatchNoneTthread(T kernel, int X = 1, int Y = 1, int Z = 1)
+        {
+            this.DispatchNoneTthread(this.kernelMap[kernel], X, Y, Z);
+        }
         public void AddParameter(T kernel, IGPUContainer parameter)
         {
             this.AddParameter(this.kernelMap[kernel], parameter);
@@ -72,6 +76,25 @@ namespace UnityTools.ComputeShaderTool
                 this.AddNewKernelInfo(kernel);
                 this.kernel[kernel].parameters.Add(parameter);
             }
+        }
+        public void DispatchNoneTthread(string kernel, int X = 1, int Y = 1, int Z = 1)
+        {
+            Assert.IsNotNull(kernel);
+            Assert.IsNotNull(this.cs);
+            if(this.kernel.ContainsKey(kernel) == false)
+            {
+                this.AddNewKernelInfo(kernel);
+            }
+
+            var kernelInfo = this.kernel[kernel];
+            var threadNum = kernelInfo.kernelDimesion;
+
+            this.UpdateParameter(kernel);
+            this.cs.SetInt("_DispatchedX", X);
+            this.cs.SetInt("_DispatchedY", Y);
+            this.cs.SetInt("_DispatchedZ", Z);
+
+            this.cs.Dispatch(kernelInfo.kernel, X, Y, Z);
         }
         public void Dispatch(string kernel, int X = 1, int Y = 1, int Z = 1)
         {
