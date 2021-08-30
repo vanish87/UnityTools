@@ -135,7 +135,7 @@ namespace UnityTools.Common
         {
         }
     }
-    public class GPUBufferVariable<T> : GPUVariable
+    public class GPUBufferVariable<T> : GPUVariable, IGPUContainer
     {
         protected const int MIN_INDIRECT_BUFFER_SIZE = 5;//5 ints
         public static void SwapBuffer(GPUBufferVariable<T> lhs, GPUBufferVariable<T> rhs)
@@ -237,7 +237,6 @@ namespace UnityTools.Common
 
         public override void SetToGPU(object container, ComputeShader cs, string kernel = null)
         {
-            LogTool.AssertNotNull(container);
             LogTool.AssertNotNull(cs);
             LogTool.AssertNotNull(kernel);
             // LogTool.AssertIsTrue(this.Size > 0);
@@ -251,12 +250,20 @@ namespace UnityTools.Common
         }
         public override void SetToMaterial(object container, Material material)
         {
-            LogTool.AssertNotNull(container);
             LogTool.AssertNotNull(material);
             if (material == null) return;
             this.SetToGPUBuffer();
             material.SetBuffer(this.shaderName, this.Data);
         }
+		public void UpdateGPU(ComputeShader computeShader, string kernel = null)
+		{
+			this.SetToGPU(null, computeShader, kernel);
+		}
+
+		public void UpdateGPU(Material material)
+		{
+            this.SetToMaterial(null, material);
+		}
 
         public override string ToString()
         {
