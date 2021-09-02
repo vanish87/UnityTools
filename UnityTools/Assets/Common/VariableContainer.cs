@@ -66,7 +66,8 @@ namespace UnityTools.Common
             this.container = objRef;
             var bindingFlags = BindingFlags.Instance |
                                BindingFlags.NonPublic |
-                               BindingFlags.Public;
+                               BindingFlags.Public |
+                               BindingFlags.Static;
 
             var variableList = type
                      .GetFields(bindingFlags)
