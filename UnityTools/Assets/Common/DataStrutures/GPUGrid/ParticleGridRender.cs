@@ -5,7 +5,7 @@ using UnityTools.Rendering;
 
 namespace UnityTools.Common
 {
-public class ParticleGridRender :  ParticleRenderBase<ParticleGrid.Particle>
+public class ParticleGridRender :  MeshRender<ParticleGrid.Particle>
 {
 }
 }

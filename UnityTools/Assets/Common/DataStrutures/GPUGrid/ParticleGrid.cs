@@ -9,7 +9,7 @@ using UnityTools.ComputeShaderTool;
 
 namespace UnityTools.Common
 {
-	public class ParticleGrid : ObjectGrid<ParticleGrid.Particle, uint2>, IParticleBuffer<ParticleGrid.Particle>
+	public class ParticleGrid : ObjectGrid<ParticleGrid.Particle, uint2>, MeshRender<ParticleGrid.Particle>
 	{
         [StructLayout(LayoutKind.Sequential)]
         public struct Particle

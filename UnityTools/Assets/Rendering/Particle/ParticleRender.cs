@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace UnityTools.Rendering
 {
-public class ParticleRender : ParticleRenderBase<ParticleRenderExample.Particle>
-{
-}
+	public class ParticleRender : MeshRender<ParticleRenderExample.Particle>
+	{
+	}
 }

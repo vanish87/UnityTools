@@ -7,7 +7,7 @@ using UnityTools.Common;
 
 namespace UnityTools.Rendering
 {
-	public class ParticleRenderExample : MonoBehaviour, IParticleBuffer<ParticleRenderExample.Particle>
+	public class ParticleRenderExample : MonoBehaviour, IDataBuffer<ParticleRenderExample.Particle>
 	{
 		public struct Particle
 		{
