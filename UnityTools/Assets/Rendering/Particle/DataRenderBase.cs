@@ -41,7 +41,7 @@ namespace UnityTools.Rendering
 			}
             material.SetBuffer("_DataBuffer", this.buffer.Buffer);
 			var b = new Bounds(Vector3.zero, Vector3.one * 10000);
-			Graphics.DrawProcedural(material, b, MeshTopology.Points,  this.buffer.Buffer.Size);
+			Graphics.DrawProcedural(material, b, MeshTopology.Points, this.buffer.Buffer.Size);
 		}
 		public virtual void Init()
 		{
@@ -49,6 +49,7 @@ namespace UnityTools.Rendering
 			LogTool.AssertNotNull(this.buffer);
 			
 			this.particleMaterial = new DisposableMaterial(this.dataShader);
+			this.inited = true;
 		}
 		public virtual void Deinit()
 		{
