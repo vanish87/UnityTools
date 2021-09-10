@@ -260,6 +260,7 @@ namespace UnityTools.Common
             if (material == null) return;
             this.SetToGPUBuffer();
             material.SetBuffer(this.shaderName, this.Data);
+            material.SetInt(this.shaderName+"Count", this.Size);
         }
 		public void UpdateGPU(ComputeShader computeShader, string kernel = null)
 		{
