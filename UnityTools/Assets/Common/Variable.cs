@@ -290,6 +290,10 @@ namespace UnityTools.Common
             {
                 this.Data.GetData(this.CPUData);
             }
+            else
+            {
+                LogTool.Log("No CPU Data available", LogLevel.Warning);
+            }
         }
     }
 
