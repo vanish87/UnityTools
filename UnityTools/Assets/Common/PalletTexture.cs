@@ -19,7 +19,7 @@ namespace UnityTools.Common
             var w = size;
             var h = from.Count;
 
-            var texture = TextureManager.Create(w,h);
+			var texture = TextureManager.Create(w, h, TextureFormat.RGBA32, false, true);
             texture.filterMode = FilterMode.Point;
             texture.wrapMode = TextureWrapMode.Clamp;
             
