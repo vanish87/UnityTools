@@ -18,7 +18,10 @@ namespace UnityTools.Common
             public float4 col;
         }
         public GPUBufferVariable<Particle> Buffer => this.parameter.particleBuffer;
-        [SerializeField] protected int numOfParticles = 1024 * 128;
+
+		public ISpace Space => UnityTools.Common.Space.LargeSpace;
+
+		[SerializeField] protected int numOfParticles = 1024 * 128;
 
         [System.Serializable]
 		public class ParticleGPUParameter : GPUContainer

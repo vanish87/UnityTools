@@ -16,7 +16,10 @@ namespace UnityTools.Rendering
 		}
 
 		public GPUBufferVariable<Particle> Buffer => this.particleBuffer;
-        protected GPUBufferVariable<Particle> particleBuffer = new GPUBufferVariable<Particle>();
+
+		public ISpace Space => UnityTools.Common.Space.LargeSpace;
+
+		protected GPUBufferVariable<Particle> particleBuffer = new GPUBufferVariable<Particle>();
 
 
 		protected void OnEnable()

@@ -9,6 +9,7 @@ namespace UnityTools.Rendering
 	public interface IDataBuffer<T>
 	{
 		GPUBufferVariable<T> Buffer { get; }
+		ISpace Space { get; }
 	}
 
 	public class DataRenderBase<T> : MonoBehaviour, IInitialize

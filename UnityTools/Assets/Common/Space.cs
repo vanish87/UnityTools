@@ -43,6 +43,7 @@ namespace UnityTools.Common
 
     public static class Space
     {
+		public static readonly Space3D LargeSpace = new Space3D() { Center = 0, Rotation = quaternion.identity, Scale = 10000 };
         public static readonly Dictionary<SpaceCorner, float3> SpaceCorners = new Dictionary<SpaceCorner, float3>()
         {
             {SpaceCorner.NearLeftUp,        new float3(-0.5f, 0.5f, -0.5f) },
@@ -75,6 +76,7 @@ namespace UnityTools.Common
             camera.gameObject.transform.localRotation = space.Rotation;
         }
     }
+    
 
     [System.Serializable]
     public class Space3D : ISpace
