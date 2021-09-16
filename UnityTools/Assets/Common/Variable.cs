@@ -315,7 +315,7 @@ namespace UnityTools.Common
     public class GPUBufferAppendConsume<T>: GPUBufferVariable<T>
     {
         protected GPUBufferVariable<int> counterBuffer;
-		protected GPUBufferVariable<int> CounterBuffer => this.counterBuffer ??= new GPUBufferVariable<int>();
+		protected GPUBufferVariable<int> CounterBuffer => this.counterBuffer ??= new GPUBufferVariable<int>(MIN_INDIRECT_BUFFER_SIZE, true, false, ComputeBufferType.IndirectArguments);
 
         public void InitAppendBuffer(int size, bool autoSet = false)
         {
@@ -339,12 +339,12 @@ namespace UnityTools.Common
             LogTool.AssertIsTrue(this.Size > 0);
             this.Data.SetCounterValue(counter);
 
-			if (this.counterBuffer == null) this.CounterBuffer.InitBuffer(MIN_INDIRECT_BUFFER_SIZE, true, false, ComputeBufferType.IndirectArguments);
             this.CounterBuffer.ClearData();
         }
 
         public int GetCounter()
         {
+            //Note: GetCounter is very expensive, use it wisely
             ComputeBuffer.CopyCount(this.Data, this.CounterBuffer, 0);
             this.CounterBuffer.GetToCPUData();
             //only first int is valid, rest 4 ints in CPU data should be 0(undefined);
@@ -369,6 +369,19 @@ namespace UnityTools.Common
             base.Release();
             this.counterBuffer?.Release();
             this.counterBuffer = null;
+        }
+        public override void SetToGPU(object container, ComputeShader cs, string kernel = null)
+        {
+            base.SetToGPU(container, cs, kernel);
+            var id = cs.FindKernel(kernel);
+            ComputeBuffer.CopyCount(this.Data, this.CounterBuffer, 0);
+            cs.SetBuffer(id, this.shaderName + "ActiveCount", this.CounterBuffer);
+        }
+        public override void SetToMaterial(object container, Material material)
+        {
+            base.SetToMaterial(container, material);
+            ComputeBuffer.CopyCount(this.Data, this.CounterBuffer, 0);
+            material.SetBuffer(this.shaderName + "ActiveCount", this.CounterBuffer);
         }
     }
 }
