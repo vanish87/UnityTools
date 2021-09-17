@@ -162,12 +162,15 @@ namespace UnityTools.Common
             get
             {
                 LogTool.AssertIsTrue(this.Size > 0);
-                return this.gpuBuffer ??= new ComputeBuffer(this.size, Marshal.SizeOf<T>(), this.type);
+                return this.gpuBuffer ??= new ComputeBuffer(this.Size, Marshal.SizeOf<T>(), this.type);
             }
         } 
         public T[] CPUData => this.cpuData;
         public int Size => this.size;
         public string ShaderName => this.shaderName;
+		protected bool Inited => this.inited;
+        private bool inited = false; 
+
         private T[] cpuData;
         private int size;
         private bool autoSet = true;
@@ -198,11 +201,14 @@ namespace UnityTools.Common
             this.type = type;
             this.autoSet = autoSet;
 			this.cpuData = cpuData ? new T[this.size] : null;
+            
+            this.inited = true;
         }
 
         public virtual void InitBuffer(GPUBufferVariable<T> other)
         {
             LogTool.AssertIsTrue(other.Size > 0);
+            LogTool.AssertIsTrue(this != other);//self assignment is dangerous
 
             this.Release();
 
@@ -215,6 +221,8 @@ namespace UnityTools.Common
                 Array.Copy(other.cpuData, this.cpuData, this.size);
             }
             this.gpuBuffer = other.Data;
+
+            this.inited = true;
         }
         public void UpdateBuffer(GPUBufferVariable<T> other)
         {
@@ -227,6 +235,8 @@ namespace UnityTools.Common
                 Array.Copy(other.cpuData, this.cpuData, this.size);
             }
             this.gpuBuffer = other.Data;
+            
+            this.inited = true;
         }
         public void ClearData(bool gpu = true)
         {
@@ -247,7 +257,7 @@ namespace UnityTools.Common
             LogTool.AssertNotNull(kernel);
             // LogTool.AssertIsTrue(this.Size > 0);
 			// if (cs == null || this.Size == 0) { LogTool.Log(this.displayName + " is not set to GPU", LogLevel.Warning); return; }
-			if (cs == null || this.Size == 0) return;
+			if (cs == null || !this.Inited) return;
 
             this.SetToGPUBuffer();
             var id = cs.FindKernel(kernel);
@@ -257,7 +267,7 @@ namespace UnityTools.Common
         public override void SetToMaterial(object container, Material material)
         {
             LogTool.AssertNotNull(material);
-            if (material == null) return;
+            if (material == null || !this.Inited) return;
             this.SetToGPUBuffer();
             material.SetBuffer(this.shaderName, this.Data);
             material.SetInt(this.shaderName+"Count", this.Size);
@@ -373,6 +383,9 @@ namespace UnityTools.Common
         public override void SetToGPU(object container, ComputeShader cs, string kernel = null)
         {
             base.SetToGPU(container, cs, kernel);
+
+			if (cs == null || !this.Inited) return;
+
             var id = cs.FindKernel(kernel);
             ComputeBuffer.CopyCount(this.Data, this.CounterBuffer, 0);
             cs.SetBuffer(id, this.shaderName + "ActiveCount", this.CounterBuffer);
@@ -380,6 +393,9 @@ namespace UnityTools.Common
         public override void SetToMaterial(object container, Material material)
         {
             base.SetToMaterial(container, material);
+
+			if (material == null || !this.Inited) return;
+
             ComputeBuffer.CopyCount(this.Data, this.CounterBuffer, 0);
             material.SetBuffer(this.shaderName + "ActiveCount", this.CounterBuffer);
         }
