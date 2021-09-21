@@ -30,6 +30,7 @@ namespace UnityTools.GUITool
             {typeof(Texture3D),     HandleGPUResource},
             {typeof(RenderTexture), HandleGPUResource},
             {typeof(GPUVariable),   HandleGPUVariable},
+            {typeof(ListVariable),  HandleListVariable},
         };
         private Dictionary<string, string> unParsedString = new Dictionary<string, string>();
         private string classHashString;
@@ -44,23 +45,25 @@ namespace UnityTools.GUITool
         }
         public virtual void OnGUI()
         {
-            this.OnGUIInternal();
-        }
-        private void OnGUIInternal()
-        {
             foreach (var v in this.VariableList)
+            {
+				OnGUIInternal(v, this.Container, this.unParsedString);
+            }
+        }
+        static private void OnGUIInternal(Variable v, object container, Dictionary<string, string> unParsedString)
+        {
             {
                 var t = v.Value.FieldType;
                 var key = TypeDrawerMap.ContainsKey(t) ? t : TypeDrawerMap.Keys.Where(k => t.IsSubclassOf(k)).FirstOrDefault();
                 if (key != null)
                 {
-                    TypeDrawerMap[key].Invoke(this.Container, v, this.unParsedString);
+                    TypeDrawerMap[key].Invoke(container, v, unParsedString);
                 }
                 else
                 {
                     var method = typeof(GUIContainer).GetMethod("HandleFieldValue", BindingFlags.NonPublic | BindingFlags.Static);
                     var typeFunc = method.MakeGenericMethod(v.Value.FieldType);
-                    typeFunc?.Invoke(null, new object[3] { this.Container, v, this.unParsedString });
+                    typeFunc?.Invoke(null, new object[3] { container, v, unParsedString });
                 }
             }
         }
@@ -225,8 +228,11 @@ namespace UnityTools.GUITool
             var v = (Texture)variable.Value.GetValue(container);
             if (v == null) return;
 
+			var aspect = v.width * 1.0f / v.height;
+            var w = 256f;
+            var h = w / aspect;
             GUILayout.Label(variable.displayName);
-            GUILayout.Box(v);
+            GUILayout.Box(v, GUILayout.Width(w), GUILayout.Height(h));
         }
         static private void HandleGPUVariable(object container, Variable variable, Dictionary<string, string> unparsedString)
         {
@@ -234,6 +240,13 @@ namespace UnityTools.GUITool
             if (v == null) return;
 
             GUILayout.Label(v.ToString());
+        }
+        static private void HandleListVariable(object container, Variable variable, Dictionary<string, string> unparsedString)
+        {
+            var vl = (ListVariable)variable.Value.GetValue(container);
+            if (vl == null) return;
+
+            //TODO
         }
         static private void HandleFieldValue<T>(object container, Variable variable, Dictionary<string, string> unparsedString)
         {

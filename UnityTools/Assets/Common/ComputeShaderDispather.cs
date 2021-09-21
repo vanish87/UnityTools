@@ -23,6 +23,10 @@ namespace UnityTools.ComputeShaderTool
         {
             this.Dispatch(this.kernelMap[kernel], X, Y, Z);
         }
+        public void DispatchNoneThread(T kernel, int X = 1, int Y = 1, int Z = 1)
+        {
+            this.DispatchNoneThread(this.kernelMap[kernel], X, Y, Z);
+        }
         public void AddParameter(T kernel, IGPUContainer parameter)
         {
             this.AddParameter(this.kernelMap[kernel], parameter);
@@ -73,6 +77,25 @@ namespace UnityTools.ComputeShaderTool
                 this.kernel[kernel].parameters.Add(parameter);
             }
         }
+        public void DispatchNoneThread(string kernel, int X = 1, int Y = 1, int Z = 1)
+        {
+            Assert.IsNotNull(kernel);
+            Assert.IsNotNull(this.cs);
+            if(this.kernel.ContainsKey(kernel) == false)
+            {
+                this.AddNewKernelInfo(kernel);
+            }
+
+            var kernelInfo = this.kernel[kernel];
+            var threadNum = kernelInfo.kernelDimesion;
+
+            this.UpdateParameter(kernel);
+            this.cs.SetInt("_DispatchedX", X);
+            this.cs.SetInt("_DispatchedY", Y);
+            this.cs.SetInt("_DispatchedZ", Z);
+
+            this.cs.Dispatch(kernelInfo.kernel, X, Y, Z);
+        }
         public void Dispatch(string kernel, int X = 1, int Y = 1, int Z = 1)
         {
             Assert.IsNotNull(kernel);
@@ -86,6 +109,9 @@ namespace UnityTools.ComputeShaderTool
             var threadNum = kernelInfo.kernelDimesion;
 
             this.UpdateParameter(kernel);
+            this.cs.SetInt("_DispatchedX", X);
+            this.cs.SetInt("_DispatchedY", Y);
+            this.cs.SetInt("_DispatchedZ", Z);
             this.cs.Dispatch(kernelInfo.kernel, this.GetDispatchSize(X, threadNum.x), this.GetDispatchSize(Y, threadNum.y), this.GetDispatchSize(Z, threadNum.z));
         }
 
@@ -118,7 +144,11 @@ namespace UnityTools.ComputeShaderTool
             Assert.IsTrue(desired > 0);
             Assert.IsTrue(threadNum > 0);
 
-            return (int)((desired + threadNum - 1) / threadNum);
+            var dsize = (int)((desired + threadNum - 1) / threadNum);
+
+			if (desired != dsize * threadNum) LogTool.Log("Dispatch threads " + dsize*threadNum + " more than desired " + desired, LogLevel.Warning);
+
+            return dsize;
         }
     }
 }

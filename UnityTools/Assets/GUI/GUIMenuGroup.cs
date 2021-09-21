@@ -72,6 +72,7 @@ namespace UnityTools.GUITool
         }
 
         [SerializeField] protected List<WindowData> windowData = new List<WindowData>();
+        protected List<IConfigure> configures = new List<IConfigure>();
 
 
         protected void Start()
@@ -80,6 +81,8 @@ namespace UnityTools.GUITool
             {
                 this.windowData.Add(new WindowData() { title = gui.Title, key = gui.OpenKey });
             }
+
+            this.configures = ObjectTool.FindAllObject<IConfigure>();
 
             foreach(var w in this.windowData)
             {
@@ -109,8 +112,15 @@ namespace UnityTools.GUITool
         {
             foreach(var w in this.windowData)
             {
-                GUILayout.Label("Use " + w.key.ToString()+ " key for " + w.title + " window");
+                // GUILayout.Label("Use " + w.key.ToString()+ " key for " + w.title + " window");
+				w.open = GUILayout.Toggle(w.open, w.title);
             }
+
+            foreach(var c in this.configures)
+            {
+                c.IsOpen = GUILayout.Toggle(c.IsOpen, c.ToString());
+            }
+
         }
         
     }

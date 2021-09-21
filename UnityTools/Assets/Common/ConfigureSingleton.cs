@@ -9,7 +9,8 @@ namespace UnityTools.Common
     public abstract class ConfigureSingleton<T> : SingletonMonoBehaviour<ConfigureSingleton<T>>, IConfigure<T>, IConfigureSerialize where T : new()
     {
         public T D => this.data ??= new T();
-        public bool IsOpen => this.open;
+		public bool IsOpen { get => this.open; set => this.open = value; }
+        public bool IsSyncing=>this.isSyncing;
 
         public virtual string FilePath => ConfigureTool.GetFilePath(this.ToString(), this.SaveType, this.Preset);
 
@@ -23,12 +24,13 @@ namespace UnityTools.Common
         public virtual KeyCode SaveKey => this.saveKey;
 
         public virtual KeyCode LoadKey => this.loadKey;
-        [SerializeField] protected ConfigureSaveMode saveMode = ConfigureSaveMode.UseEditorValue;
+        [SerializeField] protected ConfigureSaveMode saveMode = ConfigureSaveMode.SaveEditorValueWhenExitingPlayMode;
         [SerializeField] protected FileTool.SerializerType saveType = FileTool.SerializerType.XML;
         [SerializeField] protected KeyCode saveKey = KeyCode.None;
         [SerializeField] protected KeyCode openKey = KeyCode.None;
         [SerializeField] protected KeyCode loadKey = KeyCode.None;
         [SerializeField] protected ConfigurePreset preset = ConfigurePreset.Default;
+		[SerializeField] protected bool isSyncing = false;
 
         [SerializeField] private T data;
         protected bool open = false;
@@ -57,18 +59,31 @@ namespace UnityTools.Common
             this.guiContainer = null;
         }
 
+        public virtual void OpenFile()
+        {
+            Application.OpenURL(this.FilePath);
+        }
         public void NotifyChange()
         {
             this.OnConfigureChange(this, null);
         }
 
+		public byte[] OnSerialize()
+		{
+            return Serialization.ObjectToByteArray(JsonUtility.ToJson(this.D));
+		}
+
+		public void OnDeserialize(byte[] data)
+		{
+            JsonUtility.FromJsonOverwrite(Serialization.ByteArrayToObject<string>(data), this.data);
+		}
         protected virtual void Start()
         {
             if (this.data == null) this.Initialize();
         }
         protected virtual void OnDisable()
         {
-            if (Application.isEditor && this.saveMode == ConfigureSaveMode.UseEditorValue)
+            if (Application.isEditor && this.saveMode == ConfigureSaveMode.SaveEditorValueWhenExitingPlayMode)
             {
                 this.Save();
                 //LogTool.Log("Configure " + this.name + " Saved", LogLevel.Verbose, LogChannel.IO);
@@ -91,7 +106,7 @@ namespace UnityTools.Common
             }
         }
         private Rect windowRect;
-        protected virtual void OnGUIDrawWindow()
+        protected virtual void OnGUI()
         {
             if(!this.IsOpen) return;
             this.windowRect =

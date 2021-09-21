@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -65,7 +66,8 @@ namespace UnityTools.Common
             this.container = objRef;
             var bindingFlags = BindingFlags.Instance |
                                BindingFlags.NonPublic |
-                               BindingFlags.Public;
+                               BindingFlags.Public |
+                               BindingFlags.Static;
 
             var variableList = type
                      .GetFields(bindingFlags)
@@ -100,7 +102,15 @@ namespace UnityTools.Common
                 }
                 else
                 {
-                    this.variableList.Add(this.Create(v, name, v.GetValue(this.Container), isGPU, shaderName));
+                    var value = v.GetValue(this.Container);
+                    if(value is IList list)
+                    {
+                        //TODO
+                    }
+                    else
+                    {
+						this.variableList.Add(this.Create(v, name, value, isGPU, shaderName));
+                    }
                 }
             }
         }

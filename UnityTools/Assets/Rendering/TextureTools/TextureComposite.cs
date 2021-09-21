@@ -90,7 +90,7 @@ namespace UnityTools.Rendering
             }
         }
 
-        public virtual void RecalculateTextureParameter(TextureLayout layout = TextureLayout.Auto)
+        public virtual void RecalculateTextureParameter(TextureLayout layout = TextureLayout.Auto, int maxLineCount = -1)
         {
             if(this.textureList.Count == 0)
             {
@@ -106,7 +106,7 @@ namespace UnityTools.Rendering
             //use max width or height as total width/height
             //another size of texture is sum up of width/height size
             var horizontal = layout == TextureLayout.Auto ?
-                             maxW <= maxH :
+                             maxH <= maxW :
                              layout == TextureLayout.Horizontal;
 
             var compacked = layout != TextureLayout.Auto;
@@ -114,8 +114,8 @@ namespace UnityTools.Rendering
             var newSize = new Vector2Int(0, 0);
             var currentSize = new Vector2Int(0, 0);
             
-            var maxLineSize = (horizontal?maxW:maxH) * (compacked?this.textureList.Count:Mathf.CeilToInt(Mathf.Sqrt(this.textureList.Count)));
-            
+            maxLineCount = maxLineCount != -1? maxLineCount:Mathf.CeilToInt(Mathf.Sqrt(this.textureList.Count));
+            var maxLineSize = (horizontal?maxW:maxH) * (compacked?this.textureList.Count:maxLineCount);
 
             foreach (var t in textureList)
             {

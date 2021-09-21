@@ -46,7 +46,7 @@ namespace UnityTools.Networking
         public interface IMessage
         {
             byte[] OnSerialize();
-
+            void OnDeserialize(IMessage message);
             void OnSuccessReceived();
         }
 

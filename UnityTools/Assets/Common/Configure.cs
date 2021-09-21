@@ -12,7 +12,7 @@ namespace UnityTools
     public interface IConfigure
     {
         void OnConfigureChange(object sender, EventArgs args);
-        bool IsOpen { get; }
+		bool IsOpen { get; set; }
         string FilePath { get; }
         ConfigurePreset Preset { get; }
 
@@ -23,6 +23,7 @@ namespace UnityTools
         void Initialize();
         void Save();
         void Load();
+        void OpenFile();
         void NotifyChange();
         void OnGUIDraw();
 
@@ -34,13 +35,17 @@ namespace UnityTools
 
     public interface IConfigureSerialize
     {
-        FileTool.SerializerType SaveType { get; } 
+        FileTool.SerializerType SaveType { get; }
+		bool IsSyncing { get; }
+
+        byte[] OnSerialize();
+        void OnDeserialize(byte[] data);
     }
 
     public enum ConfigureSaveMode
     {
         None = 0,
-        UseEditorValue,
+        SaveEditorValueWhenExitingPlayMode,
         UseFileValue,
     }
 
@@ -75,8 +80,13 @@ namespace UnityTools
 
     public abstract class Configure<T> : MonoBehaviour, IConfigure<T>, IConfigureSerialize where T : new()
     {
+        public static implicit operator T(Configure<T> source)
+        {
+            return source.D;
+        }
         public T D => this.data ??= new T();
-        public bool IsOpen => this.open;
+		public bool IsOpen { get => this.open; set => this.open = value; }
+        public bool IsSyncing=>this.isSyncing;
 
         public virtual string FilePath => ConfigureTool.GetFilePath(this.ToString(), this.SaveType, this.Preset);
 
@@ -91,14 +101,15 @@ namespace UnityTools
 
         public virtual KeyCode LoadKey => this.loadKey;
 
-        [SerializeField] protected ConfigureSaveMode saveMode = ConfigureSaveMode.UseEditorValue;
+        [SerializeField] protected ConfigureSaveMode saveMode = ConfigureSaveMode.SaveEditorValueWhenExitingPlayMode;
         [SerializeField] protected FileTool.SerializerType saveType = FileTool.SerializerType.XML;
         [SerializeField] protected KeyCode openKey = KeyCode.None;
         [SerializeField] protected KeyCode saveKey = KeyCode.None;
         [SerializeField] protected KeyCode loadKey = KeyCode.None;
         [SerializeField] protected ConfigurePreset preset = ConfigurePreset.Default;
 
-        [SerializeField] private T data;
+		[SerializeField] protected bool isSyncing = false;
+        [SerializeField] protected T data;
         protected bool open = false;
         private GUIContainer guiContainer = null;
 
@@ -124,6 +135,10 @@ namespace UnityTools
             if (data != null) this.data = data;
             this.guiContainer = null;
         }
+        public virtual void OpenFile()
+        {
+            Application.OpenURL(this.FilePath);
+        }
 
         public void NotifyChange()
         {
@@ -136,7 +151,7 @@ namespace UnityTools
         }
         protected virtual void OnDisable()
         {
-            if (Application.isEditor && this.saveMode == ConfigureSaveMode.UseEditorValue)
+            if (Application.isEditor && this.saveMode == ConfigureSaveMode.SaveEditorValueWhenExitingPlayMode)
             {
                 this.Save();
                 this.Load();
@@ -162,7 +177,7 @@ namespace UnityTools
         }
 
         private Rect windowRect;
-        protected virtual void OnGUIDrawWindow()
+        protected virtual void OnGUI()
         {
             if(!this.IsOpen) return;
             this.windowRect =
@@ -197,7 +212,17 @@ namespace UnityTools
             if (GUILayout.Button("Save")) this.Save();
             if (GUILayout.Button("Load")) { this.Load(); this.NotifyChange(); }
         }
-    }
+
+		public virtual byte[] OnSerialize()
+		{
+            return Serialization.ObjectToByteArray(JsonUtility.ToJson(this.D));
+		}
+
+		public virtual void OnDeserialize(byte[] data)
+		{
+            JsonUtility.FromJsonOverwrite(Serialization.ByteArrayToObject<string>(data), this.data);
+		}
+	}
 
     public class ConfigureGUI
     {
