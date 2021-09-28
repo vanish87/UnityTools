@@ -23,7 +23,7 @@ namespace UnityTools.Rendering
 
 		public void Start()
 		{
-			if(!this.Inited) this.Init();
+			this.Init();
 		}
 		protected void OnDestroy()
 		{
@@ -40,15 +40,17 @@ namespace UnityTools.Rendering
 				LogTool.Log("Draw buffer is null, nothing to draw", LogLevel.Warning);
 				return;
 			}
-            material.SetBuffer("_DataBuffer", this.buffer.Buffer);
+			material.SetBuffer("_DataBuffer", this.buffer.Buffer);
 			var b = new Bounds(Vector3.zero, Vector3.one * 10000);
 			Graphics.DrawProcedural(material, b, MeshTopology.Points, this.buffer.Buffer.Size);
 		}
 		public virtual void Init()
 		{
+			if (this.Inited) return;
+
 			this.buffer = this.gameObject.GetComponent<IDataBuffer<T>>();
 			LogTool.AssertNotNull(this.buffer);
-			
+
 			this.particleMaterial = new DisposableMaterial(this.dataShader);
 			this.inited = true;
 		}
