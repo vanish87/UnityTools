@@ -79,7 +79,7 @@ namespace UnityTools.Common
         protected override void DisposeUnmanaged()
         {
             base.DisposeUnmanaged();
-            Assert.IsNotNull(this.data);
+            // Assert.IsNotNull(this.data);
             data?.DestoryObj();
             data = null;
         }
