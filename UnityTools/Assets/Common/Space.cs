@@ -117,7 +117,7 @@ namespace UnityTools.Common
         }
         [SerializeField] protected float3 center;
         [SerializeField] protected quaternion rotation = quaternion.identity;
-        [SerializeField] protected float3 scale;
+		[SerializeField] protected float3 scale = new float3(1, 1, 1);
         [SerializeField] protected bool displayAxis = true;
         [SerializeField] protected bool displayText = true;
         [SerializeField] protected bool displayBound = true;
