@@ -295,6 +295,11 @@ namespace UnityTools.Common
             }
         }
 
+        public void OverWriteCPUData(T[] newData)
+        {
+            this.cpuData = newData;
+        }
+
         public void GetToCPUData()
         {
             if(this.CPUData != null)
