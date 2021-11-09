@@ -32,6 +32,10 @@ namespace UnityTools.GUITool
             {typeof(GPUVariable),   HandleGPUVariable},
             {typeof(ListVariable),  HandleListVariable},
         };
+        static private HashSet<Type> DrawableType = new HashSet<Type>()
+        {
+			typeof(bool), typeof(float), typeof(int), typeof(string),
+        };
         private Dictionary<string, string> unParsedString = new Dictionary<string, string>();
         private string classHashString;
 
@@ -59,7 +63,7 @@ namespace UnityTools.GUITool
                 {
                     TypeDrawerMap[key].Invoke(container, v, unParsedString);
                 }
-                else
+                else if(DrawableType.Contains(t))
                 {
                     var method = typeof(GUIContainer).GetMethod("HandleFieldValue", BindingFlags.NonPublic | BindingFlags.Static);
                     var typeFunc = method.MakeGenericMethod(v.Value.FieldType);
