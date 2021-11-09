@@ -10,14 +10,14 @@ namespace UnityTools.Rendering
 		[SerializeField] protected Mesh mesh;
 		protected GPUBufferIndirectArgument indirectBuffer = new GPUBufferIndirectArgument();
 
-		public override void Init()
+		public override void Init(params object[] parameters)
 		{
 			base.Init();
 
 			LogTool.AssertNotNull(this.mesh);
 			this.indirectBuffer.InitBuffer(this.mesh, this.buffer.Buffer.Size);
 		}
-		public override void Deinit()
+		public override void Deinit(params object[] parameters)
 		{
 			base.Deinit();
 			this.indirectBuffer?.Release();

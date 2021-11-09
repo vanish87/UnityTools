@@ -44,7 +44,7 @@ namespace UnityTools.Rendering
 			var b = new Bounds(Vector3.zero, Vector3.one * 10000);
 			Graphics.DrawProcedural(material, b, MeshTopology.Points, this.buffer.Buffer.Size);
 		}
-		public virtual void Init()
+		public virtual void Init(params object[] parameters)
 		{
 			if (this.Inited) return;
 
@@ -54,9 +54,10 @@ namespace UnityTools.Rendering
 			this.particleMaterial = new DisposableMaterial(this.dataShader);
 			this.inited = true;
 		}
-		public virtual void Deinit()
+		public virtual void Deinit(params object[] parameters)
 		{
 			this.particleMaterial?.Dispose();
+			this.inited  = false;
 		}
 	}
 }
