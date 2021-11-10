@@ -32,11 +32,11 @@ namespace UnityTools.Rendering
         }
         protected void Update()
         {
-            this.mainTexture = this.mainTexture??this.Field?.FieldAsTexture;
-            if(this.mainTexture != null)
+            if(this.mainTexture != null || this.Field?.FieldAsTexture != null)
             {
-				this.material.Data.mainTexture = this.mainTexture;
-				this.transform.localScale = new Vector3(this.mainTexture.width * 1.0f / this.mainTexture.height, 1, 1) * scale;
+                var tex = this.mainTexture??this.Field?.FieldAsTexture;
+				this.material.Data.mainTexture = tex;
+				this.transform.localScale = new Vector3(tex.width * 1.0f / tex.height, 1, 1) * scale;
             }
         }
         protected void OnDisable()
