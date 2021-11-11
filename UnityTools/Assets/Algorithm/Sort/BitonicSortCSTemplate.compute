@@ -1,8 +1,8 @@
 ﻿#pragma kernel BitonicSort
 #pragma kernel MatrixTranspose
 
-#define BITONIC_BLOCK_SIZE 512
-#define TRANSPOSE_BLOCK_SIZE 16
+#define BITONIC_BLOCK_SIZE 1024
+#define TRANSPOSE_BLOCK_SIZE 32
 
 //Define Datatype and Compare function only
 #define DataType int

@@ -12,7 +12,7 @@ namespace UnityTools.Algorithm
 		protected GPUBufferVariable<int> source = new GPUBufferVariable<int>();
 		protected void Start()
 		{
-			this.source.InitBuffer(8192, true);
+			this.source.InitBuffer(1024 * 512, true);
 			foreach (var i in Enumerable.Range(0, this.source.Size))
 			{
 				this.source.CPUData[i] = Random.Range(-this.source.Size, this.source.Size);

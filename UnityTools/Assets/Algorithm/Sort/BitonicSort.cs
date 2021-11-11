@@ -8,8 +8,8 @@ namespace UnityTools.Algorithm
 {
 	public class BitonicSort<T> : MonoBehaviour
 	{
-		protected const int BITONIC_BLOCK_SIZE = 512;
-		protected const int TRANSPOSE_BLOCK_SIZE = 16;
+		protected const int BITONIC_BLOCK_SIZE = 1024;
+		protected const int TRANSPOSE_BLOCK_SIZE = 32;
 		[SerializeField] protected ComputeShader bitonicCS;
 
 		protected GPUBufferVariable<T> tempBuffer = new GPUBufferVariable<T>();
