@@ -9,7 +9,7 @@ using System;
 namespace UnityTools.Common
 {
 	[RequireComponent(typeof(GridIndexSort))]
-	public class ObjectGrid<T, Cell> : GPUGrid<Cell>
+	public class ObjectGrid<ObjectType, CellType> : GPUGrid<CellType>
 	{
 		public enum Kernel
 		{
@@ -21,8 +21,8 @@ namespace UnityTools.Common
 
 		public class GridBuffer : GPUContainer
 		{
-			[Shader(Name = "_ObjectBufferRead")] public GPUBufferVariable<T> objectBuffer= new GPUBufferVariable<T>();
-			[Shader(Name = "_ObjectBufferSorted")] public GPUBufferVariable<T> objectBufferSorted = new GPUBufferVariable<T>();
+			[Shader(Name = "_ObjectBufferRead")] public GPUBufferVariable<ObjectType> objectBuffer= new GPUBufferVariable<ObjectType>();
+			[Shader(Name = "_ObjectBufferSorted")] public GPUBufferVariable<ObjectType> objectBufferSorted = new GPUBufferVariable<ObjectType>();
 			[Shader(Name = "_ObjectGridIndexBuffer")] public GPUBufferVariable<uint2> objectGridIndexBuffer = new GPUBufferVariable<uint2>();
 
 		}
@@ -33,7 +33,7 @@ namespace UnityTools.Common
 		protected GridIndexSort sort;
 		protected ComputeShaderDispatcher<Kernel> dispatcher;
 
-		public void BuildSortedParticleGridIndex(GPUBufferVariable<T> source, out GPUBufferVariable<T> sortedBuffer)
+		public void BuildSortedParticleGridIndex(GPUBufferVariable<ObjectType> source, out GPUBufferVariable<ObjectType> sortedBuffer)
 		{
 			sortedBuffer = default;
 
@@ -50,7 +50,7 @@ namespace UnityTools.Common
 			sortedBuffer = this.gridbuffer.objectBufferSorted;
 		}
 
-		protected void CheckBufferChanged(GPUBufferVariable<T> source)
+		protected void CheckBufferChanged(GPUBufferVariable<ObjectType> source)
 		{
 			if(this.gridbuffer.objectBufferSorted == null || this.gridbuffer.objectBufferSorted.Size != source.Size)
 			{
