@@ -16,6 +16,7 @@ namespace UnityTools.Physics
 			DeltaTime,//use delta time for update
 			PreferredTime,// use preferredTimestep
 			PreferredTimeOverTime,// use preferredTimestep but can not catch real world time
+			PreferredTimeUnderTime,// use preferredTimestep but too fast to excede real world time
 			
 		}
 		protected Action<float> updateActions;
@@ -24,15 +25,15 @@ namespace UnityTools.Physics
 		[SerializeField] protected int maxIteration = 32;
 		[SerializeField] protected const float MaxAccumulationTime = 1f;
 		[SerializeField] protected bool logWarning = false;
-		[SerializeField] protected bool alwaysPreferredTimestep = false;
+		[SerializeField] protected bool forcePreferredTimestep = false;
 		[SerializeField] protected bool forceIteration = false;
 		[SerializeField, DisableEdit] protected State currentState = State.DeltaTime;
-		public AccumulatorTimestep(float preferredTimestep = 1 / 60f, int maxIteration = 32, bool alwaysPreferredTimestep = false, bool forceIteration = false, bool logWarning = false)
+		public AccumulatorTimestep(float preferredTimestep = 1 / 60f, int maxIteration = 32, bool forcePreferredTimestep = false, bool forceIteration = false, bool logWarning = false)
         {
             this.preferredTimestep = preferredTimestep;
             this.maxIteration = maxIteration;
             this.accumulator = 0;
-			this.alwaysPreferredTimestep = alwaysPreferredTimestep;
+			this.forcePreferredTimestep = forcePreferredTimestep;
 			this.forceIteration = forceIteration;
 
 			this.logWarning = logWarning;
@@ -49,16 +50,16 @@ namespace UnityTools.Physics
             var iteration = 0;
 			while ((this.accumulator >= this.preferredTimestep || this.forceIteration) && iteration < this.maxIteration)
 			{
-				var dt = this.preferredTimestep;
+				var dt = this.forceIteration ? (this.forcePreferredTimestep ? this.preferredTimestep : math.min(this.preferredTimestep, Time.deltaTime)) : this.preferredTimestep;
 				this.updateActions?.Invoke(dt);
 				this.accumulator -= dt;
 				iteration++;
 
-				this.currentState = State.PreferredTime;
+				this.currentState = this.accumulator < 0 ? State.PreferredTimeUnderTime : State.PreferredTime;
 			}
 			if(iteration == 0) 
 			{
-				var dt = this.alwaysPreferredTimestep ? this.preferredTimestep : Time.deltaTime;
+				var dt = this.forcePreferredTimestep ? this.preferredTimestep : Time.deltaTime;
 				this.updateActions?.Invoke(dt);
 				this.accumulator -= dt;
 				this.accumulator = math.clamp(this.accumulator, 0, MaxAccumulationTime);
@@ -66,7 +67,7 @@ namespace UnityTools.Physics
 				this.currentState = State.DeltaTime;
 			}
 
-            if(iteration >= this.maxIteration)
+			if (iteration + 1 > this.maxIteration)
             {
 				if (this.logWarning) LogTool.Log("Max Iteration reached " + iteration, LogLevel.Warning);
                 if(this.accumulator > MaxAccumulationTime)
