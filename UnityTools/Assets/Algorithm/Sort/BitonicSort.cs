@@ -17,6 +17,7 @@ namespace UnityTools.Algorithm
 		public void Sort(ref GPUBufferVariable<T> source)
 		{
 			LogTool.LogAssertIsTrue(Mathf.IsPowerOfTwo(source.Size), "num of source should be power of 2");
+			LogTool.LogAssertIsTrue(source.Size >= BITONIC_BLOCK_SIZE * TRANSPOSE_BLOCK_SIZE, "source size must bigger than " + (BITONIC_BLOCK_SIZE * TRANSPOSE_BLOCK_SIZE));
 
 			if (this.tempBuffer == null || this.tempBuffer.Size != source.Size)
 			{
