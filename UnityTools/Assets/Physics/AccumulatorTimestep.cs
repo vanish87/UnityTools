@@ -25,14 +25,15 @@ namespace UnityTools.Physics
 		[SerializeField] protected const float MaxAccumulationTime = 1f;
 		[SerializeField] protected bool logWarning = false;
 		[SerializeField] protected bool alwaysPreferredTimestep = false;
-		[SerializeField] protected bool forceStepIteration = false;
+		[SerializeField] protected bool forceIteration = false;
 		[SerializeField, DisableEdit] protected State currentState = State.DeltaTime;
-		public AccumulatorTimestep(float preferredTimestep = 1 / 60f, int maxIteration = 32, bool alwaysPreferredTimestep = false, bool logWarning = false)
+		public AccumulatorTimestep(float preferredTimestep = 1 / 60f, int maxIteration = 32, bool alwaysPreferredTimestep = false, bool forceIteration = false, bool logWarning = false)
         {
             this.preferredTimestep = preferredTimestep;
             this.maxIteration = maxIteration;
             this.accumulator = 0;
 			this.alwaysPreferredTimestep = alwaysPreferredTimestep;
+			this.forceIteration = forceIteration;
 
 			this.logWarning = logWarning;
         }
@@ -46,7 +47,7 @@ namespace UnityTools.Physics
 		{
 			this.accumulator += Time.deltaTime;
             var iteration = 0;
-			while ((this.accumulator >= this.preferredTimestep || this.forceStepIteration) && iteration < this.maxIteration)
+			while ((this.accumulator >= this.preferredTimestep || this.forceIteration) && iteration < this.maxIteration)
 			{
 				var dt = this.preferredTimestep;
 				this.updateActions?.Invoke(dt);
