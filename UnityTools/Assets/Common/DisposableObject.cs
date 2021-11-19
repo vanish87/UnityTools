@@ -64,32 +64,4 @@ namespace UnityTools.Common
         }
     }
 
-    [Serializable]
-    public class DisposableMaterial : DisposableObject<Material>
-    {
-        public DisposableMaterial(Material data) : base(new Material(data))
-        {
-        }
-
-        public DisposableMaterial(Shader shader) : base(new Material(shader))
-        {
-
-        }
-
-        protected override void DisposeUnmanaged()
-        {
-            base.DisposeUnmanaged();
-            // Assert.IsNotNull(this.data);
-            data?.DestoryObj();
-            data = null;
-        }
-        public static implicit operator DisposableMaterial(Material data)
-        {
-            return new DisposableMaterial(data);
-        }
-        public static implicit operator Material(DisposableMaterial source)
-        {
-            return source.Data;
-        }
-    }
 }

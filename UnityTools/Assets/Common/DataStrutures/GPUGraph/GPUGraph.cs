@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityTools.ComputeShaderTool;
 using UnityTools.Debuging;
+using UnityTools.Rendering;
 
 namespace UnityTools.Common
 {
