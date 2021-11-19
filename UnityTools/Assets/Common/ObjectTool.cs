@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -67,6 +68,12 @@ namespace UnityTools
 
             return users;
         }
+		public static IEnumerable<T> FindAllFieldValue<T>(System.Type type, object obj, BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static)
+		{
+			return type.GetFields(flags)
+                       .Where(field => typeof(T).IsAssignableFrom(field.FieldType))
+                       .Select(v=>(T)v.GetValue(obj));
+		}
 
         public static T[] SubArray<T>(this T[] data, int index, int length)
         {
