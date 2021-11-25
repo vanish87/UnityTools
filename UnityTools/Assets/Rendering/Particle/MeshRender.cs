@@ -9,13 +9,10 @@ namespace UnityTools.Rendering
 	{
 		[SerializeField] protected Mesh mesh;
 		protected GPUBufferIndirectArgument indirectBuffer = new GPUBufferIndirectArgument();
-
 		public override void Init(params object[] parameters)
 		{
 			base.Init();
-
 			LogTool.AssertNotNull(this.mesh);
-			this.indirectBuffer.InitBuffer(this.mesh, this.buffer.Buffer.Size);
 		}
 		public override void Deinit(params object[] parameters)
 		{
@@ -23,17 +20,32 @@ namespace UnityTools.Rendering
 			this.indirectBuffer?.Release();
 		}
 
-		protected override void Draw(Material material)
+		public override void OnUpdateDraw()
 		{
-			if (this.buffer == null || this.mesh == null || material == null || this.indirectBuffer == null)
+			if (this.Source == null || this.mesh == null || this.dataMaterial == null)
 			{
 				LogTool.Log("Draw buffer is null, nothing to draw", LogLevel.Warning);
 				return;
 			}
-			this.indirectBuffer.UpdateGPU(material);
-            material.SetBuffer("_ParticleBuffer", this.buffer.Buffer);
-			var b = new Bounds(Vector3.zero, Vector3.one * 10000);
-			Graphics.DrawMeshInstancedIndirect(mesh, 0, material, b, this.indirectBuffer, 0);
+			if(this.indirectBuffer.Size == 0 || this.indirectBuffer.CPUData[0] != this.mesh.GetIndexCount(0))
+			{
+				this.indirectBuffer.InitBuffer(this.mesh, this.Source.Buffer.Size);
+			}
+
+			this.dataMaterial.UpdateShaderCommand();
+			this.indirectBuffer.UpdateGPU(this.dataMaterial);
+			this.Source.Buffer.UpdateGPU(this.dataMaterial);
+			Graphics.DrawMeshInstancedIndirect(this.mesh, 0, this.dataMaterial, this.Source.Space.Bound, this.indirectBuffer, 0);
+		}
+		public override void OnRenderDraw()
+		{
+			if (this.Source == null || this.mesh == null || this.dataMaterial == null || this.indirectBuffer == null)
+			{
+				LogTool.Log("Draw buffer is null, nothing to draw", LogLevel.Warning);
+				return;
+			}
+
+			LogTool.Log("Not supported now", LogLevel.Warning);
 		}
 	}
 }

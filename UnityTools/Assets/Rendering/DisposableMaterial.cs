@@ -1,184 +1,58 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityTools.Common;
+using UnityTools.Debuging;
 
 namespace UnityTools.Rendering
 {
-	public interface IShaderCommand
-	{
-		string Name { get; }
-		bool SetToMaterial(Material material);
-	}
-	public interface IShaderCommand<T> : IShaderCommand
-	{
-		T Value { get; set; }
-	}
-
 	[Serializable]
-	public abstract class IntShaderCommand<T> : IShaderCommand<T>
+	public class DisposableMaterial : DisposableObject<Material>, IShaderCommandUser
 	{
-		public abstract string Name { get; }
-
-		public T Value { get => this.v; set => this.v = value; }
-		public T v = default;
-
-		public virtual bool SetToMaterial(Material material)
-		{
-			material.SetInt(this.Name, Convert.ToInt32(this.v));
-			return true;
-		}
-	}
-	[Serializable]
-	public abstract class BoolShaderCommand : IntShaderCommand<bool>
-	{
-		public BoolShaderCommand() : base() { this.Value = false; }
-		public override bool SetToMaterial(Material material)
-		{
-			material.SetOverrideTag(this.Name, this.v ? "True" : "False");
-			return true;
-		}
-	}
-	[Serializable]
-	public abstract class OnOffShaderCommand : IntShaderCommand<bool>
-	{
-		public OnOffShaderCommand() : base() { this.Value = false; }
-		public override bool SetToMaterial(Material material)
-		{
-			material.SetInt(this.Name, this.v ? 1 : 0);
-			return true;
-		}
-	}
-
-	[Serializable]
-	public class Blend : BoolShaderCommand
-	{
-		public override string Name => "Blend";
-		public BlendMode src = BlendMode.One;
-		public BlendMode dst = BlendMode.Zero;
-		public Blend() : base() { this.Value = false;}
-
-		public override bool SetToMaterial(Material material)
-		{
-			if (this.Value)
-			{
-				material.SetInt("BlendSrc", (int)this.src);
-				material.SetInt("BlendDst", (int)this.dst);
-			}
-			else
-			{
-				material.SetInt("BlendSrc", (int)BlendMode.One);
-				material.SetInt("BlendDst", (int)BlendMode.Zero);
-			}
-			return true;
-		}
-	}
-	[Serializable]
-	public class BlendOperation : IntShaderCommand<BlendOp>
-	{
-		public override string Name => "BlendOp";
-		public BlendOperation() : base() { this.Value = BlendOp.Add;}
-	}
-	[Serializable]
-	public class ColorMask : IntShaderCommand<ColorMask.Mask>
-	{
-		[Flags]
-		public enum Mask
-		{
-			None = 0,
-			Blue = 1 << 1,
-			Green = 1 << 2,
-			Red = 1 << 3,
-			Alpha = 1 << 4,
-			RGB = Blue | Green | Red,
-			RGBA = Blue | Green | Red | Alpha,
-		}
-		public override string Name => "ColorMask";
-		public ColorMask() : base() { this.Value = Mask.RGB; }
-	}
-	[Serializable]
-	public class Conservative : BoolShaderCommand
-	{
-		public override string Name => "Conservative";
-	}
-
-	[Serializable]
-	public class Cull : IntShaderCommand<CullMode>
-	{
-		public override string Name => "CullMode";
-		public Cull() : base() { this.Value = CullMode.Back; }
-	}
-	[Serializable]
-	public class ZClip : BoolShaderCommand
-	{
-		public override string Name => "ZClip";
-	}
-	[Serializable]
-	public class ZTest : IntShaderCommand<CompareFunction>
-	{
-		public override string Name => "ZTest";
-		public ZTest() : base() { this.Value = CompareFunction.Less; }
-	}
-	[Serializable]
-	public class ZWrite : OnOffShaderCommand
-	{
-		public override string Name => "ZWrite";
-		public ZWrite() : base() { this.Value = true; }
-	}
-	[Serializable]
-	public class RenderQueueTag : IntShaderCommand<RenderQueue>
-	{
-		public override string Name => "Queue";
-		public RenderQueueTag() : base() { this.Value = RenderQueue.Geometry; }
-		public override bool SetToMaterial(Material material)
-		{
-			material.renderQueue = (int)this.Value;
-			return true;
-		}
-	}
-	[Serializable]
-	public class IgnoreProjectorTag : BoolShaderCommand
-	{
-		public IgnoreProjectorTag() : base() { this.Value = true; }
-		public override string Name => "IgnoreProjector";
-	}
-	[Serializable]
-	public class RenderTypeTag : IntShaderCommand<string>
-	{
-		public override string Name => "RenderType";
-		public override bool SetToMaterial(Material material)
-		{
-			material.SetOverrideTag(this.Name, this.v);
-			return true;
-		}
-	}
-
-	[Serializable]
-	public class DisposableMaterial : DisposableObject<Material>
-	{
-		public RenderQueueTag quque = new RenderQueueTag();
-		public IgnoreProjectorTag ignoreProjector = new IgnoreProjectorTag();
-		public RenderTypeTag renderTypeTag = new RenderTypeTag();
-		public Blend blend = new Blend();
-		public BlendOperation blendOperation = new BlendOperation();
-		public ColorMask colorMask = new ColorMask();
-		public Cull cull = new Cull();
-		public ZClip zClip = new ZClip();
-		public ZTest zTest = new ZTest();
-		public ZWrite zWrite = new ZWrite();
-		protected IEnumerable<IShaderCommand> commands;
+		[SerializeField] protected List<IShaderCommand> commands = new List<IShaderCommand>();
 		public DisposableMaterial(Material data) : base(new Material(data))
 		{
-			this.commands = ObjectTool.FindAllFieldValue<IShaderCommand>(typeof(DisposableMaterial), this);
+			foreach(var c in ObjectTool.FindAllFieldValue<IShaderCommand>(typeof(DisposableMaterial), this))
+			{
+				this.AddShaderCommand(c);
+			}
 		}
 
 		public DisposableMaterial(Shader shader) : base(new Material(shader))
 		{
-			this.commands = ObjectTool.FindAllFieldValue<IShaderCommand>(typeof(DisposableMaterial), this);
+			foreach(var c in ObjectTool.FindAllFieldValue<IShaderCommand>(typeof(DisposableMaterial), this))
+			{
+				this.AddShaderCommand(c);
+			}
 		}
-		public virtual void UpdateProperty()
+
+		public void AddShaderCommand(IShaderCommand shaderCommand)
+		{
+			if(this.commands.Contains(shaderCommand)) 
+			{
+				LogTool.Log("Duplicated Shader Command" + shaderCommand.Name, LogLevel.Warning);
+				return;
+			}
+			this.commands.Add(shaderCommand);
+		}
+
+		public void RemoveShaderCommand(IShaderCommand shaderCommand)
+		{
+			if(this.commands.Contains(shaderCommand)) 
+			{
+				this.commands.Remove(shaderCommand);
+			}
+		}
+
+		public void RemoveAllShaderCommand()
+		{
+			this.commands.Clear();
+		}
+
+		public virtual void UpdateShaderCommand()
 		{
 			foreach (var c in this.commands) c.SetToMaterial(this.Data);
 		}

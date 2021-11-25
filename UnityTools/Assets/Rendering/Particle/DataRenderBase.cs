@@ -12,52 +12,89 @@ namespace UnityTools.Rendering
 		ISpace Space { get; }
 	}
 
-	public class DataRenderBase<T> : MonoBehaviour, IInitialize
+	public interface IDataRender
 	{
+		DataRenderMode Mode { get; }
+		void OnUpdateDraw();
+		void OnRenderDraw();
+	}
+
+	public enum DataRenderMode
+	{
+		OnUpdate,
+		OnRender,
+	}
+
+	public class DataRenderBase<T> : MonoBehaviour, IInitialize, IDataRender
+	{
+		public bool Inited => this.inited;
+		public DataRenderMode Mode => this.mode;
+
 		[SerializeField] protected Shader dataShader;
-		protected IDataBuffer<T> buffer;
-		protected DisposableMaterial particleMaterial;
+		[SerializeField] protected DataRenderMode mode = DataRenderMode.OnUpdate;
+		protected IDataBuffer<T> Source => this.source ??= this.gameObject.GetComponent<IDataBuffer<T>>();
+		protected IDataBuffer<T> source; 
+		protected DisposableMaterial dataMaterial;
 		protected bool inited = false;
 
-		public bool Inited => this.inited;
+		public virtual void Init(params object[] parameters)
+		{
+			if (this.Inited) return;
 
-		public void Start()
+			this.dataMaterial = new DisposableMaterial(this.dataShader);
+			this.inited = true;
+		}
+		public virtual void Deinit(params object[] parameters)
+		{
+			this.dataMaterial?.Dispose();
+			this.inited = false;
+		}
+
+		public virtual void OnUpdateDraw()
+		{
+			this.dataMaterial.UpdateShaderCommand();
+			if (this.Source == null || this.dataMaterial == null)
+			{
+				LogTool.Log("Draw buffer is null, nothing to draw", LogLevel.Warning);
+				return;
+			}
+			this.Source.Buffer.UpdateGPU(this.dataMaterial);
+			Graphics.DrawProcedural(this.dataMaterial, this.Source.Space.Bound, MeshTopology.Points, this.Source.Buffer.Size);
+		}
+
+		public virtual void OnRenderDraw()
+		{
+			this.dataMaterial.UpdateShaderCommand();
+			if (this.Source == null || this.dataMaterial == null)
+			{
+				LogTool.Log("Draw buffer is null, nothing to draw", LogLevel.Warning);
+				return;
+			}
+			this.Source.Buffer.UpdateGPU(this.dataMaterial);
+			this.dataMaterial.Data.SetPass(0);
+			Graphics.DrawProceduralNow(MeshTopology.Points, this.Source.Buffer.Size, 1);
+		}
+		protected void OnEnable()
 		{
 			this.Init();
 		}
-		protected void OnDestroy()
+		protected void OnDisable()
 		{
 			this.Deinit();
 		}
 		protected void Update()
 		{
-			this.Draw(this.particleMaterial);
-		}
-		protected virtual void Draw(Material material)
-		{
-			if (this.buffer == null || material == null)
+			if (this.Mode == DataRenderMode.OnUpdate)
 			{
-				LogTool.Log("Draw buffer is null, nothing to draw", LogLevel.Warning);
-				return;
+				this.OnUpdateDraw();
 			}
-			material.SetBuffer("_DataBuffer", this.buffer.Buffer);
-			var b = new Bounds(Vector3.zero, Vector3.one * 10000);
-			Graphics.DrawProcedural(material, b, MeshTopology.Points, this.buffer.Buffer.Size);
 		}
-		public virtual void Init(params object[] parameters)
+		protected void OnRenderObject()
 		{
-			if (this.Inited) return;
-
-			this.buffer = this.gameObject.GetComponent<IDataBuffer<T>>();
-			LogTool.AssertNotNull(this.buffer);
-
-			this.particleMaterial = new DisposableMaterial(this.dataShader);
-			this.inited = true;
-		}
-		public virtual void Deinit(params object[] parameters)
-		{
-			this.particleMaterial?.Dispose();
-			this.inited  = false;
+			if (this.Mode == DataRenderMode.OnRender)
+			{
+				this.OnRenderDraw();
+			}
 		}
 	}
 }
