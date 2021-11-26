@@ -23,7 +23,9 @@ namespace UnityTools.Common
 
         public virtual KeyCode LoadKey => this.loadKey;
 
-        [SerializeField] protected FileTool.SerializerType saveType = FileTool.SerializerType.XML;
+		public bool Inited => this.inited;
+
+		[SerializeField] protected FileTool.SerializerType saveType = FileTool.SerializerType.XML;
         [SerializeField] protected KeyCode saveKey = KeyCode.None;
         [SerializeField] protected KeyCode openKey = KeyCode.None;
         [SerializeField] protected KeyCode loadKey = KeyCode.None;
@@ -33,19 +35,14 @@ namespace UnityTools.Common
         [SerializeField] private T data;
         protected bool open = false;
         private GUIContainer guiContainer = null;
+        private bool inited = false;
 
         public ConfigureNoneMono()
         {
-            this.Initialize();
+            this.Init();
         }
 
         public virtual void OnConfigureChange(object sender, EventArgs args) { }
-
-        public void Initialize()
-        {
-            this.Load();
-            this.NotifyChange();
-        }
 
         public void Save()
         {
@@ -66,11 +63,6 @@ namespace UnityTools.Common
         public void NotifyChange()
         {
             this.OnConfigureChange(this, null);
-        }
-
-        public virtual void Start()
-        {
-            if (this.data == null) this.Initialize();
         }
 
         public virtual void Update()
@@ -119,6 +111,20 @@ namespace UnityTools.Common
 		public void OnDeserialize(byte[] data)
 		{
             JsonUtility.FromJsonOverwrite(Serialization.ByteArrayToObject<string>(data), this.data);
+		}
+
+		public void Init(params object[] parameters)
+		{
+            if(this.Inited) return;
+            this.Load();
+            this.NotifyChange();
+
+            this.inited = true;
+		}
+
+		public void Deinit(params object[] parameters)
+		{
+            this.inited = false;
 		}
 	}
 }

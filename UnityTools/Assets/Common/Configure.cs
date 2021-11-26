@@ -9,7 +9,7 @@ using UnityTools.GUITool;
 
 namespace UnityTools
 {
-    public interface IConfigure
+    public interface IConfigure : IInitialize
     {
         void OnConfigureChange(object sender, EventArgs args);
 		bool IsOpen { get; set; }
@@ -20,7 +20,6 @@ namespace UnityTools
         KeyCode SaveKey { get; }
         KeyCode LoadKey { get; }
 
-        void Initialize();
         void Save();
         void Load();
         void OpenFile();
@@ -101,7 +100,9 @@ namespace UnityTools
 
         public virtual KeyCode LoadKey => this.loadKey;
 
-        [SerializeField] protected ConfigureSaveMode saveMode = ConfigureSaveMode.SaveEditorValueWhenExitingPlayMode;
+		public bool Inited => this.inited;
+
+		[SerializeField] protected ConfigureSaveMode saveMode = ConfigureSaveMode.SaveEditorValueWhenExitingPlayMode;
         [SerializeField] protected FileTool.SerializerType saveType = FileTool.SerializerType.XML;
         [SerializeField] protected KeyCode openKey = KeyCode.None;
         [SerializeField] protected KeyCode saveKey = KeyCode.None;
@@ -112,17 +113,27 @@ namespace UnityTools
         [SerializeField] protected T data;
         protected bool open = false;
         private GUIContainer guiContainer = null;
+        private bool inited = false;
 
         public virtual void OnConfigureChange(object sender, EventArgs args) { }
 
-        public void Initialize()
-        {
+
+		public void Init(params object[] parameters)
+		{
+            if(this.Inited) return;
             //do not load for prefab object
             if (this.gameObject.scene.rootCount == 0) return;
 
             this.Load();
             this.NotifyChange();
-        }
+
+            this.inited = true;
+		}
+
+		public void Deinit(params object[] parameters)
+		{
+            this.inited = false;
+		}
 
         public virtual void Save()
         {
@@ -145,9 +156,9 @@ namespace UnityTools
             this.OnConfigureChange(this, null);
         }
 
-        protected virtual void Start()
+        protected virtual void OnEnable()
         {
-            if (this.data == null) this.Initialize();
+            this.Init();
         }
         protected virtual void OnDisable()
         {
@@ -157,6 +168,8 @@ namespace UnityTools
                 this.Load();
                 //LogTool.Log("Configure " + this.name + " Saved", LogLevel.Verbose, LogChannel.IO);
             }
+
+            this.Deinit();
         }
 
         protected virtual void Update()

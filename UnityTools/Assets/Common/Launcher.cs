@@ -136,7 +136,7 @@ namespace UnityTools.Common
 
             foreach(var config in ObjectTool.FindAllObject<IConfigure>())
             {
-                config.Initialize();
+                config.Init();
             }
             #if !DEBUG
             this.environment.runtime = Environment.Runtime.Production;

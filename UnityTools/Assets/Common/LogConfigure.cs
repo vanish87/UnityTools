@@ -52,8 +52,6 @@ namespace UnityTools.Debuging
         }
         public void SetupChannel()
         {
-            this.Initialize();
-
             if (this.D.level == LogLevel.None)
             {
                 LogTool.Log("No log level found, set to Everything by default", LogLevel.Warning);
@@ -66,9 +64,9 @@ namespace UnityTools.Debuging
         {
             LogToolNetwork.LogToolNetworkSocket.SetupNetwork(this.D.remoteLogPC, this.D.remoteLogPort);
         }
-        protected override void Start()
+        protected override void OnEnable()
         {
-            base.Start();
+            base.OnEnable();
             this.SetupChannel();
         }
 

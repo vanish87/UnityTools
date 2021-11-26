@@ -17,7 +17,7 @@ namespace UnityTools.Common.Example
         {
             base.ConfigureEnvironment();
 
-            this.data.pcConfigure.Initialize();
+            this.data.pcConfigure.Init();
 
             #if !DEBUG
             this.environment.runtime = Environment.Runtime.Production;
