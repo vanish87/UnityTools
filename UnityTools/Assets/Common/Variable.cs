@@ -24,6 +24,7 @@ namespace UnityTools.Common
     public class ShaderAttribute : Attribute
     {
         public string Name;
+        public bool MustNotNull = false;
     }
 
     public interface IVariable
@@ -54,63 +55,89 @@ namespace UnityTools.Common
     }
     public class GPUVariable : Variable, IGPUVariable
     {
-        private delegate void Setter(object value, string shaderVarName, ComputeShader cs, string kernel);
-        private delegate void SetterMat(object value, string shaderVarName, Material mat);
+        private delegate void Setter(object value, string shaderVarName, ComputeShader cs, string kernel, bool mustNotNull = false);
+        private delegate void SetterMat(object value, string shaderVarName, Material mat, bool mustNotNull = false);
         static private Dictionary<Type, Setter> TypeSetterMap = new Dictionary<Type, Setter>()
         {
-            {typeof(Enum),          (value, shaderVarName, cs, kernel) =>{ cs.SetInt(shaderVarName, (int)value);} },
-            {typeof(bool),          (value, shaderVarName, cs, kernel) =>{ cs.SetBool(shaderVarName, (bool)value);} },
-            {typeof(int),           (value, shaderVarName, cs, kernel) =>{ cs.SetInt(shaderVarName, (int)value);} },
-            {typeof(float),         (value, shaderVarName, cs, kernel) =>{ cs.SetFloat(shaderVarName, (float)value);} },
-            {typeof(Matrix4x4),     (value, shaderVarName, cs, kernel) =>{ cs.SetMatrix(shaderVarName, (Matrix4x4)value);} },
-            {typeof(int[]),         (value, shaderVarName, cs, kernel) =>{ cs.SetInts(shaderVarName, (int[])value);} },
-            {typeof(float[]),       (value, shaderVarName, cs, kernel) =>{ cs.SetFloats(shaderVarName, (float[])value);} },
-            {typeof(Matrix4x4[]),   (value, shaderVarName, cs, kernel) =>{ cs.SetMatrixArray(shaderVarName, (Matrix4x4[])value);} },
-            {typeof(bool2),         (value, shaderVarName, cs, kernel) =>{ var v = (bool2)value;cs.SetVector(shaderVarName, new Vector4(v.x?1:0,v.y?1:0,0,0));} },
-            {typeof(bool3),         (value, shaderVarName, cs, kernel) =>{ var v = (bool3)value;cs.SetVector(shaderVarName, new Vector4(v.x?1:0,v.y?1:0,v.z?1:0,0));} },
-            {typeof(bool4),         (value, shaderVarName, cs, kernel) =>{ var v = (bool4)value;cs.SetVector(shaderVarName, new Vector4(v.x?1:0,v.y?1:0,v.z?1:0,v.w?1:0));} },
-            {typeof(int2),          (value, shaderVarName, cs, kernel) =>{ var v = (int2)value;cs.SetVector(shaderVarName, new Vector4(v.x,v.y,0,0));} },
-            {typeof(int3),          (value, shaderVarName, cs, kernel) =>{ var v = (int3)value;cs.SetVector(shaderVarName, new Vector4(v.x,v.y,v.z,0));} },
-            {typeof(int4),          (value, shaderVarName, cs, kernel) =>{ var v = (int4)value;cs.SetVector(shaderVarName, new Vector4(v.x,v.y,v.z,v.w));} },
-            {typeof(float2),        (value, shaderVarName, cs, kernel) =>{ var v = (float2)value;cs.SetVector(shaderVarName, new Vector4(v.x,v.y,0,0));} },
-            {typeof(float3),        (value, shaderVarName, cs, kernel) =>{ var v = (float3)value;cs.SetVector(shaderVarName, new Vector4(v.x,v.y,v.z,0));} },
-            {typeof(float4),        (value, shaderVarName, cs, kernel) =>{ var v = (float4)value;cs.SetVector(shaderVarName, new Vector4(v.x,v.y,v.z,v.w));} },
-            {typeof(Vector2),       (value, shaderVarName, cs, kernel) =>{ cs.SetVector(shaderVarName, (Vector2)value);} },
-            {typeof(Vector3),       (value, shaderVarName, cs, kernel) =>{ cs.SetVector(shaderVarName, (Vector3)value);} },
-            {typeof(Vector4),       (value, shaderVarName, cs, kernel) =>{ cs.SetVector(shaderVarName, (Vector4)value);} },
-            {typeof(Color),         (value, shaderVarName, cs, kernel) =>{ cs.SetVector(shaderVarName, (Color)value);} },
-            {typeof(Texture),       (value, shaderVarName, cs, kernel) =>{ cs.SetTexture(cs.FindKernel(kernel), shaderVarName, (Texture)value);} },
-            {typeof(Texture2D),     (value, shaderVarName, cs, kernel) =>{ cs.SetTexture(cs.FindKernel(kernel), shaderVarName, (Texture2D)value);} },
-            {typeof(Texture3D),     (value, shaderVarName, cs, kernel) =>{ cs.SetTexture(cs.FindKernel(kernel), shaderVarName, (Texture3D)value);} },
-            {typeof(RenderTexture), (value, shaderVarName, cs, kernel) =>{ cs.SetTexture(cs.FindKernel(kernel), shaderVarName, (RenderTexture)value);} },
+            {typeof(Enum),          (value, shaderVarName, cs, kernel, notNull) =>{ cs.SetInt(shaderVarName, (int)value);} },
+            {typeof(bool),          (value, shaderVarName, cs, kernel, notNull) =>{ cs.SetBool(shaderVarName, (bool)value);} },
+            {typeof(int),           (value, shaderVarName, cs, kernel, notNull) =>{ cs.SetInt(shaderVarName, (int)value);} },
+            {typeof(float),         (value, shaderVarName, cs, kernel, notNull) =>{ cs.SetFloat(shaderVarName, (float)value);} },
+            {typeof(Matrix4x4),     (value, shaderVarName, cs, kernel, notNull) =>{ cs.SetMatrix(shaderVarName, (Matrix4x4)value);} },
+            {typeof(int[]),         (value, shaderVarName, cs, kernel, notNull) =>{ cs.SetInts(shaderVarName, (int[])value);} },
+            {typeof(float[]),       (value, shaderVarName, cs, kernel, notNull) =>{ cs.SetFloats(shaderVarName, (float[])value);} },
+            {typeof(Matrix4x4[]),   (value, shaderVarName, cs, kernel, notNull) =>{ cs.SetMatrixArray(shaderVarName, (Matrix4x4[])value);} },
+            {typeof(bool2),         (value, shaderVarName, cs, kernel, notNull) =>{ var v = (bool2)value;cs.SetVector(shaderVarName, new Vector4(v.x?1:0,v.y?1:0,0,0));} },
+            {typeof(bool3),         (value, shaderVarName, cs, kernel, notNull) =>{ var v = (bool3)value;cs.SetVector(shaderVarName, new Vector4(v.x?1:0,v.y?1:0,v.z?1:0,0));} },
+            {typeof(bool4),         (value, shaderVarName, cs, kernel, notNull) =>{ var v = (bool4)value;cs.SetVector(shaderVarName, new Vector4(v.x?1:0,v.y?1:0,v.z?1:0,v.w?1:0));} },
+            {typeof(int2),          (value, shaderVarName, cs, kernel, notNull) =>{ var v = (int2)value;cs.SetVector(shaderVarName, new Vector4(v.x,v.y,0,0));} },
+            {typeof(int3),          (value, shaderVarName, cs, kernel, notNull) =>{ var v = (int3)value;cs.SetVector(shaderVarName, new Vector4(v.x,v.y,v.z,0));} },
+            {typeof(int4),          (value, shaderVarName, cs, kernel, notNull) =>{ var v = (int4)value;cs.SetVector(shaderVarName, new Vector4(v.x,v.y,v.z,v.w));} },
+            {typeof(float2),        (value, shaderVarName, cs, kernel, notNull) =>{ var v = (float2)value;cs.SetVector(shaderVarName, new Vector4(v.x,v.y,0,0));} },
+            {typeof(float3),        (value, shaderVarName, cs, kernel, notNull) =>{ var v = (float3)value;cs.SetVector(shaderVarName, new Vector4(v.x,v.y,v.z,0));} },
+            {typeof(float4),        (value, shaderVarName, cs, kernel, notNull) =>{ var v = (float4)value;cs.SetVector(shaderVarName, new Vector4(v.x,v.y,v.z,v.w));} },
+            {typeof(Vector2),       (value, shaderVarName, cs, kernel, notNull) =>{ cs.SetVector(shaderVarName, (Vector2)value);} },
+            {typeof(Vector3),       (value, shaderVarName, cs, kernel, notNull) =>{ cs.SetVector(shaderVarName, (Vector3)value);} },
+            {typeof(Vector4),       (value, shaderVarName, cs, kernel, notNull) =>{ cs.SetVector(shaderVarName, (Vector4)value);} },
+            {typeof(Color),         (value, shaderVarName, cs, kernel, notNull) =>{ cs.SetVector(shaderVarName, (Color)value);} },
+			{typeof(Texture),       (value, shaderVarName, cs, kernel, notNull) =>{ SetTexture( shaderVarName, (Texture)value,cs, kernel, notNull);} },
+			{typeof(Texture2D),     (value, shaderVarName, cs, kernel, notNull) =>{ SetTexture( shaderVarName, (Texture2D)value,cs, kernel, notNull);} },
+			{typeof(Texture3D),     (value, shaderVarName, cs, kernel, notNull) =>{ SetTexture( shaderVarName, (Texture3D)value,cs, kernel, notNull);} },
+			{typeof(RenderTexture), (value, shaderVarName, cs, kernel, notNull) =>{ SetTexture( shaderVarName, (RenderTexture)value,cs, kernel, notNull);} },
         };
         static private Dictionary<Type, SetterMat> TypeSetterMatMap = new Dictionary<Type, SetterMat>()
         {
-            {typeof(Enum),          (value, shaderVarName, mat) =>{ mat.SetInt(shaderVarName, (int)value);} },
-            {typeof(bool),          (value, shaderVarName, mat) =>{ mat.SetInt(shaderVarName, (bool)value?1:0);} },
-            {typeof(int),           (value, shaderVarName, mat) =>{ mat.SetInt(shaderVarName, (int)value);} },
-            {typeof(float),         (value, shaderVarName, mat) =>{ mat.SetFloat(shaderVarName, (float)value);} },
-            {typeof(Matrix4x4),     (value, shaderVarName, mat) =>{ mat.SetMatrix(shaderVarName, (Matrix4x4)value);} },
-            {typeof(Matrix4x4[]),   (value, shaderVarName, mat) =>{ mat.SetMatrixArray(shaderVarName, (Matrix4x4[])value);} },
-            {typeof(bool2),         (value, shaderVarName, mat) =>{ var v = (bool2)value; mat.SetVector(shaderVarName, new Vector4(v.x?1:0,v.y?1:0,0,0));} },
-            {typeof(bool3),         (value, shaderVarName, mat) =>{ var v = (bool3)value; mat.SetVector(shaderVarName, new Vector4(v.x?1:0,v.y?1:0,v.z?1:0,0));} },
-            {typeof(bool4),         (value, shaderVarName, mat) =>{ var v = (bool4)value; mat.SetVector(shaderVarName, new Vector4(v.x?1:0,v.y?1:0,v.z?1:0,v.w?1:0));} },
-            {typeof(int2),          (value, shaderVarName, mat) =>{ var v = (int2)value;  mat.SetVector(shaderVarName, new Vector4(v.x,v.y,0,0));} },
-            {typeof(int3),          (value, shaderVarName, mat) =>{ var v = (int3)value;  mat.SetVector(shaderVarName, new Vector4(v.x,v.y,v.z,0));} },
-            {typeof(int4),          (value, shaderVarName, mat) =>{ var v = (int4)value;  mat.SetVector(shaderVarName, new Vector4(v.x,v.y,v.z,v.w));} },
-            {typeof(float2),        (value, shaderVarName, mat) =>{ var v = (float2)value;mat.SetVector(shaderVarName, new Vector4(v.x,v.y,0,0));} },
-            {typeof(float3),        (value, shaderVarName, mat) =>{ var v = (float3)value;mat.SetVector(shaderVarName, new Vector4(v.x,v.y,v.z,0));} },
-            {typeof(float4),        (value, shaderVarName, mat) =>{ var v = (float4)value;mat.SetVector(shaderVarName, new Vector4(v.x,v.y,v.z,v.w));} },
-            {typeof(Vector2),       (value, shaderVarName, mat) =>{ mat.SetVector(shaderVarName, (Vector2)value);} },
-            {typeof(Vector3),       (value, shaderVarName, mat) =>{ mat.SetVector(shaderVarName, (Vector3)value);} },
-            {typeof(Vector4),       (value, shaderVarName, mat) =>{ mat.SetVector(shaderVarName, (Vector4)value);} },
-            {typeof(Color),         (value, shaderVarName, mat) =>{ mat.SetColor(shaderVarName,  (Color)value);} },
-            {typeof(Texture),       (value, shaderVarName, mat) =>{ mat.SetTexture(shaderVarName, (Texture)value);} },
-            {typeof(Texture2D),     (value, shaderVarName, mat) =>{ mat.SetTexture(shaderVarName, (Texture2D)value);} },
-            {typeof(Texture3D),     (value, shaderVarName, mat) =>{ mat.SetTexture(shaderVarName, (Texture3D)value);} },
-            {typeof(RenderTexture), (value, shaderVarName, mat) =>{ mat.SetTexture(shaderVarName, (RenderTexture)value);} },
+            {typeof(Enum),          (value, shaderVarName, mat, notNull) =>{ mat.SetInt(shaderVarName, (int)value);} },
+            {typeof(bool),          (value, shaderVarName, mat, notNull) =>{ mat.SetInt(shaderVarName, (bool)value?1:0);} },
+            {typeof(int),           (value, shaderVarName, mat, notNull) =>{ mat.SetInt(shaderVarName, (int)value);} },
+            {typeof(float),         (value, shaderVarName, mat, notNull) =>{ mat.SetFloat(shaderVarName, (float)value);} },
+            {typeof(Matrix4x4),     (value, shaderVarName, mat, notNull) =>{ mat.SetMatrix(shaderVarName, (Matrix4x4)value);} },
+            {typeof(Matrix4x4[]),   (value, shaderVarName, mat, notNull) =>{ mat.SetMatrixArray(shaderVarName, (Matrix4x4[])value);} },
+            {typeof(bool2),         (value, shaderVarName, mat, notNull) =>{ var v = (bool2)value; mat.SetVector(shaderVarName, new Vector4(v.x?1:0,v.y?1:0,0,0));} },
+            {typeof(bool3),         (value, shaderVarName, mat, notNull) =>{ var v = (bool3)value; mat.SetVector(shaderVarName, new Vector4(v.x?1:0,v.y?1:0,v.z?1:0,0));} },
+            {typeof(bool4),         (value, shaderVarName, mat, notNull) =>{ var v = (bool4)value; mat.SetVector(shaderVarName, new Vector4(v.x?1:0,v.y?1:0,v.z?1:0,v.w?1:0));} },
+            {typeof(int2),          (value, shaderVarName, mat, notNull) =>{ var v = (int2)value;  mat.SetVector(shaderVarName, new Vector4(v.x,v.y,0,0));} },
+            {typeof(int3),          (value, shaderVarName, mat, notNull) =>{ var v = (int3)value;  mat.SetVector(shaderVarName, new Vector4(v.x,v.y,v.z,0));} },
+            {typeof(int4),          (value, shaderVarName, mat, notNull) =>{ var v = (int4)value;  mat.SetVector(shaderVarName, new Vector4(v.x,v.y,v.z,v.w));} },
+            {typeof(float2),        (value, shaderVarName, mat, notNull) =>{ var v = (float2)value;mat.SetVector(shaderVarName, new Vector4(v.x,v.y,0,0));} },
+            {typeof(float3),        (value, shaderVarName, mat, notNull) =>{ var v = (float3)value;mat.SetVector(shaderVarName, new Vector4(v.x,v.y,v.z,0));} },
+            {typeof(float4),        (value, shaderVarName, mat, notNull) =>{ var v = (float4)value;mat.SetVector(shaderVarName, new Vector4(v.x,v.y,v.z,v.w));} },
+            {typeof(Vector2),       (value, shaderVarName, mat, notNull) =>{ mat.SetVector(shaderVarName, (Vector2)value);} },
+            {typeof(Vector3),       (value, shaderVarName, mat, notNull) =>{ mat.SetVector(shaderVarName, (Vector3)value);} },
+            {typeof(Vector4),       (value, shaderVarName, mat, notNull) =>{ mat.SetVector(shaderVarName, (Vector4)value);} },
+            {typeof(Color),         (value, shaderVarName, mat, notNull) =>{ mat.SetColor(shaderVarName,  (Color)value);} },
+            {typeof(Texture),       (value, shaderVarName, mat, notNull) =>{ SetTexture(shaderVarName, (Texture)value, mat, notNull);} },
+            {typeof(Texture2D),     (value, shaderVarName, mat, notNull) =>{ SetTexture(shaderVarName, (Texture2D)value, mat, notNull);} },
+            {typeof(Texture3D),     (value, shaderVarName, mat, notNull) =>{ SetTexture(shaderVarName, (Texture3D)value, mat, notNull);} },
+            {typeof(RenderTexture), (value, shaderVarName, mat, notNull) =>{ SetTexture(shaderVarName, (RenderTexture)value, mat, notNull);} },
         };
+
+		static private void SetTexture(string shaderName, Texture texture, ComputeShader computeShader, string kernel, bool mustNotNull)
+		{
+            if(texture == null && mustNotNull) LogTool.Log(shaderName + " Must Not null", LogLevel.Warning);
+
+            if(texture != null)
+            {
+				if (texture is Texture2D) computeShader.SetVector(shaderName + "Size", new Vector4(texture.width, texture.height));
+				if (texture is RenderTexture rt) computeShader.SetVector(shaderName + "Size", new Vector4(rt.width, rt.height, rt.depth));
+				if (texture is Texture3D t3d) computeShader.SetVector(shaderName + "Size", new Vector4(t3d.width, t3d.height, t3d.depth));
+            }
+			computeShader.SetTexture(computeShader.FindKernel(kernel), shaderName, texture);
+		}
+		static private void SetTexture(string shaderName, Texture texture, Material material, bool mustNotNull)
+		{
+            if(texture == null && mustNotNull) LogTool.Log(shaderName + " Must Not null", LogLevel.Warning);
+
+            if(texture != null) 
+            {
+				if (texture is Texture2D) material.SetVector(shaderName + "Size", new Vector4(texture.width, texture.height));
+				if (texture is RenderTexture rt) material.SetVector(shaderName + "Size", new Vector4(rt.width, rt.height, rt.depth));
+				if (texture is Texture3D t3d) material.SetVector(shaderName + "Size", new Vector4(t3d.width, t3d.height, t3d.depth));
+            }
+			material.SetTexture(shaderName, texture);
+		}
         internal string shaderName;
+        internal bool mustNotNull = false;
         public virtual void SetToGPU(object container, ComputeShader cs, string kernel = null)
         {
             LogTool.AssertNotNull(container);
@@ -122,7 +149,8 @@ namespace UnityTools.Common
                 LogTool.Log(t.ToString() + " Handler not found");
                 return;
             }
-            TypeSetterMap[t].Invoke(value, this.shaderName, cs, kernel);
+
+            TypeSetterMap[t].Invoke(value, this.shaderName, cs, kernel, this.mustNotNull);
         }
         public virtual void SetToMaterial(object container, Material material)
         {
@@ -135,7 +163,8 @@ namespace UnityTools.Common
                 LogTool.Log(t.ToString() + " Handler not found");
                 return;
             }
-            TypeSetterMatMap[t].Invoke(value, this.shaderName, material);
+
+            TypeSetterMatMap[t].Invoke(value, this.shaderName, material, this.mustNotNull);
         }
         public virtual void Release()
         {

@@ -78,6 +78,7 @@ namespace UnityTools.Common
                 var name = v.Name;
                 var isGPU = false;
                 var shaderName = v.Name;
+                var mustNotNull = false;
                 if (Attribute.IsDefined(v, typeof(GUIMenuAttribute)))
                 {
                     var attrib = Attribute.GetCustomAttribute(v, typeof(GUIMenuAttribute)) as GUIMenuAttribute;
@@ -87,6 +88,7 @@ namespace UnityTools.Common
                 {
                     var attrib = Attribute.GetCustomAttribute(v, typeof(ShaderAttribute)) as ShaderAttribute;
                     shaderName = attrib.Name;
+                    mustNotNull = attrib.MustNotNull;
                     isGPU = true;
                 }
                 if (v.FieldType.IsSubclassOf(typeof(GPUVariable)))
@@ -98,6 +100,7 @@ namespace UnityTools.Common
                     variable.lastValidValue = null;
                     variable.displayName = name;
                     variable.shaderName = shaderName;
+                    variable.mustNotNull = mustNotNull;
                     this.variableList.Add(variable);
                 }
                 else
@@ -109,12 +112,12 @@ namespace UnityTools.Common
                     }
                     else
                     {
-						this.variableList.Add(this.Create(v, name, value, isGPU, shaderName));
+						this.variableList.Add(this.Create(v, name, value, isGPU, shaderName, mustNotNull));
                     }
                 }
             }
         }
-        private Variable Create(FieldInfo v, string name, object initValue, bool isGPU, string shaderName)
+        private Variable Create(FieldInfo v, string name, object initValue, bool isGPU, string shaderName, bool mustNotNull)
         {
             if (isGPU)
             {
@@ -124,7 +127,8 @@ namespace UnityTools.Common
                     defaultValue = initValue,
                     lastValidValue = initValue,
                     displayName = name,
-                    shaderName = shaderName
+                    shaderName = shaderName,
+                    mustNotNull = mustNotNull,
                 };
             }
             else
