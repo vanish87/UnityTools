@@ -39,6 +39,7 @@ namespace UnityTools.Common
 		Bounds Bound { get; }
 
         float3 LocalPoint(SpaceCorner corner);
+        bool IsInSpace(float3 point);
     }
 
     public static class Space
@@ -123,6 +124,12 @@ namespace UnityTools.Common
         [SerializeField] protected bool displayBound = true;
         [SerializeField] protected Color color = Color.cyan;
 		[SerializeField] protected Dictionary<SpaceCorner, float3> localPoints = Space.SpaceCorners;
+
+        public virtual bool IsInSpace(float3 point)
+        {
+			var local = new float3(this.TRS.inverse.MultiplyPoint(point));
+			return math.all(math.abs(local) < 0.5f);
+        }
 
 		public virtual void OnDrawGizmos()
         {
