@@ -16,6 +16,11 @@ namespace UnityTools.Common
 
     }
     [AttributeUsage(AttributeTargets.Field)]
+    public class NoneSerializeAttribute : Attribute
+    {
+
+    }
+    [AttributeUsage(AttributeTargets.Field)]
     public class GUIMenuAttribute : Attribute
     {
         public string DisplayName;

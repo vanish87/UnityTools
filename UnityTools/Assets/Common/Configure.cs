@@ -233,7 +233,9 @@ namespace UnityTools
 
 		public virtual void OnDeserialize(byte[] data)
 		{
+            var fields = ObjectTool.FindAllNoneSerializeField(typeof(T)).Select(f=>(f, f.GetValue(this.D)));
             JsonUtility.FromJsonOverwrite(Serialization.ByteArrayToObject<string>(data), this.data);
+            foreach(var f in fields) f.f.SetValue(this.D, f.Item2);
 		}
 	}
 

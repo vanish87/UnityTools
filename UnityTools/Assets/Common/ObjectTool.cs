@@ -68,6 +68,23 @@ namespace UnityTools
 
             return users;
         }
+
+        public static bool IsNoneSerializable(System.Reflection.FieldInfo field)
+        {
+			return typeof(Texture).IsAssignableFrom(field.FieldType)
+                || System.Attribute.IsDefined(field, typeof(Common.NoneSerializeAttribute));
+        }
+
+		public static IEnumerable<System.Reflection.FieldInfo> FindAllSerializeField(System.Type type, BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static)
+        {
+			return type.GetFields(flags)
+					.Where(field => !IsNoneSerializable(field));
+        }
+		public static IEnumerable<System.Reflection.FieldInfo> FindAllNoneSerializeField(System.Type type, BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static)
+        {
+			return type.GetFields(flags)
+					.Where(field => IsNoneSerializable(field));
+        }
 		public static IEnumerable<T> FindAllFieldValue<T>(System.Type type, object obj, BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static)
 		{
 			return type.GetFields(flags)
