@@ -169,6 +169,7 @@ namespace UnityTools.Common
 
 		public float3 LocalPoint(SpaceCorner corner)
 		{
+            if(this.localPoints == null) this.localPoints = Space.SpaceCorners;
             return this.localPoints[corner];
 		}
 	}
