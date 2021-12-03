@@ -2,9 +2,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityTools.Rendering;
+using UnityTools.Common;
 
-namespace UnityTools.Common
+namespace UnityTools.Rendering
 {
     [System.Serializable]
     public class ShaderMaterial<T>: ShaderMaterial where T : Enum
