@@ -25,6 +25,7 @@ namespace UnityTools.Rendering
 		public void Init(params object[] parameters)
         {
             if(this.Inited) return;
+			if(this.shader == null) return;
 
             this.material?.Dispose();
             this.material = new DisposableMaterial(this.shader);
