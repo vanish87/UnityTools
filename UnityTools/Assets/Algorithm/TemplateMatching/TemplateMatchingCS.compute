@@ -1,0 +1,54 @@
+#pragma kernel Process
+
+Texture2D<float4> _InputTex;
+Texture2D<float4> _TemplateTex;
+float2 _TemplateTexSize;
+
+RWTexture2D<float4> _ResultTex;
+
+float4 ToGray(float4 rgba)
+{
+	return float4(dot(rgba.rgb, float3(0.3, 0.59, 0.11)).xxx, 1);
+}
+
+[numthreads(1,1,1)]
+void Process (uint3 id : SV_DispatchThreadID)
+{
+	int2 h = _TemplateTexSize;
+	float j = 0;
+	int2 center = id.xy;
+
+	float sumt = 0;
+	float sumi = 0;
+	for(int u = 0; u < h.x; ++u)
+	{
+		for(int v = 0; v < h.y; ++v)
+		{
+			int2 iuv = center + int2(u,v);
+			int2 tuv = int2(u,v);
+
+			// if(any(iuv < 0) || any(iuv >= _InputGrayTexSize)) continue;
+			// bool inValid = any(iuv < 0) || any(iuv >= _InputGrayTexSize);
+
+			// j = j + _InputGrayTex[iuv] * _TemplateGrayTex[tuv];
+			// float i = inValid?9999:_InputGrayTex[iuv];
+			// float t = inValid?9999:_TemplateGrayTex[tuv];
+			float i = ToGray(_InputTex[iuv]);
+			float t = ToGray(_TemplateTex[tuv]);
+			// j = j + pow(t-i,2); //SQDIFF
+			j = j + i * t; //CCORR
+			// j = j + abs(t-i);
+
+			sumi += i * i;
+			sumt += t * t;
+
+		}
+	}
+
+	if(sumi > 0 && sumt > 0)
+	{
+		j /= sqrt(sumi * sumt);
+	}
+
+	_ResultTex[center] = float4(center, j, 1);
+}
