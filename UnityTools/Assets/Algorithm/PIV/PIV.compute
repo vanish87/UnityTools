@@ -1,0 +1,110 @@
+
+#pragma kernel PIVWindow
+#pragma kernel PIVMax
+
+#include "UnityCG.cginc"
+
+Texture2D<float4> _PrevTex;
+Texture2D<float4> _CurrTex;
+
+float2 _WindowSize;
+float2 _TextureSize;
+
+RWTexture2D<float4> _WindowResult;
+RWTexture2D<float4> _Result;
+
+
+float4 TG(float4 rgba)
+{
+    return rgba;
+	return float4(dot(rgba.rgb, float3(0.3, 0.59, 0.11)).xxx, 1);
+}
+
+bool IsValid(int2 uv)
+{
+    return all(uv >= 0) && all(uv < _TextureSize);
+}
+
+[numthreads(1,1,1)]
+void PIVWindow (uint3 id : SV_DispatchThreadID)
+{
+    int2 h = _WindowSize;
+    int2 hws = _WindowSize/2;
+    //Current id.xy is the center for input
+    int2 center = id.xy;
+	int2 istart = center - hws;  //Prev as search image(input)
+	int2 tstart = center/h * h;  //Curr as template image(template)
+
+
+    float j = 0;
+    float sumi = 0;
+    float sumt = 0;
+    for(int r = 0; r < h.x; ++r)
+    {
+        for(int c = 0; c < h.y; ++c)
+        {
+            int2 Prevuv = int2(r,c) + istart;
+            int2 Curruv = int2(r,c) + tstart;
+
+            float i = IsValid(Prevuv)?TG(_PrevTex[Prevuv]):9999;
+            float t = IsValid(Curruv)?TG(_CurrTex[Curruv]):9999;
+
+            j = j + i * t;
+            // j = j + (t-i)*(t-i);
+
+            sumi += i * i;
+            sumt += t * t;
+        }
+    }
+
+    if(sumi > 0 && sumt > 0)
+    {
+		j /= sqrt(sumi * sumt);
+    }
+
+    _WindowResult[center] = j;
+}
+
+[numthreads(1,1,1)]
+void PIVMax (uint3 id : SV_DispatchThreadID)
+{
+    int2 h = _WindowSize;
+    int2 hws = _WindowSize/2;
+    int2 wuv = id.xy;
+	int2 wstart = wuv * h; // Window start
+    int2 center = wstart + hws;
+
+    int2 maxCoord = center;
+    float maxJ = 0;
+    for(int r = 0; r < h.x; ++r)
+    {
+        for(int c = 0; c < h.y; ++c)
+        {
+            int2 ruv = int2(r,c) + wstart;
+
+            float4 iv = _WindowResult[ruv];
+            float i = length(iv);
+            if(i > maxJ)
+            {
+                maxJ = i;
+                maxCoord = ruv;
+            }
+        }
+    }
+
+    float2 dir = maxCoord - center;
+
+    dir = -dir;
+    // dir /= unity_DeltaTime;
+    // dir /= 50;
+
+    // if(length(dir) > 0) dir = (normalize(dir) + 1) * 0.5f;
+    // if(length(dir) > 0) dir = normalize(dir);
+
+    // dir = normalize(dir);
+    // dir = (dir + 1) * 0.5f;
+
+    float4 newVel = float4(dir, 0, 1) * length(_CurrTex[center].rgb);
+    float4 oldVel = _Result[wuv];
+    _Result[wuv] = lerp(oldVel, newVel, 0.1f);
+}
