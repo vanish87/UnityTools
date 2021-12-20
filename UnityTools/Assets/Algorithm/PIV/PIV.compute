@@ -46,8 +46,8 @@ void PIVWindow (uint3 id : SV_DispatchThreadID)
             int2 Prevuv = int2(r,c) + istart;
             int2 Curruv = int2(r,c) + tstart;
 
-            float i = IsValid(Prevuv)?TG(_PrevTex[Prevuv]):9999;
-            float t = IsValid(Curruv)?TG(_CurrTex[Curruv]):9999;
+            float i = IsValid(Prevuv)?TG(_PrevTex[Prevuv]):0;
+            float t = IsValid(Curruv)?TG(_CurrTex[Curruv]):0;
 
             j = j + i * t;
             // j = j + (t-i)*(t-i);
@@ -82,8 +82,7 @@ void PIVMax (uint3 id : SV_DispatchThreadID)
         {
             int2 ruv = int2(r,c) + wstart;
 
-            float4 iv = _WindowResult[ruv];
-            float i = length(iv);
+            float i = _WindowResult[ruv];
             if(i > maxJ)
             {
                 maxJ = i;
