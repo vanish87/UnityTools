@@ -10,7 +10,7 @@ using UnityTools.Rendering;
 
 namespace UnityTools.Algorithm
 {
-	public class PIV : MonoBehaviour
+	public class ParticleImageVelocimetry : MonoBehaviour
 	{
 		[System.Serializable]
 		public class GPUData : GPUContainer

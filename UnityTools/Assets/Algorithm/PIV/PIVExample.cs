@@ -11,7 +11,7 @@ namespace UnityTools.Algorithm
 		public Camera f1Camera;
 		public int2 textureSize = new int2(512, 512);
 		public Texture FieldAsTexture => this.result;
-		public PIV piv;
+		public ParticleImageVelocimetry piv;
 		public bool drawGUI = false;
 		protected void Start()
 		{
@@ -24,7 +24,7 @@ namespace UnityTools.Algorithm
 			this.input = new RenderTexture(desc);
 			this.f1Camera.targetTexture = this.input;
 
-			this.piv = this.GetComponent<PIV>();
+			this.piv = this.GetComponent<ParticleImageVelocimetry>();
 		}
 
 		protected void OnDestory()
