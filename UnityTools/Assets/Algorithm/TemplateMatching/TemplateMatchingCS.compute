@@ -33,8 +33,8 @@ void Process (uint3 id : SV_DispatchThreadID)
 			// j = j + _InputGrayTex[iuv] * _TemplateGrayTex[tuv];
 			// float i = inValid?9999:_InputGrayTex[iuv];
 			// float t = inValid?9999:_TemplateGrayTex[tuv];
-			float i = ToGray(_InputTex[iuv]);
-			float t = ToGray(_TemplateTex[tuv]);
+			float i = ToGray(_InputTex[iuv]).x;
+			float t = ToGray(_TemplateTex[tuv]).x;
 			// j = j + pow(t-i,2); //SQDIFF
 			j = j + i * t; //CCORR
 			// j = j + abs(t-i);
