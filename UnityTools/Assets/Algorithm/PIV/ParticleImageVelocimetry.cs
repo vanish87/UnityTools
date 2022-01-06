@@ -5,7 +5,6 @@ using UnityTools.Attributes;
 using UnityTools.Common;
 using UnityTools.ComputeShaderTool;
 using UnityTools.Debuging;
-using UnityTools.ImageProcessing;
 using UnityTools.Rendering;
 
 namespace UnityTools.Algorithm
