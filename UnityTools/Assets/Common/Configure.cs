@@ -66,13 +66,13 @@ namespace UnityTools
             {FileTool.SerializerType.Binary, ".bin"},
         };
 
-        public static string GetFilePath(string fileName, FileTool.SerializerType saveType, ConfigurePreset preset)
+        public static string GetFilePath(string fileName, FileTool.SerializerType saveType, string preset)
         {
             var path = System.IO.Path.Combine(Application.streamingAssetsPath, fileName);
             var ext = TypeToExtension[saveType];
             if (path.Contains(ext) == false) path += ext;
 
-            if(preset != ConfigurePreset.Default) path = path.Insert(path.LastIndexOf('.'), preset.ToString());
+            path = path.Insert(path.LastIndexOf('.'), preset.ToString());
             return path;
         }
     }
@@ -87,7 +87,7 @@ namespace UnityTools
 		public bool IsOpen { get => this.open; set => this.open = value; }
         public bool IsSyncing=>this.isSyncing;
 
-        public virtual string FilePath => ConfigureTool.GetFilePath(this.ToString(), this.SaveType, this.Preset);
+        public virtual string FilePath => ConfigureTool.GetFilePath(this.ToString(), this.SaveType, this.PresetToString(this.Preset));
 
         public virtual ConfigurePreset Preset => this.preset;
 
@@ -114,6 +114,8 @@ namespace UnityTools
         protected bool open = false;
         private GUIContainer guiContainer = null;
         private bool inited = false;
+
+		protected virtual string PresetToString(ConfigurePreset preset) => preset.ToString();
 
         public virtual void OnConfigureChange(object sender, EventArgs args) { }
 

@@ -12,7 +12,7 @@ namespace UnityTools.Common
 		public bool IsOpen { get => this.open; set => this.open = value; }
         public bool IsSyncing=>this.isSyncing;
 
-        public virtual string FilePath => ConfigureTool.GetFilePath(this.ToString(), this.SaveType, this.Preset);
+        public virtual string FilePath => ConfigureTool.GetFilePath(this.ToString(), this.SaveType, this.PresetToString(this.Preset));
 
         public virtual ConfigurePreset Preset => this.preset;
 
@@ -39,6 +39,7 @@ namespace UnityTools.Common
         protected bool open = false;
         private GUIContainer guiContainer = null;
         private bool inited = false;
+		protected virtual string PresetToString(ConfigurePreset preset) => preset.ToString();
 
         public virtual void OnConfigureChange(object sender, EventArgs args) { }
 
