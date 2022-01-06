@@ -7,6 +7,11 @@ using UnityTools.Math;
 
 namespace UnityTools.Common
 {
+	public interface ISampler<Value, Input>
+	{
+		Value Evaluate(Input input);
+		IEnumerable<(Input, Value)> Sample(ISpace space, int3 size);
+	}
 	[ExecuteInEditMode]
 	public class Sampler
 	{

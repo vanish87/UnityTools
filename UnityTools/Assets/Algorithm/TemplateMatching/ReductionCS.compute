@@ -1,0 +1,37 @@
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel Reduction
+#pragma kernel Result
+
+
+RWTexture2D<float4> _From;
+RWTexture2D<float4> _To;
+
+float4 Get(float4 a, float4 b)
+{
+    return a.z > b.z?a:b;
+}
+
+//it dispatches _To size number of threads
+[numthreads(1,1,1)]
+void Reduction (uint3 id : SV_DispatchThreadID)
+{
+    int2 tuv = id.xy;
+    int2 fuv = tuv * 2;
+
+    float4 u  = _From[fuv + int2(0, 1)];
+    float4 lu = _From[fuv + int2(1, 1)];
+    float4 l  = _From[fuv + int2(1, 0)];
+    float4 c  = _From[fuv + int2(0, 0)];
+
+    float4 t = Get(Get(u, lu), Get(l, c));
+
+    _To[tuv] = t;
+}
+
+RWStructuredBuffer<float4> _ResultBuffer;
+
+[numthreads(1,1,1)]
+void Result (uint3 id : SV_DispatchThreadID)
+{
+    _ResultBuffer[id.x] = _From[id.xy];
+}

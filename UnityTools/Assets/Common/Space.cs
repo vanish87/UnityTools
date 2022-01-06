@@ -40,6 +40,9 @@ namespace UnityTools.Common
 
         float3 LocalPoint(SpaceCorner corner);
         bool3 IsInSpace(float3 point);
+
+        float3 LocalToWorld(float3 local);
+        float3 WorldToLocal(float3 world);
     }
 
     public static class Space
@@ -176,7 +179,18 @@ namespace UnityTools.Common
 
 		public float3 LocalPoint(SpaceCorner corner)
 		{
+            if(this.localPoints == null) this.localPoints = Space.SpaceCorners;
             return this.localPoints[corner];
+		}
+
+		public float3 LocalToWorld(float3 local)
+		{
+            return this.TRS.MultiplyPoint(local);
+		}
+
+		public float3 WorldToLocal(float3 world)
+		{
+            return this.ToLocal.MultiplyPoint(world);
 		}
 	}
     // public class Space : MonoBehaviour, ISpace
