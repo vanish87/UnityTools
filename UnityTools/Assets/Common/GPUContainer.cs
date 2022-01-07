@@ -14,7 +14,7 @@ namespace UnityTools.Common
     }
     public class GPUContainer : GUIContainer, IGPUContainer
     {
-        public void UpdateGPU(ComputeShader computeShader, string kernel = null)
+        public virtual void UpdateGPU(ComputeShader computeShader, string kernel = null)
         {
             foreach(var p in this.VariableList)
             {
@@ -24,7 +24,7 @@ namespace UnityTools.Common
                 }
             }
         }
-        public void UpdateGPU(Material material)
+        public virtual void UpdateGPU(Material material)
         {
             foreach(var p in this.VariableList)
             {
