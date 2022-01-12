@@ -61,6 +61,14 @@ namespace UnityTools.Common
             {SpaceCorner.FarRightUp,        new float3(0.5f, 0.5f, 0.5f) },
             {SpaceCorner.FarRightBottom,    new float3(0.5f, -0.5f, 0.5f) },
         };
+        public static int2 SpaceToPixelSize(ISpace space, int pixelSize)
+        {
+            LogTool.AssertIsTrue(space.Scale.x > 0);
+            LogTool.AssertIsTrue(pixelSize > 2);
+            
+            var aspect = space.Scale.y / space.Scale.x;
+			return new int2(pixelSize, Mathf.CeilToInt(pixelSize * aspect));
+        }
         public static void SetGameObjectToSpace(GameObject go, ISpace space)
         {
             go.transform.localPosition = space.Center;
