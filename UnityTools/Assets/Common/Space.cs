@@ -26,6 +26,7 @@ namespace UnityTools.Common
         float3 Scale { get; set; }
         Matrix4x4 TRS { get; }
         Matrix4x4 ToLocal { get; }
+        Matrix4x4 ToWorld { get; }
 
         float3 Forward { get; }
         float3 Up { get; }
@@ -65,7 +66,7 @@ namespace UnityTools.Common
         {
             LogTool.AssertIsTrue(space.Scale.x > 0);
             LogTool.AssertIsTrue(pixelSize > 2);
-            
+
             var aspect = space.Scale.y / space.Scale.x;
 			return new int2(pixelSize, Mathf.CeilToInt(pixelSize * aspect));
         }
@@ -107,6 +108,7 @@ namespace UnityTools.Common
         public float3 Right => math.mul(this.Rotation, new float3(1, 0, 0));
 
 		public Matrix4x4 ToLocal => this.TRS.inverse;
+		public Matrix4x4 ToWorld => this.TRS;
 
 		public Color Color => this.color;
 
