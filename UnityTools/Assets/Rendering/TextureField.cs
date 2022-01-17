@@ -7,10 +7,13 @@ using UnityTools.Rendering;
 
 namespace UnityTools.Common
 {
-	public interface IField<T>
+	public interface IField<F>
 	{
-		T Field { get; }
-		int3 Size { get; set; }
+		F Field { get; }
+	}
+	public interface ITypeField<T, D> : IField<D>
+	{
+		T Type { get; }
 	}
 	public interface IFieldTexture
 	{
@@ -33,12 +36,12 @@ namespace UnityTools.Common
 		{
 			this.Release();
 
-            this.fieldSize = size;
-            this.format = format;
-            
+			this.fieldSize = size;
+			this.format = format;
+
 			var rt = new RenderTexture(this.fieldSize.x, this.fieldSize.y, this.fieldSize.z, this.format);
 			rt.enableRandomWrite = true;
-            rt.name = this.shaderName;
+			rt.name = this.shaderName;
 			this.data = rt;
 		}
 		public override void Release()
