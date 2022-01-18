@@ -283,6 +283,7 @@ namespace UnityTools.Common
             this.gpuBuffer?.Release();
             this.gpuBuffer = null;
             this.cpuData = null;
+            this.size = 0;
         }
 
         public override void SetToGPU(object container, ComputeShader cs, string kernel = null)
