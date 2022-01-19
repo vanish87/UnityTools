@@ -4,6 +4,7 @@ using UnityEngine;
 using System.IO;
 using UnityEngine.Assertions;
 using UnityTools.Common;
+using Unity.Mathematics;
 
 namespace UnityTools.Rendering
 {    
@@ -163,6 +164,12 @@ namespace UnityTools.Rendering
                 target = TextureManager.Create(src.descriptor);
             }
         }        
+        public static int2 BaseSize(this RenderTexture target, int pixelSize = 1024)
+        {
+            var size = new int2(target.width, target.height);
+			var aspect = size.y * 1.0f / size.x;
+            return new int2(pixelSize, Mathf.CeilToInt(pixelSize * aspect));
+        }
 
         public static void Clear(this RenderTexture target)
         {

@@ -30,7 +30,7 @@ namespace UnityTools.Rendering
             this.meshRenderer.material = this.material;
             this.meshFilter.sharedMesh = this.quad;
         }
-        protected void Update()
+        protected virtual void Update()
         {
             if(this.mainTexture != null || this.Field?.FieldAsTexture != null)
             {
