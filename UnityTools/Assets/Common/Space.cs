@@ -72,6 +72,8 @@ namespace UnityTools.Common
         }
         public static void SetGameObjectToSpace(GameObject go, ISpace space)
         {
+			if (go == null || space == null) return;
+
             go.transform.localPosition = space.Center;
             go.transform.localRotation = space.Rotation;
             go.transform.localScale = space.Scale;
