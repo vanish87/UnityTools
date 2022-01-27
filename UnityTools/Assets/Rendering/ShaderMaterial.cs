@@ -36,5 +36,9 @@ namespace UnityTools.Rendering
             this.material?.Dispose();
 			this.inited = false;
 		}
+		public static implicit operator Material(ShaderMaterial source)
+		{
+			return source.material;
+		}
 	}
 }
