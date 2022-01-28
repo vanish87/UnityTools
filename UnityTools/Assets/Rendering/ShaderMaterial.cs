@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityTools.Common;
+using UnityTools.Debuging;
 
 namespace UnityTools.Rendering
 {
@@ -14,7 +15,7 @@ namespace UnityTools.Rendering
 	[System.Serializable]
 	public class ShaderMaterial : IInitialize
 	{
-		public string name;
+		public string defaultShaderName;
 		public Shader shader;
 		public DisposableMaterial material;
 
@@ -25,7 +26,11 @@ namespace UnityTools.Rendering
 		public void Init(params object[] parameters)
         {
             if(this.Inited) return;
-			if(this.shader == null) return;
+			if(this.shader == null) 
+			{
+				this.shader = Shader.Find(this.defaultShaderName);
+				LogTool.AssertNotNull(this.shader);
+			}
 
             this.material?.Dispose();
             this.material = new DisposableMaterial(this.shader);
