@@ -32,7 +32,7 @@ namespace UnityTools.Rendering
 		{
 			if (this.Inited) return;
 
-			this.material.defaultShaderName = "UnityTools/GeneralShader";
+			this.material.defaultShaderName ??= "UnityTools/GeneralShader";
 			this.material.Init();
 			this.inited = true;
 		}
