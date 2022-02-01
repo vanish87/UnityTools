@@ -50,6 +50,7 @@ namespace UnityTools.Common
         protected abstract T OnCreate(S para);
         public T Current { get { return this[this.circleIndexer.Current]; } }
         public T Next { get { return this[this.circleIndexer.Current + 1]; } }
+        public T Prev { get { return this[this.circleIndexer.Current - 1]; } }
         public T GetCurrentAndMoveNext
         {
             get
