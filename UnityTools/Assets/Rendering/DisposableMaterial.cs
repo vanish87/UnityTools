@@ -12,26 +12,44 @@ namespace UnityTools.Rendering
 	[Serializable]
 	public class DisposableMaterial : DisposableObject<Material>, IShaderCommandUser
 	{
+		[SerializeField] protected RenderQueueTag renderQueueTag = new RenderQueueTag();
+		[SerializeField] protected IgnoreProjectorTag ignoreProjectorTag = new IgnoreProjectorTag();
+		[SerializeField] protected RenderTypeTag renderTypeTag = new RenderTypeTag();
+
+		[SerializeField] protected Blend blend = new Blend();
+		[SerializeField] protected BlendOperation blendOperation = new BlendOperation();
+		[SerializeField] protected ColorMask colorMask = new ColorMask();
+
+		[SerializeField] protected Cull cull = new Cull();
+		[SerializeField] protected ZClip zClip = new ZClip();
+		[SerializeField] protected ZTest zTest = new ZTest();
+		[SerializeField] protected ZWrite zWrite = new ZWrite();
+		[SerializeField] protected CheckBoard checkBoardSize = new CheckBoard();
 		[SerializeField] protected List<IShaderCommand> commands = new List<IShaderCommand>();
 		public DisposableMaterial(Material data) : base(new Material(data))
 		{
-			foreach(var c in ObjectTool.FindAllFieldValue<IShaderCommand>(typeof(DisposableMaterial), this))
-			{
-				this.AddShaderCommand(c);
-			}
+			this.AddAllShaderCommand();
 		}
 
 		public DisposableMaterial(Shader shader) : base(new Material(shader))
 		{
-			foreach(var c in ObjectTool.FindAllFieldValue<IShaderCommand>(typeof(DisposableMaterial), this))
+			this.AddAllShaderCommand();
+		}
+		public virtual void AddAllShaderCommand()
+		{
+			foreach (var c in ObjectTool.FindAllFieldValue<IShaderCommand>(this.GetType(), this))
 			{
 				this.AddShaderCommand(c);
 			}
 		}
+		public virtual void RemoveAllShaderCommand()
+		{
+			this.commands?.Clear();
+		}
 
 		public void AddShaderCommand(IShaderCommand shaderCommand)
 		{
-			if(this.commands.Contains(shaderCommand)) 
+			if (this.commands.Contains(shaderCommand))
 			{
 				LogTool.Log("Duplicated Shader Command" + shaderCommand.Name, LogLevel.Warning);
 				return;
@@ -41,15 +59,10 @@ namespace UnityTools.Rendering
 
 		public void RemoveShaderCommand(IShaderCommand shaderCommand)
 		{
-			if(this.commands.Contains(shaderCommand)) 
+			if (this.commands.Contains(shaderCommand))
 			{
 				this.commands.Remove(shaderCommand);
 			}
-		}
-
-		public void RemoveAllShaderCommand()
-		{
-			this.commands.Clear();
 		}
 
 		public virtual void UpdateShaderCommand()
