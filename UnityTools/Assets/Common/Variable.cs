@@ -215,6 +215,13 @@ namespace UnityTools.Common
             //empty buffer for dynamic init 
             //also init buffer in following two constructors with declearation
         }
+        public GPUBufferVariable(string name)
+        {
+            //name only init
+            //buffer will inited later
+            this.displayName = name;
+            this.shaderName = name;
+        }
         public GPUBufferVariable(string name, int size, bool cpuData = false, bool autoSet = true, ComputeBufferType type = ComputeBufferType.Default)
         {
             this.displayName = name;
@@ -293,6 +300,8 @@ namespace UnityTools.Common
             // LogTool.AssertIsTrue(this.Size > 0);
 			// if (cs == null || this.Size == 0) { LogTool.Log(this.displayName + " is not set to GPU", LogLevel.Warning); return; }
 			if (cs == null || !this.Inited) return;
+            
+            LogTool.AssertNotNull(this.shaderName);
 
             this.SetToGPUBuffer();
             var id = cs.FindKernel(kernel);
