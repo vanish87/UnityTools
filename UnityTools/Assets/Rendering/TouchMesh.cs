@@ -32,11 +32,21 @@ namespace UnityTools.Interaction
 				collider.sharedMesh = filter.mesh;
 			}
 
+			foreach(var user in ObjectTool.FindAllObject<IEventUser>())
+			{
+				user.OnSenderAdded(this);
+			}
+
 		}
 
 		protected void OnDisable()
 		{
 			this.debug?.DestoryObj();
+			
+			foreach(var user in ObjectTool.FindAllObject<IEventUser>())
+			{
+				user.OnSenderRemoved(this);
+			}
 		}
 
 		protected void Update()
