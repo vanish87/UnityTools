@@ -5,6 +5,13 @@ using UnityTools.Rendering;
 
 namespace UnityTools.Interaction
 {
+	[System.Serializable]
+	public class TouchMessage : EventArgs
+	{
+		public int id;
+		public float3 worldPos;
+		public float2 uv;
+	}
 	public class TouchMesh : MonoEvent
 	{
 		[SerializeField] protected bool displayDebug = false;
