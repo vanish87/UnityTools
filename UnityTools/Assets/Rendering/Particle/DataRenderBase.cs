@@ -30,48 +30,48 @@ namespace UnityTools.Rendering
 		public bool Inited => this.inited;
 		public DataRenderMode Mode => this.mode;
 
-		[SerializeField] protected Shader dataShader;
+		[SerializeField] protected ShaderMaterial dataMaterial = new ShaderMaterial();
 		[SerializeField] protected DataRenderMode mode = DataRenderMode.OnUpdate;
 		protected IDataBuffer<T> Source => this.source ??= this.gameObject.GetComponent<IDataBuffer<T>>();
 		protected IDataBuffer<T> source; 
-		protected DisposableMaterial dataMaterial;
 		protected bool inited = false;
 
 		public virtual void Init(params object[] parameters)
 		{
 			if (this.Inited) return;
 
-			this.dataMaterial = new DisposableMaterial(this.dataShader);
+			this.dataMaterial.Init();
 			this.inited = true;
 		}
 		public virtual void Deinit(params object[] parameters)
 		{
-			this.dataMaterial?.Dispose();
+			this.dataMaterial?.Deinit();
 			this.inited = false;
 		}
 
 		public virtual void OnUpdateDraw()
 		{
-			this.dataMaterial.UpdateShaderCommand();
 			if (this.Source == null || this.dataMaterial == null)
 			{
 				LogTool.Log("Draw buffer is null, nothing to draw", LogLevel.Warning);
 				return;
 			}
+
+			this.dataMaterial.UpdateShaderCommand();
 			this.Source.Buffer.UpdateGPU(this.dataMaterial);
 			Graphics.DrawProcedural(this.dataMaterial, this.Source.Space.Bound, MeshTopology.Points, this.Source.Buffer.Size);
 		}
 
 		public virtual void OnRenderDraw()
 		{
-			this.dataMaterial.UpdateShaderCommand();
 			if (this.Source == null || this.dataMaterial == null)
 			{
 				LogTool.Log("Draw buffer is null, nothing to draw", LogLevel.Warning);
 				return;
 			}
+			this.dataMaterial.UpdateShaderCommand();
 			this.Source.Buffer.UpdateGPU(this.dataMaterial);
-			this.dataMaterial.Data.SetPass(0);
+			this.dataMaterial.Mat.SetPass(0);
 			Graphics.DrawProceduralNow(MeshTopology.Points, this.Source.Buffer.Size, 1);
 		}
 		protected void OnEnable()

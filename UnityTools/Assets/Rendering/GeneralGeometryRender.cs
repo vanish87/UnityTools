@@ -19,6 +19,7 @@ namespace UnityTools.Rendering
 	}
 	public class GeneralGeometryRender : MonoBehaviour, IInitialize
 	{
+		public const string DEFAULT_SHADER_NAME = "UnityTools/GeneralShader";
 		public bool Inited => this.inited;
 		[SerializeField] protected ShaderMaterial material;
 		protected bool inited = false;
@@ -32,7 +33,7 @@ namespace UnityTools.Rendering
 		{
 			if (this.Inited) return;
 
-			this.material.defaultShaderName ??= "UnityTools/GeneralShader";
+			this.material.defaultShaderName ??= DEFAULT_SHADER_NAME;
 			this.material.Init();
 			this.inited = true;
 		}
@@ -46,31 +47,35 @@ namespace UnityTools.Rendering
 		protected void Update()
 		{
 			this.material.UpdateShaderCommand();
-			if(this.Provier != null)
+			if (this.Provier != null)
 			{
-				if(this.primitiveInstance == null)
+				if (this.primitiveInstance == null)
 				{
 					this.primitiveInstance = GameObject.CreatePrimitive(this.Provier.GeometryType);
 					this.primitiveInstance.transform.parent = this.transform;
 					var render = this.primitiveInstance.GetComponent<MeshRenderer>();
 					render.sharedMaterial = this.material;
 				}
-				if(this.Provier.AutoSpace) 
+				if (this.Provier.AutoSpace)
 				{
 					Common.Space.SetGameObjectToSpace(this.gameObject, this.Provier.Space);
 				}
-				if(this.Provier.EnableTouch && this.touchMesh == null)
+				if (this.Provier.EnableTouch && this.touchMesh == null)
 				{
 					this.touchMesh = this.gameObject.FindOrAddTypeInComponentsAndChildren<TouchMesh>();
 				}
-				if(this.Provier.AutoTextureSize && this.Provier.MainTexture != null)
+				if (this.Provier.MainTexture != null)
 				{
 					var tex = this.Provier.MainTexture;
-					var aspect = 1f * tex.width / tex.height;
-					var scale = this.Provier.Space.Scale;
-					this.gameObject.transform.localScale = new Vector3(aspect * scale.y, scale.y, scale.z);
 					Material mat = this.material;
 					mat.mainTexture = tex;
+
+					if (this.Provier.AutoTextureSize)
+					{
+						var aspect = 1f * tex.width / tex.height;
+						var scale = this.Provier.Space.Scale;
+						this.gameObject.transform.localScale = new Vector3(aspect * scale.y, scale.y, scale.z);
+					}
 				}
 			}
 		}

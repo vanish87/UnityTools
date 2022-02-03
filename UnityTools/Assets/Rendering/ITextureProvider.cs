@@ -10,7 +10,5 @@ namespace UnityTools.Rendering
 	public interface ITextureProvider
 	{
 		Texture Tex { get; }
-		System.Action<Texture> OnTextureChanged { get; set; }
-
 	}
 }

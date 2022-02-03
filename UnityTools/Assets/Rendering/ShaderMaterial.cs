@@ -15,7 +15,8 @@ namespace UnityTools.Rendering
 	[System.Serializable]
 	public class ShaderMaterial : IInitialize, IShaderCommandUser
 	{
-		public string defaultShaderName = "Unlit/Texture";
+		public const string DEFAULT_SHADER_NAME = "Unlit/Texture";
+		public string defaultShaderName = DEFAULT_SHADER_NAME;
 		public Shader Shader
 		{
 			get
@@ -42,8 +43,7 @@ namespace UnityTools.Rendering
 		[SerializeField] protected ZTest zTest = new ZTest();
 		[SerializeField] protected ZWrite zWrite = new ZWrite();
 		[SerializeField] protected CheckBoard checkBoardSize = new CheckBoard();
-		[SerializeField] protected List<IShaderCommand> commands = new List<IShaderCommand>();
-
+		protected List<IShaderCommand> commands = new List<IShaderCommand>();
 		protected bool inited = false;
 		protected Material material;
 		[SerializeField] protected Shader shader;
@@ -53,6 +53,16 @@ namespace UnityTools.Rendering
 			if (this.Inited) return;
 
 			this.AddAllShaderCommand();
+			if(String.IsNullOrEmpty(this.defaultShaderName))
+			{
+				this.defaultShaderName = this.shader != null ? this.shader.name : DEFAULT_SHADER_NAME;
+			}
+
+			if (this.shader != null && this.defaultShaderName != this.shader.name)
+			{
+				LogTool.Log("Inconstant Shade name, using " + this.shader.name, LogLevel.Warning);
+				this.defaultShaderName = this.shader.name;
+			}
 
 			this.inited = true;
 		}
