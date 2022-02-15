@@ -69,6 +69,8 @@ namespace UnityTools.Rendering
 		public virtual void Deinit(params object[] parameters)
 		{
 			this.material?.DestoryObj();
+			this.material = null;
+			this.RemoveAllShaderCommand();
 			this.inited = false;
 		}
 
