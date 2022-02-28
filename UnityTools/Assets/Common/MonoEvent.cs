@@ -10,6 +10,11 @@ namespace UnityTools.Common
         void RegisterOnMessage(EventHandler handler);
         void UnregisterOnMessage(EventHandler handler);
     }
+    public interface IEventUser
+    {
+        void OnSenderAdded(IEventSender sender);
+        void OnSenderRemoved(IEventSender sender);
+    }
 
     public interface IEventData
     {

@@ -7,6 +7,8 @@ namespace UnityTools.Rendering
 {
 	public interface IShaderCommandUser
 	{
+		void AddAllShaderCommand();
+		void RemoveAllShaderCommand();
 		void AddShaderCommand(IShaderCommand shaderCommand);
 		void UpdateShaderCommand();
 		void RemoveShaderCommand(IShaderCommand shaderCommand);
@@ -160,7 +162,7 @@ namespace UnityTools.Rendering
 	public class ZTest : IntShaderCommand<CompareFunction>
 	{
 		public override string Name => "ZTest";
-		public ZTest() : base() { this.Value = CompareFunction.Less; }
+		public ZTest() : base() { this.Value = CompareFunction.LessEqual; }
 	}
 	[Serializable]
 	public class ZWrite : OnOffShaderCommand
@@ -188,11 +190,32 @@ namespace UnityTools.Rendering
 	[Serializable]
 	public class RenderTypeTag : IntShaderCommand<string>
 	{
+		// Shader replacement tags in built-in shaders
+		// All built-in shaders have a “RenderType” tag set that can be used when rendering with replaced shaders. Tag values are the following:
+
+		// Opaque: most of the shaders (Normal , Self Illuminated, Reflective, terrain shaders).
+		// Transparent: most semitransparent shaders (Transparent, Particle, Font, terrain additive pass shaders).
+		// TransparentCutout: masked transparency shaders (Transparent Cutout, two pass vegetation shaders).
+		// Background: Skybox shaders.
+		// Overlay: Halo, Flare shaders.
+		// TreeOpaque: terrain  engine tree bark.
+		// TreeTransparentCutout: terrain engine tree leaves.
+		// TreeBillboard: terrain engine billboarded trees.
+		// Grass: terrain engine grass.
+		// GrassBillboard: terrain engine billboarded grass.
+		public const string Opaque = "Opaque";
+		public const string Transparent = "Transparent";
 		public override string Name => "RenderType";
+		public RenderTypeTag() : base() { this.Value = Opaque; }
 		public override bool SetToMaterial(Material material)
 		{
 			material.SetOverrideTag(this.Name, this.v);
 			return true;
 		}
+	}
+	[Serializable]
+	public class CheckBoard : IntShaderCommand<int>
+	{
+		public override string Name => "CheckBoard";
 	}
 }

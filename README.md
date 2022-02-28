@@ -1,7 +1,6 @@
 # UnityTools
 
 ### [Wiki for Feature List](https://github.com/vanish87/UnityTools/wiki/Feature-List)
-### [Dev Flow Chart](https://github.com/vanish87/UnityTools/wiki/Development-Flow-Chart)
 
 ### Tools list
 - [x] Closest Hit

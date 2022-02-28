@@ -99,6 +99,10 @@ namespace UnityTools.Common
                     variable.Value = v;
                     variable.defaultValue = null;
                     variable.lastValidValue = null;
+                    if(variable.shaderName != null && variable.shaderName != shaderName)
+                    {
+						Debuging.LogTool.Log("inconstant shader name, using " + shaderName, Debuging.LogLevel.Warning);
+                    }
                     variable.displayName = name;
 					if (!String.IsNullOrEmpty(variable.shaderName) && variable.shaderName != v.Name && variable.shaderName != shaderName) LogTool.Log("shader name conflict, using " + shaderName, LogLevel.Warning);
                     variable.shaderName = shaderName;

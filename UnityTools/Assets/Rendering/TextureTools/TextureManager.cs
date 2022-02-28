@@ -14,10 +14,18 @@ namespace UnityTools.Rendering
             if(copy) Graphics.CopyTexture(tex, ret);
 
             #if DEBUG
-            TextureManager.tracking.AddTemp(ret);
+            // TextureManager.tracking.AddTemp(ret);
             #endif
 
             return ret;
+        }
+        public static void ReleaseTemp(this RenderTexture tex)
+        {
+            RenderTexture.ReleaseTemporary(tex);
+
+            #if DEBUG
+            // TextureManager.tracking.(ret);
+            #endif
         }
         public static Texture Clone(this Texture tex, bool copy = true)
         {
