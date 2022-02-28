@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using UnityTools.Debuging;
 
 namespace UnityTools.Common
 {
@@ -99,6 +100,7 @@ namespace UnityTools.Common
                     variable.defaultValue = null;
                     variable.lastValidValue = null;
                     variable.displayName = name;
+					if (!String.IsNullOrEmpty(variable.shaderName) && variable.shaderName != v.Name && variable.shaderName != shaderName) LogTool.Log("shader name conflict, using " + shaderName, LogLevel.Warning);
                     variable.shaderName = shaderName;
                     variable.mustNotNull = mustNotNull;
                     this.variableList.Add(variable);
