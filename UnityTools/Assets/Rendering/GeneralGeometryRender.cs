@@ -41,6 +41,7 @@ namespace UnityTools.Rendering
 		{
 			this.material?.Deinit();
 			this.primitiveInstance?.DestoryObj();
+			this.primitiveInstance = null;
 			this.inited = false;
 		}
 
@@ -53,6 +54,9 @@ namespace UnityTools.Rendering
 				{
 					this.primitiveInstance = GameObject.CreatePrimitive(this.Provier.GeometryType);
 					this.primitiveInstance.transform.parent = this.transform;
+					this.primitiveInstance.transform.localPosition = Vector3.zero;
+					this.primitiveInstance.transform.localRotation = Quaternion.identity;
+					this.primitiveInstance.transform.localScale = Vector3.one;
 					var render = this.primitiveInstance.GetComponent<MeshRenderer>();
 					render.sharedMaterial = this.material;
 				}
