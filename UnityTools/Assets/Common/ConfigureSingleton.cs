@@ -59,12 +59,12 @@ namespace UnityTools.Common
 		{
             this.inited = false;
 		}
-        public void Save()
+        public virtual void Save()
         {
             FileTool.Write(this.FilePath, this.D, this.SaveType);
         }
 
-        public void Load()
+        public virtual void Load()
         {
             var data = FileTool.Read<T>(this.FilePath, this.SaveType);
             if (data != null) this.data = data;
@@ -80,12 +80,12 @@ namespace UnityTools.Common
             this.OnConfigureChange(this, null);
         }
 
-		public byte[] OnSerialize()
+		public virtual byte[] OnSerialize()
 		{
             return Serialization.ObjectToByteArray(JsonUtility.ToJson(this.D));
 		}
 
-		public void OnDeserialize(byte[] data)
+		public virtual void OnDeserialize(byte[] data)
 		{
             JsonUtility.FromJsonOverwrite(Serialization.ByteArrayToObject<string>(data), this.data);
 		}
