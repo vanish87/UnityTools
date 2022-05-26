@@ -1,4 +1,6 @@
 
+using System;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityTools.Common;
 using UnityTools.Rendering;
