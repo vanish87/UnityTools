@@ -139,22 +139,22 @@ void Prediction (uint3 idx : SV_DispatchThreadID)
     if(p.active)
     {
         float3 force = 0;
-        for(int n = 0; n < _NodeCount; ++n)
-        {
-            Node next = _NodeBuffer[n];
-            if(n == did) continue;
-            if(!next.active) continue;
-            if(next.sid == p.sid) continue;
+        // for(int n = 0; n < _NodeCount; ++n)
+        // {
+        //     Node next = _NodeBuffer[n];
+        //     if(n == did) continue;
+        //     if(!next.active) continue;
+        //     if(next.sid == p.sid) continue;
 
-            if(distance(p.pos, next.pos) < 0.2f)
-            {
-                float3 rejection = p.pos - next.pos;
-                float scale = (1.0 / length(rejection) - 1);
-                scale = clamp(scale, 0, 50);
-                force += rejection * scale;
-            }
-        }
-        // force = clamp(force, -100, 100);
+        //     if(distance(p.pos, next.pos) < 0.2f)
+        //     {
+        //         float3 rejection = p.pos - next.pos;
+        //         float scale = (1.0 / length(rejection) - 1);
+        //         scale = clamp(scale, 0, 50);
+        //         force += rejection * scale;
+        //     }
+        // }
+        // // force = clamp(force, -100, 100);
 
         if(UseGravity)force += GRAVITY;
 

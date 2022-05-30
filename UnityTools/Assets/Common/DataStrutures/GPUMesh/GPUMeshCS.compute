@@ -1,0 +1,29 @@
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel Update
+
+RWByteAddressBuffer _VertexBuffer;
+
+// Write a vertex data to ByteAddressBuffer
+void WriteVertex(uint vidx, float3 p)
+{
+    uint addr_p = vidx * (3 + 2) * 4; //12 bytes for each float3
+    _VertexBuffer.Store3(addr_p, asuint(p));
+}
+float3 ReadPos(uint vidx)
+{
+    uint addr_p = vidx * (3 + 2) * 4; //12 bytes for each float3
+    float3 pos = asfloat(_VertexBuffer.Load3(addr_p));
+    return pos;
+
+}
+[numthreads(128,1,1)]
+void Update (uint3 id : SV_DispatchThreadID)
+{
+    uint vidx = id.x;
+
+    float3 pos = ReadPos(vidx);
+    pos.y += 2;
+
+    // Write to the vertex buffer.
+    WriteVertex(vidx, pos);
+}
