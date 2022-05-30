@@ -25,6 +25,7 @@ namespace UnityTools.Rendering
 				{
 					this.shader = Shader.Find(this.defaultShaderName);
 				}
+				if(this.shader == null) LogTool.Log("Shader not find " + this.defaultShaderName, LogLevel.Error);
 				return this.shader;
 			}
 		}
