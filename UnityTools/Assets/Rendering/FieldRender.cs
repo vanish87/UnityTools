@@ -12,9 +12,9 @@ namespace UnityTools.Rendering
 		public Texture MainTexture { set => this.mainTexture = value; }
 		public float Scale { set => this.scale = value; }
         [SerializeField] protected Mesh quad;
-        [SerializeField] protected Shader shader;
+        // [SerializeField] protected Shader shader;
         [SerializeField] protected float scale = 1;
-        protected DisposableMaterial material;
+		[SerializeField] protected ShaderMaterial material;
         protected MeshRenderer meshRenderer;
         protected MeshFilter meshFilter;
         protected IFieldTexture field;
@@ -23,8 +23,7 @@ namespace UnityTools.Rendering
 
         protected void OnEnable()
         {
-            this.material?.Dispose();
-            this.material = new DisposableMaterial(this.shader);
+            this.material.Init();
             this.meshRenderer = this.GetComponent<MeshRenderer>();
             this.meshFilter = this.GetComponent<MeshFilter>();
             this.meshRenderer.material = this.material;
@@ -32,16 +31,17 @@ namespace UnityTools.Rendering
         }
         protected virtual void Update()
         {
+            this.material.UpdateShaderCommand();
             if(this.mainTexture != null || this.Field?.FieldAsTexture != null)
             {
                 var tex = this.mainTexture??this.Field?.FieldAsTexture;
-				this.material.Data.mainTexture = tex;
+				this.material.Mat.mainTexture = tex;
 				this.transform.localScale = new Vector3(tex.width * 1.0f / tex.height, 1, 1) * scale;
             }
         }
         protected void OnDisable()
         {
-            this.material?.Dispose();
+            this.material?.Deinit();
         }
 
 	}
