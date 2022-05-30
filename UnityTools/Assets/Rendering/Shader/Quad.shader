@@ -6,14 +6,22 @@ Shader "Unlit/Quad"
     }
     SubShader
     {
-        Tags { "Queue"="Transparent" "RenderType"="Transparent" "IgnoreProjector"="True" }
+        // Tags { "Queue"="Transparent" "RenderType"="Transparent" "IgnoreProjector"="True" }
 
         // inside Pass
         // ZWrite Off
         // Blend SrcAlpha OneMinusSrcAlpha
-        Blend One OneMinusSrcAlpha
+        // Blend One OneMinusSrcAlpha
 		// Blend SrcAlpha One
         // LOD 100
+
+        Blend [BlendSrc] [BlendDst]
+        BlendOp [BlendOp]
+        ColorMask [ColorMask]
+        Cull [CullMode]
+        ZClip [ZClip]
+        ZTest [ZTest]
+        ZWrite [ZWrite]
 
         Pass
         {
@@ -24,6 +32,7 @@ Shader "Unlit/Quad"
             #pragma multi_compile_fog
 
             #include "UnityCG.cginc"
+
 
             struct appdata
             {
@@ -52,6 +61,7 @@ Shader "Unlit/Quad"
             {
                 // sample the texture
                 float4 col = tex2D(_MainTex, i.uv);
+                return col;
                 return fixed4(col.rgb, length(col.rgb));
             }
             ENDCG
