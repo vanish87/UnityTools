@@ -373,8 +373,8 @@ namespace UnityTools.Common
     }
     public class GPUBufferAppendConsume<T>: GPUBufferVariable<T>
     {
+		public GPUBufferVariable<int> CounterBuffer => this.counterBuffer ??= new GPUBufferVariable<int>(MIN_INDIRECT_BUFFER_SIZE, true, false, ComputeBufferType.IndirectArguments);
         protected GPUBufferVariable<int> counterBuffer;
-		protected GPUBufferVariable<int> CounterBuffer => this.counterBuffer ??= new GPUBufferVariable<int>(MIN_INDIRECT_BUFFER_SIZE, true, false, ComputeBufferType.IndirectArguments);
 
         public void InitAppendBuffer(int size, bool autoSet = false)
         {
