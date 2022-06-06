@@ -24,7 +24,9 @@ namespace UnityTools.Rendering
 				if (this.shader == null)
 				{
 					this.shader = Shader.Find(this.defaultShaderName);
+					if (this.shader == null) LogTool.Log("Cannot find shader " + this.defaultShaderName, LogLevel.Error);
 				}
+				if(this.shader == null) LogTool.Log("Shader not find " + this.defaultShaderName, LogLevel.Error);
 				return this.shader;
 			}
 		}
@@ -111,6 +113,7 @@ namespace UnityTools.Rendering
 
 		public static implicit operator Material(ShaderMaterial source)
 		{
+			LogTool.AssertNotNull(source.Mat);
 			return source.Mat;
 		}
 	}

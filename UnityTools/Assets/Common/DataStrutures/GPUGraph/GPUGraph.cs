@@ -139,7 +139,7 @@ namespace UnityTools.Common
             args[1] = (uint)count;
             args[2] = (uint)mesh.GetIndexStart(subIndex);
             args[3] = (uint)mesh.GetBaseVertex(subIndex);
-            buffer.SetToGPUBuffer();
+            buffer.SetToGPUBuffer(true);
         }
 
         protected Mesh GenerateEdgeMesh()
