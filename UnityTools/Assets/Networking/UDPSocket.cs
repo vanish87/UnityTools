@@ -95,6 +95,11 @@ namespace UnityTools.Networking
     {
         public SocketData remote = SocketData.Make();
     }
+    public enum ConnectionType
+    {
+        UDP,
+        TCP,
+    }
 
     //code from https://gist.github.com/darkguy2008/413a6fea3a5b4e67e5e0d96f750088a9
     //for testing latency of UDP
@@ -102,11 +107,11 @@ namespace UnityTools.Networking
     {
         public ReceiveState receiveState = new ReceiveState();
         public bool DebugLog = false;
-
+        private Socket socket;
         public enum Connection
         {
             Incoming,
-            Outcoming,
+            Outgoing,
         }
 
         public enum SocketRole
@@ -124,7 +129,7 @@ namespace UnityTools.Networking
         protected Dictionary<Connection, List<SocketData>> connections = new Dictionary<Connection, List<SocketData>>()
         {
             { Connection.Incoming   , new List<SocketData>() },
-            { Connection.Outcoming  , new List<SocketData>() },
+            { Connection.Outgoing  , new List<SocketData>() },
         };
 
         protected override void DisposeManaged()
@@ -139,12 +144,13 @@ namespace UnityTools.Networking
                 finally
                 {
                     this.socket.Close();
+                    this.socket.Dispose();
                 }
                 this.socket = null;
             }
         }
 
-        public void Setup(SocketRole role, SocketData data = null)
+        public void Setup(SocketRole role, SocketData remote)
         {
             if (this.roleState[role]) return;
             try
@@ -153,18 +159,19 @@ namespace UnityTools.Networking
                 {
                     case SocketRole.Sender:
                         {
-                            //connect is optional
-                            //socket.Connect(IPAddress.Parse(address), port);
+                            Assert.IsNotNull(remote);
+                            //connect is optional for UDP
+                            this.socket.Connect(remote.endPoint);
                         }
                         break;
                     case SocketRole.Receiver:
                         {
                             this.socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.ReuseAddress, true);
                             //this.socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.PacketInformation, true);
-                            Assert.IsNotNull(data);
-                            this.socket.Bind(data.endPoint);
+                            Assert.IsNotNull(remote);
+                            this.socket.Bind(remote.endPoint);
 
-                            if (DebugLog) LogTool.Log("Start Receiver on " + data.endPoint);
+                            if (DebugLog) LogTool.Log("Start Receiver on " + remote.endPoint);
                         }
                         break;
                     case SocketRole.Broadcast:
@@ -176,8 +183,20 @@ namespace UnityTools.Networking
                         break;
                 }
             }
-            catch(SocketException e) { LogTool.Log(data.endPoint.ToString() + " "  + e.ToString()); }
+            catch (SocketException e)
+            {
+                LogTool.Log(remote.endPoint.ToString() + " " + e.ToString());
+                return;
+            }
             this.roleState[role] = true;
+        }
+        public UDPSocket(ConnectionType type = ConnectionType.UDP)
+        {
+            var st = type == ConnectionType.UDP?SocketType.Dgram:SocketType.Stream;
+            var pt = type == ConnectionType.UDP?ProtocolType.Udp:ProtocolType.Tcp;
+            this.socket?.Close();
+            this.socket?.Dispose();
+            this.socket = new Socket(AddressFamily.InterNetwork, st, pt);
         }
 
         public virtual void OnConnect(SocketData socket) { }
@@ -198,14 +217,14 @@ namespace UnityTools.Networking
 
         public virtual void Send(SocketData socket, T data)
         {
-            this.Setup(SocketRole.Sender);
+            this.Setup(SocketRole.Sender, socket);
 
             var byteData = this.OnSerialize(data);
             this.SendByte(socket, byteData);
         }
         public virtual void Broadcast(T data, int port)
         {
-            this.Setup(SocketRole.Broadcast);
+            this.Setup(SocketRole.Broadcast, null);
 
             var epTo = SocketData.Make();
             epTo.endPoint.Address = IPAddress.Broadcast;
@@ -234,7 +253,6 @@ namespace UnityTools.Networking
             }
         }
 
-        private Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
 
         protected void SendByte(SocketData epTo, byte[] byteData)
         {
@@ -283,10 +301,10 @@ namespace UnityTools.Networking
 
                     int bytes = socketData.socket.EndSendTo(ar);
 
-                    if (this.connections[Connection.Outcoming].Exists(c => c.endPoint.Address.Equals(socketData.endPoint.Address)) == false
+                    if (this.connections[Connection.Outgoing].Exists(c => c.endPoint.Address.Equals(socketData.endPoint.Address)) == false
                         && socketData.endPoint.Address != IPAddress.Broadcast)
                     {
-                        this.connections[Connection.Outcoming].Add(socketData);
+                        this.connections[Connection.Outgoing].Add(socketData);
                         if (DebugLog) LogTool.LogFormat("Add out connection: {0}", LogLevel.Warning, LogChannel.Network, socketData.endPoint.ToString());
                     }
 
