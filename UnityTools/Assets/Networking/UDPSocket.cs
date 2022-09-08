@@ -321,6 +321,7 @@ namespace UnityTools.Networking
             }
             catch (SocketException e)
             {
+                LogTool.Log("UDP Socket Exception");
                 LogTool.Log(e.ToString());
                 LogTool.Log((e as SocketException).ErrorCode.ToString());
                 LogTool.Log((e as SocketException).Message);
