@@ -195,7 +195,7 @@ namespace UnityTools.Common
         {
             get
             {
-                LogTool.AssertIsTrue(this.Size > 0);
+				if (this.Size == 0) { LogTool.Log("Compute buffer size is 0", LogLevel.Warning); return default; }
                 return this.gpuBuffer ??= new ComputeBuffer(this.Size, Marshal.SizeOf<T>(), this.type);
             }
         } 
