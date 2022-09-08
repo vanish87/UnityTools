@@ -442,6 +442,14 @@ namespace UnityTools
                 }
             }
         }
+        static public void OnGUI(Texture tex, string displayName = null, GUILayoutOption[] op = null)
+        {
+            var v = tex;
+            var aspect = v.width * 1.0f / v.height;
+            var w = 256f;
+            var h = w / aspect;
+            GUILayout.Box(v, GUILayout.Width(w), GUILayout.Height(h));
+        }
         public static bool HasFlag<T>(Enum value, T flag)
         {
             Type underlyingType = Enum.GetUnderlyingType(value.GetType());
