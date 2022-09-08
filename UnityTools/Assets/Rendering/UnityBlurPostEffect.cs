@@ -7,7 +7,7 @@ using UnityTools.Debuging;
 
 namespace UnityTools.Rendering
 {
-    public class UnityBlur : MonoBehaviour
+    public class UnityBlurPostEffect : PostEffectBase
     {
         public int DownSample { get => this.downsample; set => this.downsample = value; }
         public float BlurSize { get => this.blurSize; set => this.blurSize = value; }
@@ -23,30 +23,19 @@ namespace UnityTools.Rendering
         [SerializeField] protected int blurIterations = 2;
 
         [SerializeField] protected BlurType blurType = BlurType.StandardGauss;
-        [SerializeField] protected ShaderMaterial shader = new ShaderMaterial();
 
         public enum BlurType
         {
             StandardGauss = 0,
             SgxGauss = 1,
         }
-
-        public virtual void OnEnable()
-        {
-            this.shader?.Init();
-        }
-        public virtual void OnDisable()
-        {
-            this.shader?.Deinit();
-        }
-
         public void BlurTexture(RenderTexture source, RenderTexture output)
         {
             Assert.IsNotNull(source);
             Assert.IsNotNull(output);
-            if (output == null || this.shader == null) return;
+            if (output == null || this.mat == null) return;
 
-            var mat = this.shader.Mat;
+            var mat = this.mat.Data;
 
             float widthMod = 1.0f / (1.0f * (1 << downsample));
 
@@ -97,9 +86,9 @@ namespace UnityTools.Rendering
         public void BlurTexture(RenderTexture output)
         {
             Assert.IsNotNull(output);
-            if (output == null || this.shader == null) return;
+            if (output == null || this.mat == null) return;
 
-            var mat = this.shader.Mat;
+            var mat = this.mat.Data;
             var source = output.CloneTemp();
             this.BlurTexture(source, output);
             RenderTexture.ReleaseTemporary(source);
