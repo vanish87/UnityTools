@@ -46,25 +46,27 @@ namespace UnityTools.Networking
         public interface IMessage
         {
             byte[] OnSerialize();
-            void OnDeserialize(IMessage message);
-            void OnSuccessReceived();
+            void OnDeserialize(byte[] data);
         }
 
         protected readonly float timeout = 10;
 
-        protected ConcurrentDictionary<int, (IMessage, Data, DateTime)> currentSendingData = new ConcurrentDictionary<int, (IMessage, Data, DateTime)>();
-        protected ConcurrentQueue<(IMessage, Data)> currentSendingQueue = new ConcurrentQueue<(IMessage, Data)>();
+        protected ConcurrentDictionary<int, (IMessage, Data, DateTime)> currentSendData = new ConcurrentDictionary<int, (IMessage, Data, DateTime)>();
         protected ConcurrentDictionary<int, DateTime> currentReceivedData = new ConcurrentDictionary<int, DateTime>();
         protected List<SocketData> remote = new List<SocketData>();
         protected short replayPort = -1;
-
         protected int messageCounter = 0;
         protected Action<IMessage> newMessageActions;
-
+        protected Action<IMessage> messageReceivedActions;
         public void NewMessage(Action<IMessage> action)
         {
             this.newMessageActions -= action;
             this.newMessageActions += action;
+        }
+        public void MessageReceived(Action<IMessage> action)
+        {
+            this.messageReceivedActions -= action;
+            this.messageReceivedActions += action;
         }
 
         protected short GetNextAvailablePortFrom(short port = 10000)
@@ -84,36 +86,70 @@ namespace UnityTools.Networking
         {
             if (this.replayPort > 0) return;
             this.replayPort = this.GetNextAvailablePortFrom();
+			Debug.Log("Reply port is " + this.replayPort);
             this.StartReceive(this.replayPort);
         }
 
         public override void OnMessage(SocketData socket, Data data)
         {
+			Debug.Log("Get Message from server");
+            //if it is sending data and is waiting for reply
             if (this.replayPort > 0)
             {
                 var d = default((IMessage, Data, DateTime));
-                if (this.currentSendingData.TryRemove(data.messageID, out d))
+                if (this.currentSendData.TryRemove(data.messageID, out d))
                 {
-                    d.Item1.OnSuccessReceived();
+					//get a reply from remote
+                    //sending succeed
+					this.messageReceivedActions?.Invoke(d.Item1);
+
+                    // Debug.Log("Send on " + d.Item3.ToString());
+                    Debug.Log("Latency " + (DateTime.Now - d.Item3).TotalMilliseconds);
+                }
+                else
+                {
+                    Debug.Log("Get Reply but no message is waiting discard it");
                 }
             }
+            //if it is receiving data
             else
             {
+                // Debug.Log("Get Message from server");
+                //if received this message at first time
+                //call new message function
                 if (!this.currentReceivedData.ContainsKey(data.messageID))
                 {
-                    var method = typeof(Serialization).GetMethod("ByteArrayToObject", BindingFlags.Public | BindingFlags.Static);
-                    var typeFunc = method.MakeGenericMethod(data.type);
-                    var ret = (IMessage)typeFunc?.Invoke(null, new object[1] { data.data });
-                    this.newMessageActions?.Invoke(ret);
+                    // var method = typeof(Serialization).GetMethod("ByteArrayToObject", BindingFlags.Public | BindingFlags.Static);
+                    // var typeFunc = method.MakeGenericMethod(data.type);
+                    // var ret = (IMessage)typeFunc?.Invoke(null, new object[1] { data.data });
+
+                    var obj = (IMessage)Activator.CreateInstance(data.type);
+                    obj.OnDeserialize(data.data);
+                    this.newMessageActions?.Invoke(obj);
+                }
+                else
+                {
+                    Debug.Log("Client get a duplicated massage");
                 }
 
                 this.currentReceivedData.AddOrUpdate(data.messageID, DateTime.Now, (mid, old) => DateTime.Now);
 
+                //try to reply to server with an empty message
                 if(data.replyPort > 0)
                 {
                     var server = SocketData.Make(socket.endPoint.Address, data.replyPort);
                     data.data = null;
-                    this.Send(server, data);
+                    if(!Tool.IsReachable(server.endPoint))
+                    {
+                        Debug.Log("Cannot reach " + server.endPoint);
+
+                    }
+                    else
+                    {
+                        this.Send(server, data);
+                        Debug.Log("Send reply");
+                    }
+                    
                 }
             }
         }
@@ -128,34 +164,38 @@ namespace UnityTools.Networking
 
             var mid = this.messageCounter++ % int.MaxValue;
             var data = new Data() { type = message.GetType(), messageID = mid, replyPort = this.replayPort, data = message.OnSerialize() };
-            this.currentSendingData.AddOrUpdate(mid, (message, data, DateTime.Now), (h, old) => (message, data, DateTime.Now));
+            this.currentSendData.AddOrUpdate(mid, (message, data, DateTime.Now), (h, old) => (message, data, DateTime.Now));
+
+            //send them immediately to reduce latency
+            this.SendQueue();
         }
         public void SendNoneReply(IMessage message)
         {
             var mid = this.messageCounter++ % int.MaxValue;
             var data = new Data() { type = message.GetType(), messageID = mid, replyPort = -1, data = message.OnSerialize() };
-            this.currentSendingQueue.Enqueue((message, data));
+            foreach (var r in this.remote)
+            {
+				this.Send(r, data);
+            }
+        }
+
+        protected void SendQueue()
+        {
+            foreach (var r in this.remote)
+            {
+                foreach (var d in this.currentSendData)
+                {
+                    // Debug.Log("From send to socket send " + (DateTime.Now - d.Value.Item3).TotalMilliseconds);
+                    this.Send(r, d.Value.Item2);
+                    // Debug.Log("Send to" + r.endPoint.ToString() + d.Value.Item2);
+                }
+            }
         }
 
 
         public void Update()
         {
-            foreach (var r in this.remote)
-            {
-                foreach (var d in this.currentSendingData)
-                {
-                    this.Send(r, d.Value.Item2);
-                }
-                while(this.currentSendingQueue.Count > 0)
-                {
-                    var d = default((IMessage, Data));
-                    if(this.currentSendingQueue.TryDequeue(out d))
-                    {
-                        this.Send(r, d.Item2);
-                        d.Item1.OnSuccessReceived();
-                    }
-                }
-            }
+            this.SendQueue();
 
             this.UpdateSendingTimeout();
             this.UpdateReceiveTimeout();
@@ -165,14 +205,14 @@ namespace UnityTools.Networking
         protected void UpdateSendingTimeout()
         {
             var timeout = new List<int>();
-            foreach(var d in this.currentSendingData)
+            foreach(var d in this.currentSendData)
             {
                 if(DateTime.Now.Subtract(d.Value.Item3).Seconds > this.timeout)
                 {
                     timeout.Add(d.Key);
                 }
             }
-            foreach(var mid in timeout) this.currentSendingData.TryRemove(mid, out _);
+            foreach(var mid in timeout) this.currentSendData.TryRemove(mid, out _);
 
         }
 
@@ -193,7 +233,7 @@ namespace UnityTools.Networking
 
         public void OnGUI()
         {
-            foreach (var d in this.currentSendingData)
+            foreach (var d in this.currentSendData)
             {
                 GUILayout.Label(d.Key.ToString());
             }
