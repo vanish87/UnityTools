@@ -321,7 +321,7 @@ namespace UnityTools.Networking
             }
             catch (SocketException e)
             {
-                LogTool.Log("UDP Socket Exception");
+                LogTool.Log("UDP Send Exception");
                 LogTool.Log(e.ToString());
                 LogTool.Log((e as SocketException).ErrorCode.ToString());
                 LogTool.Log((e as SocketException).Message);
@@ -358,6 +358,7 @@ namespace UnityTools.Networking
             }
             catch (Exception e)
             {
+                LogTool.Log("UDP Receive Exception");
                 if(!(e is ObjectDisposedException))
                 {
                     LogTool.Log(e.ToString());
