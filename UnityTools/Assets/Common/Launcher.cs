@@ -130,6 +130,10 @@ namespace UnityTools.Common
                 logConfigure.SetupChannel();
                 logConfigure.SetupLog();
             }
+            var fileName = "Version.xml";
+            var vname = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name + fileName;
+            var path = System.IO.Path.Combine(Application.streamingAssetsPath, vname);
+            if (System.IO.File.Exists(path)) this.environment.appSetting.versionInfo = FileTool.Read<VersionInfo>(path, FileTool.SerializerType.XML);
 
             Application.targetFrameRate = this.environment.appSetting.targetFPS;
             QualitySettings.vSyncCount = this.environment.appSetting.vsync;
