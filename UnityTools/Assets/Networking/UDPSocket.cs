@@ -59,7 +59,7 @@ namespace UnityTools.Networking
             if (ip.ToLower() == "localhost" || ip == "127.0.0.1")
             {
                 var localIPs = Dns.GetHostAddresses(Dns.GetHostName()).ToList();
-                local = localIPs.Find(ips =>ips.AddressFamily == AddressFamily.InterNetwork);
+                local = localIPs.Find(ips => ips.AddressFamily == AddressFamily.InterNetwork);
             }
             else
             {
@@ -83,7 +83,7 @@ namespace UnityTools.Networking
         ~SocketData()
         {
             this.endPoint = null;
-        }       
+        }
     }
 
     public class State
@@ -140,7 +140,7 @@ namespace UnityTools.Networking
                 {
                     this.socket.Shutdown(SocketShutdown.Both);
                 }
-                catch (Exception e){ if (DebugLog) Debug.LogWarning(e.ToString()); }
+                catch (Exception e) { if (DebugLog) Debug.LogWarning(e.ToString()); }
                 finally
                 {
                     this.socket.Close();
@@ -192,8 +192,8 @@ namespace UnityTools.Networking
         }
         public UDPSocket(ConnectionType type = ConnectionType.UDP)
         {
-            var st = type == ConnectionType.UDP?SocketType.Dgram:SocketType.Stream;
-            var pt = type == ConnectionType.UDP?ProtocolType.Udp:ProtocolType.Tcp;
+            var st = type == ConnectionType.UDP ? SocketType.Dgram : SocketType.Stream;
+            var pt = type == ConnectionType.UDP ? ProtocolType.Udp : ProtocolType.Tcp;
             this.socket?.Close();
             this.socket?.Dispose();
             this.socket = new Socket(AddressFamily.InterNetwork, st, pt);
@@ -208,7 +208,7 @@ namespace UnityTools.Networking
         {
             return Serialization.ObjectToByteArray(data);
         }
-        
+
         public virtual T OnDeserialize(byte[] data, int length)
         {
             //Note data may has different size than length
@@ -261,7 +261,7 @@ namespace UnityTools.Networking
             Assert.IsNotNull(epTo);
             Assert.IsNotNull(byteData);
             Assert.IsTrue(byteData.Length > 0);
-            Assert.IsTrue(byteData.Length < 64 * 1024, "Data length "+ byteData.Length+ " exceeds max 64k");
+            Assert.IsTrue(byteData.Length < 64 * 1024, "Data length " + byteData.Length + " exceeds max 64k");
             Assert.IsNotNull(epTo.socket);
 
             if (byteData.Length > 64 * 1024)
@@ -314,7 +314,7 @@ namespace UnityTools.Networking
                     {
                         foreach (var c in this.connections)
                         {
-                            LogTool.Log("connections count " + c.Key.ToString() +" " + c.Value.Count);
+                            LogTool.Log("connections count " + c.Key.ToString() + " " + c.Value.Count);
                         }
                     }
                 }
@@ -323,8 +323,8 @@ namespace UnityTools.Networking
             {
                 LogTool.Log("UDP Send Exception");
                 LogTool.Log(e.ToString());
-                LogTool.Log((e as SocketException).ErrorCode.ToString());
-                LogTool.Log((e as SocketException).Message);
+                LogTool.Log(e.ErrorCode.ToString());
+                LogTool.Log(e.Message);
             }
         }
         protected void ReceiveCallback(IAsyncResult ar)
@@ -347,7 +347,7 @@ namespace UnityTools.Networking
                     this.OnMessage(stateFrom.remote, data);
                 }
 
-                if(this.connections[Connection.Incoming].Exists(c => c.endPoint.Address.Equals(ipFrom.Address)) == false)
+                if (this.connections[Connection.Incoming].Exists(c => c.endPoint.Address.Equals(ipFrom.Address)) == false)
                 {
                     this.connections[Connection.Incoming].Add(SocketData.Make(ipFrom));
                     if (DebugLog) LogTool.LogFormat("Add in connection: {0}", LogLevel.Verbose, LogChannel.Network, ipFrom.ToString());
@@ -356,11 +356,12 @@ namespace UnityTools.Networking
                 epFrom = this.receiveState.remote.endPoint;
                 stateFrom.remote.socket.BeginReceiveFrom(this.receiveState.buffer, 0, this.receiveState.buffer.Length, SocketFlags.None, ref epFrom, this.ReceiveCallback, this.receiveState);
             }
-            catch (Exception e)
+            catch (SocketException e)
             {
-                LogTool.Log("UDP Receive Exception");
-                if(!(e is ObjectDisposedException))
+                // LogTool.Log(e.ToString());
+                // if(!(e is ObjectDisposedException))
                 {
+                    LogTool.Log("UDP Receive Exception");
                     LogTool.Log(e.ToString());
                     var se = e as SocketException;
                     if (se != null)
