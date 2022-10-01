@@ -57,6 +57,7 @@ namespace UnityTools.Rendering
 					this.primitiveInstance.transform.localPosition = Vector3.zero;
 					this.primitiveInstance.transform.localRotation = Quaternion.identity;
 					this.primitiveInstance.transform.localScale = Vector3.one;
+					this.primitiveInstance.layer = this.gameObject.layer;
 					var render = this.primitiveInstance.GetComponent<MeshRenderer>();
 					render.sharedMaterial = this.material;
 				}
