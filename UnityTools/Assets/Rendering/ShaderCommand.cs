@@ -25,7 +25,7 @@ namespace UnityTools.Rendering
 		RenderTypeTag,
 		Blend,
 		BlendOperation,
-		ColorMask,
+		// ColorMask,
 		Cull,
 		ZClip,
 		ZTest,
@@ -47,7 +47,7 @@ namespace UnityTools.Rendering
 
 				case ShaderCommand.Blend: return new Blend();
 				case ShaderCommand.BlendOperation: return new BlendOperation();
-				case ShaderCommand.ColorMask: return new ColorMask();
+				// case ShaderCommand.ColorMask: return new ColorMask();
 
 				case ShaderCommand.Cull: return new Cull();
 				case ShaderCommand.ZClip: return new ZClip();
